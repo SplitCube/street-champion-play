@@ -8,6 +8,8 @@
 <meta name="mobile-web-app-capable" content="yes">
 <title>Уличный чемпион: карьера</title>
 <!-- Telegram Mini App SDK: внутри Telegram даёт облачные сохранения, вибрацию и кнопку «Назад»; вне Telegram или без интернета игра работает и без него -->
+<script>/* диагностика: ошибки даже до запуска игры попадают на экран (панель #diag) */
+window.__errs=[];window.addEventListener('error',function(e){window.__errs.push('[js] '+(e.message||e)+' @'+(e.lineno||'?')+':'+(e.colno||'?'));if(window.showDiag)window.showDiag();else{var d=document.getElementById('diag');if(d){d.textContent='ОШИБКИ:\n'+window.__errs.join('\n')+'\n'+navigator.userAgent;d.className='on';}}});</script>
 <script async src="https://telegram.org/js/telegram-web-app.js?64" onload="window.tgInit&&tgInit()"></script>
 <style>
 :root{--bg:#0d0a1a;--panel:#1a1430;--panel2:#261d45;--line:#3d2f6b;--txt:#f1e9ff;--dim:#9a8cc0;--red:#ff3b4f;--yel:#ffd23f;--grn:#3ee07a;--cyan:#38e8ff;--mag:#ff4fd8;--org:#ff8a2b;
@@ -165,6 +167,9 @@ button{font-family:inherit;color:inherit;cursor:pointer;touch-action:manipulatio
 .adstub b{display:block;font-size:20px;color:var(--org);margin-bottom:6px}
 #rotate{display:none;position:fixed;inset:0;z-index:100;background:#05040a;color:var(--yel);font-weight:bold;font-size:18px;line-height:1.6;text-align:center;align-items:center;justify-content:center;padding:20px}
 @media (orientation:landscape) and (max-height:500px){#rotate{display:flex}} /* телефон боком — игра рассчитана на вертикальный экран */
+#diag{display:none;position:fixed;left:6px;right:6px;bottom:calc(6px + var(--sab));z-index:200;background:rgba(80,0,12,.94);color:#fff;font:11px/1.4 monospace;padding:8px;border:2px solid var(--red);max-height:50%;overflow:auto;white-space:pre-wrap;word-break:break-all;user-select:text;-webkit-user-select:text}
+#diag.on{display:block}
+#build{color:#6c5ea0;cursor:pointer}
 #toast{position:absolute;left:50%;top:calc(70px + var(--sat));transform:translateX(-50%);background:#000;border:3px solid var(--yel);color:var(--yel);padding:8px 12px;font-size:13px;font-weight:bold;z-index:40;display:none;max-width:90%;text-align:center;box-shadow:4px 4px 0 #000}
 #toast.on{display:block;animation:pop .2s steps(3)}
 .namein{display:block;width:100%;background:#000;color:var(--yel);border:3px solid #000;box-shadow:inset 0 0 0 2px var(--yel);padding:12px;font:bold 20px "Lucida Console","Courier New",monospace;text-align:center;text-transform:uppercase;letter-spacing:2px;user-select:text;-webkit-user-select:text;outline:none}
@@ -184,7 +189,7 @@ button{font-family:inherit;color:inherit;cursor:pointer;touch-action:manipulatio
       <button class="btn" data-act="help">Как играть</button>
       <button class="btn" data-act="sound" id="btnSound">Звук: вкл</button>
     </div>
-    <div class="foot">16 противников · 3 дуэта · 1 пояс · ноль правил</div>
+    <div class="foot">16 противников · 3 дуэта · 1 пояс · ноль правил<br><span id="build"></span></div>
   </div>
 
   <!-- HUB -->
@@ -248,6 +253,7 @@ button{font-family:inherit;color:inherit;cursor:pointer;touch-action:manipulatio
   </div></div>
   <div id="toast"></div>
   <div id="rotate"><div>📱 ↻<br>Поверните телефон вертикально</div></div>
+  <div id="diag"></div>
 </div>
 
 <script>
@@ -1613,21 +1619,24 @@ fctx.imageSmoothingEnabled=false; tctx.imageSmoothingEnabled=false;
 const TITLE_F=[{pal:PLAYER_PAL,pose:'idle',x:PX,face:1},{pal:OPP[OPP.length-1].pal,pose:'idle',x:OX,face:-1}];
 let last=performance.now(), titleAt=0;
 function loop(now){
-  const dt=Math.min(50,now-last); last=now;
-  try{
-    if(screen==='fight'&&F){
-      if(!$('#modal').classList.contains('on')) updateFight(dt*F.speed); // пауза, пока открыто окно
-      if(F){ if(F.state==='intro'&&F.introT>VS_END) drawVS(fctx,F,now);
-        else drawScene(fctx,F.arena,[F.p,F.o],now,{shake:F.shake,parts:F.parts,cheer:F.cheer,flashAll:F.flashAll,fx:F.fx}); renderHUD(); present(FBUF,$('#fightCv')); }
-    } else if(screen==='title'){
-      titleAt+=dt; const ph=Math.floor(titleAt/700)%6;
-      TITLE_F[0].pose=ph===2?'jab':ph===4?'hook':'idle'; TITLE_F[1].pose=ph===2?'block':ph===4?'hit':ph===5?'uppercut':'idle';
-      TITLE_F[0].pose=ph===5?'block':TITLE_F[0].pose;
-      drawScene(tctx,0,TITLE_F,now,{}); present(TBUF,$('#titleCv'));
-    } else if(screen==='hub'&&tab==='fighter') drawPortrait(now);
-    if(TR){ updateTrain(dt); drawTrain(now); present(TRBUF,$('#trCv')); }
-  }catch(err){ console.error(err); }
-  tgSyncBack();
+  const dt=Math.min(50,now-last); last=now; FRAMES++;
+  if(screen==='fight'&&F){
+    if(!$('#modal').classList.contains('on')) step('логика боя',()=>updateFight(dt*F.speed)); // пауза, пока открыто окно
+    if(F){
+      step('сцена боя',()=>{ if(F.state==='intro'&&F.introT>VS_END) drawVS(fctx,F,now);
+        else drawScene(fctx,F.arena,[F.p,F.o],now,{shake:F.shake,parts:F.parts,cheer:F.cheer,flashAll:F.flashAll,fx:F.fx}); });
+      step('полоски',renderHUD);
+      step('вывод боя',()=>present(FBUF,$('#fightCv')));
+    }
+  } else if(screen==='title'){
+    titleAt+=dt; const ph=Math.floor(titleAt/700)%6;
+    TITLE_F[0].pose=ph===2?'jab':ph===4?'hook':'idle'; TITLE_F[1].pose=ph===2?'block':ph===4?'hit':ph===5?'uppercut':'idle';
+    TITLE_F[0].pose=ph===5?'block':TITLE_F[0].pose;
+    step('заставка',()=>drawScene(tctx,0,TITLE_F,now,{}));
+    step('вывод заставки',()=>present(TBUF,$('#titleCv')));
+  } else if(screen==='hub'&&tab==='fighter') step('портрет',()=>drawPortrait(now));
+  if(TR) step('зал',()=>{ updateTrain(dt); drawTrain(now); present(TRBUF,$('#trCv')); });
+  step('telegram',tgSyncBack);
   requestAnimationFrame(loop);
 }
 
@@ -1710,19 +1719,58 @@ function tgBack(){
   if(screen==='fight') ACT.surrender(); else if(screen==='hub') ACT.menu();
 }
 
+/* ---------- ДИАГНОСТИКА: ошибки на телефоне видны прямо в игре ----------
+   Нажатие на номер сборки на заставке показывает сведения об устройстве; нажатие на панель — скрывает её. */
+const BUILD='36 · 2026-10-25'; // номер сборки — видно на заставке, свежая версия или старая из кэша Telegram
+let FRAMES=0, PRESENT_MODE='чёткий';
+const DIAG_SEEN={};
+function diag(where,e){
+  const m='['+where+'] '+(e&&e.message?e.message:String(e));
+  if(DIAG_SEEN[m]) return; DIAG_SEEN[m]=1; (window.__errs=window.__errs||[]).push(m); console.error(m,e); showDiag();
+}
+function diagEnv(){
+  const c=id=>{ const v=$(id); return v?v.width+'×'+v.height+' (css '+v.clientWidth+'×'+v.clientHeight+')':'—'; };
+  const w=TGA.app;
+  return 'Сборка '+BUILD+'\n'+navigator.userAgent+'\nэкран '+innerWidth+'×'+innerHeight+', dpr '+(window.devicePixelRatio||1)+', --app-h '+getComputedStyle(document.documentElement).getPropertyValue('--app-h')+
+    '\nTelegram: '+(w?('Bot API '+w.version+', '+w.platform+', высота '+w.viewportStableHeight+', на весь экран: '+!!w.isFullscreen):'нет')+
+    '\nзаставка '+c('#titleCv')+'\nбой '+c('#fightCv')+'\nвывод: '+PRESENT_MODE+', кадров: '+FRAMES+', экран: '+screen;
+}
+window.showDiag=function(force){
+  const d=$('#diag'), errs=window.__errs||[]; if(!d||(!errs.length&&!force)) return;
+  d.textContent=(errs.length?'ОШИБКИ:\n'+errs.slice(-6).join('\n')+'\n\n':'')+diagEnv()+'\n\n(нажмите, чтобы скрыть)'; d.classList.add('on');
+};
+document.addEventListener('click',e=>{ if(e.target.closest('#diag')) $('#diag').classList.remove('on'); else if(e.target.closest('#build')) showDiag(true); });
+$('#build').textContent='сборка '+BUILD;
+// шаг кадра с отдельной защитой: ошибка в одной части (картинка, полоски, вывод) не гасит остальные
+function step(name,fn){ try{ fn(); }catch(e){ diag(name,e); } }
+
 /* ---------- ЭКРАН: чёткие пиксели на любом телефоне ----------
    iPhone 14 … 18 Pro Max (390–440 CSS px, плотность 3×), Android (2–4×), планшеты.
    Игра рисует в маленький буфер (320×180), а на экран он выводится в физических пикселях устройства:
-   сначала целое увеличение без сглаживания, затем точная подгонка — все «пиксели» одного размера. */
+   сначала целое увеличение без сглаживания, затем точная подгонка — все «пиксели» одного размера.
+   Если чёткий вывод на устройстве падает или рисует пустоту — игра сама переходит на простой (растяжение буфера). */
 const UP=document.createElement('canvas'), upg=UP.getContext('2d');
 function present(buf,cv){
-  const cw=cv.clientWidth, ch=cv.clientHeight; if(!cw||!ch) return; // размер без учёта анимаций (transform)
-  const d=window.devicePixelRatio||1, w=Math.round(cw*d), h=Math.round(ch*d);
-  if(cv.width!==w||cv.height!==h){ cv.width=w; cv.height=h; }
-  const k=Math.max(1,Math.ceil(w/buf.width)), uw=buf.width*k, uh=buf.height*k;
-  if(UP.width!==uw||UP.height!==uh){ UP.width=uw; UP.height=uh; }
-  upg.imageSmoothingEnabled=false; upg.clearRect(0,0,uw,uh); upg.drawImage(buf,0,0,uw,uh);
-  const g=cv.getContext('2d'); g.imageSmoothingEnabled=true; g.imageSmoothingQuality='high'; g.drawImage(UP,0,0,w,h);
+  if(PRESENT_MODE!=='чёткий') return presentSimple(buf,cv);
+  try{
+    const cw=cv.clientWidth, ch=cv.clientHeight; if(!cw||!ch) return; // размер без учёта анимаций (transform)
+    const d=window.devicePixelRatio||1, w=Math.round(cw*d), h=Math.round(ch*d);
+    if(cv.width!==w||cv.height!==h){ cv.width=w; cv.height=h; }
+    const k=Math.max(1,Math.ceil(w/buf.width)), uw=buf.width*k, uh=buf.height*k;
+    if(UP.width!==uw||UP.height!==uh){ UP.width=uw; UP.height=uh; }
+    upg.imageSmoothingEnabled=false; upg.clearRect(0,0,uw,uh); upg.drawImage(buf,0,0,uw,uh);
+    const g=cv.getContext('2d'); g.imageSmoothingEnabled=true; g.imageSmoothingQuality='high'; g.drawImage(UP,0,0,w,h);
+    if((cv.__checks=(cv.__checks||0)+1)<=3){ // первые кадры: проверяем, что на экран реально что-то попало
+      const px=g.getImageData(w>>1,h>>1,1,1).data;
+      if(px[3]===0) throw new Error('чёткий вывод дал пустой кадр');
+    }
+  }catch(e){ diag('вывод',e); PRESENT_MODE='простой'; presentSimple(buf,cv); }
+}
+function presentSimple(buf,cv){
+  try{
+    if(cv.width!==buf.width||cv.height!==buf.height){ cv.width=buf.width; cv.height=buf.height; }
+    const g=cv.getContext('2d'); g.imageSmoothingEnabled=false; g.drawImage(buf,0,0);
+  }catch(e){ diag('вывод-запасной',e); }
 }
 // масштаб пиксельных надписей: не больше maxK и такой, чтобы 1 пиксель шрифта = целое число физических точек
 function crispK(cssW,avail,maxK){
