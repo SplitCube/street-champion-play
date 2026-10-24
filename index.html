@@ -1,0 +1,1716 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="theme-color" content="#0d0a1a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<title>Уличный чемпион: карьера</title>
+<!-- Telegram Mini App SDK: внутри Telegram даёт облачные сохранения, вибрацию и кнопку «Назад»; вне Telegram или без интернета игра работает и без него -->
+<script async src="https://telegram.org/js/telegram-web-app.js?64" onload="window.tgInit&&tgInit()"></script>
+<style>
+:root{--bg:#0d0a1a;--panel:#1a1430;--panel2:#261d45;--line:#3d2f6b;--txt:#f1e9ff;--dim:#9a8cc0;--red:#ff3b4f;--yel:#ffd23f;--grn:#3ee07a;--cyan:#38e8ff;--mag:#ff4fd8;--org:#ff8a2b}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;background:#05040a;color:var(--txt);font-family:"Lucida Console","Courier New",monospace;overflow:hidden;user-select:none;-webkit-user-select:none;touch-action:manipulation;-webkit-touch-callout:none}
+#app{position:relative;width:100%;max-width:520px;height:100%;height:100dvh;margin:0 auto;background:var(--bg);display:flex;flex-direction:column;overflow:hidden;box-shadow:0 0 0 3px #000,0 0 40px #2a1450}
+canvas{image-rendering:pixelated;image-rendering:crisp-edges;display:block}
+button{font-family:inherit;color:inherit;cursor:pointer;touch-action:manipulation}
+.screen{display:none;flex:1;flex-direction:column;min-height:0}
+.screen.on{display:flex}
+.scroll{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:10px 10px 16px;overscroll-behavior:contain}
+.btn{display:block;width:100%;background:var(--panel2);border:3px solid #000;padding:11px 10px;min-height:46px;font-size:14px;font-weight:bold;text-transform:uppercase;letter-spacing:1px;box-shadow:inset -3px -3px 0 rgba(0,0,0,.4),inset 3px 3px 0 rgba(255,255,255,.14);position:relative}
+.btn:active:not(:disabled){transform:translateY(2px);box-shadow:inset 3px 3px 0 rgba(0,0,0,.4)}
+.btn:disabled{opacity:.45;cursor:default}
+.btn.red{background:#b3122a}.btn.grn{background:#1e8a47}.btn.yel{background:#c9940a;color:#140c00}.btn.cyan{background:#137c92}.btn.mag{background:#8f1d7c}
+.btn.sm{display:inline-block;width:auto;min-height:36px;padding:6px 10px;font-size:12px}
+.row{display:flex;gap:8px;align-items:center}
+.gap{height:10px}
+.card{background:var(--panel);border:3px solid #000;box-shadow:inset 0 0 0 2px var(--line);padding:10px;margin-bottom:10px}
+.h{font-weight:bold;font-size:15px;text-transform:uppercase;color:var(--yel);letter-spacing:1px}
+.h2{font-weight:bold;font-size:13px;text-transform:uppercase;color:var(--cyan);margin:4px 0 8px;letter-spacing:1px}
+.dim{color:var(--dim);font-size:12px;line-height:1.45}
+.bar{height:10px;background:#000;border:2px solid #000;position:relative;overflow:hidden;box-shadow:0 0 0 2px var(--line)}
+.bar>i{position:absolute;left:0;top:0;bottom:0;display:block;transition:width .15s steps(4)}
+.note{background:#3a2a00;border:3px solid #000;box-shadow:inset 0 0 0 2px var(--yel);color:var(--yel);padding:8px 10px;font-size:12px;margin-bottom:10px;font-weight:bold;animation:blink 1s steps(2) infinite}
+@keyframes blink{50%{box-shadow:inset 0 0 0 2px #7a5a00}}
+/* top bar */
+.top{display:grid;grid-template-columns:auto 1fr auto auto;gap:6px 8px;align-items:center;padding:8px 10px;background:#120d24;border-bottom:3px solid #000;font-size:12px;padding-top:max(8px,env(safe-area-inset-top))}
+.chip{background:#000;padding:3px 6px;border:2px solid var(--line);white-space:nowrap;font-weight:bold}
+.lv{color:var(--yel)}.money{color:var(--grn)}.day{color:var(--cyan)}
+.xpw{min-width:0}.xpw .bar{height:8px}
+.enw{grid-column:1/-1;display:flex;align-items:center;gap:8px}.enw .bar{flex:1}
+.nav{display:grid;grid-template-columns:repeat(4,1fr);border-top:3px solid #000;background:#120d24;padding-bottom:env(safe-area-inset-bottom)}
+.nav button{background:none;border:none;border-right:2px solid #000;padding:9px 2px 8px;font-size:11px;font-weight:bold;text-transform:uppercase;color:var(--dim);display:flex;flex-direction:column;align-items:center;gap:3px;min-height:54px}
+.nav button:last-child{border-right:none}
+.nav button.on{color:var(--yel);background:#1f1640;box-shadow:inset 0 3px 0 var(--yel)}
+.nav .ic{font-size:18px;line-height:1}
+/* hub */
+.hero{display:flex;gap:10px;align-items:center}
+.hero canvas{width:96px;height:96px;background:#0a0716;border:3px solid #000;box-shadow:inset 0 0 0 2px var(--line);flex:none}
+.stat{display:grid;grid-template-columns:1fr auto 40px;gap:4px 8px;align-items:center;padding:7px 0;border-bottom:2px dashed #2b2150}
+.stat:last-child{border-bottom:none}
+.stat .v{font-size:18px;font-weight:bold;color:var(--yel);min-width:28px;text-align:right}
+.stat .bar{grid-column:1/3;height:6px}
+.plus{width:40px;height:36px;grid-row:1/3;grid-column:3;background:#1e8a47;border:3px solid #000;font-size:20px;font-weight:bold;box-shadow:inset -2px -2px 0 rgba(0,0,0,.4)}
+.plus:disabled{background:#2a2440;opacity:.5}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.kv{background:#0e0a1e;border:2px solid #000;padding:6px 8px;font-size:12px}
+.kv b{display:block;font-size:15px;color:var(--txt)}
+.kv span{color:var(--dim)}
+.tcard{display:flex;gap:10px;align-items:center;background:var(--panel);border:3px solid #000;box-shadow:inset 0 0 0 2px var(--line);padding:10px;margin-bottom:8px;width:100%;text-align:left}
+.tcard .ico{font-size:26px;width:42px;height:42px;display:grid;place-items:center;background:#0b0818;border:2px solid #000;flex:none}
+.tcard .tx{flex:1;min-width:0}
+.tcard .nm{font-weight:bold;text-transform:uppercase;font-size:13px}
+.tcard .bar{height:6px;margin-top:5px}
+.tcard .cost{font-size:12px;color:var(--cyan);font-weight:bold;white-space:nowrap}
+.tcard:active{transform:translateY(2px)}
+.slots{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:10px}
+.slot{background:#0b0818;border:3px solid #000;box-shadow:inset 0 0 0 2px var(--mag);min-height:48px;display:grid;place-items:center;text-align:center;font-size:12px;font-weight:bold;padding:4px;text-transform:uppercase}
+.slot.empty{box-shadow:inset 0 0 0 2px #2b2150;color:#4b3f7a}
+.mv{background:var(--panel);border:3px solid #000;box-shadow:inset 0 0 0 2px var(--line);padding:10px;margin-bottom:8px}
+.mv.sel{box-shadow:inset 0 0 0 2px var(--mag)}
+.mv .t{display:flex;justify-content:space-between;align-items:center;gap:6px}
+.mv .nm{font-weight:bold;text-transform:uppercase}
+.tag{font-size:10px;padding:2px 5px;border:2px solid #000;font-weight:bold;text-transform:uppercase}
+.tag.atk{background:#7a1020}.tag.def{background:#10507a}.tag.duo{background:#8f1d7c;color:#fff;vertical-align:middle}
+.mvst{display:flex;gap:10px;font-size:11px;color:var(--dim);margin:6px 0;flex-wrap:wrap}
+.mvst b{color:var(--txt)}
+.opp{display:flex;gap:10px;align-items:center;background:var(--panel);border:3px solid #000;box-shadow:inset 0 0 0 2px var(--line);padding:8px;margin-bottom:8px}
+.opp canvas{width:80px;height:80px;background:#0a0716;border:2px solid #000;flex:none}
+.opp .tx{flex:1;min-width:0}
+.opp .nm{font-weight:bold;text-transform:uppercase;font-size:13px}
+.opp.lock{opacity:.6}.opp.lock canvas{filter:brightness(.3)}
+.opp.next{box-shadow:inset 0 0 0 2px var(--red);animation:pulse 1.2s steps(2) infinite}
+@keyframes pulse{50%{box-shadow:inset 0 0 0 2px #6a0e1c}}
+.opp.done .nm::after{content:" ✓";color:var(--grn)}
+.opp .btn{width:auto;min-height:40px;padding:6px 10px;font-size:12px}
+.ostat{font-size:11px;color:var(--dim);margin-top:3px}
+/* title */
+#scr-title{justify-content:flex-start;background:#07050f}
+#titleCv{width:100%;aspect-ratio:16/9;border-bottom:3px solid #000}
+.logo{text-align:center;padding:14px 10px 6px}
+.logo .a{font-size:30px;font-weight:bold;color:var(--yel);letter-spacing:2px;line-height:1.05;text-shadow:3px 0 #000,-3px 0 #000,0 3px #000,0 -3px #000,4px 4px 0 var(--red),6px 6px 0 #000}
+.logo .b{font-size:18px;font-weight:bold;color:var(--cyan);letter-spacing:6px;margin-top:8px;text-shadow:2px 2px 0 #000}
+.menu{padding:10px 18px;display:flex;flex-direction:column;gap:9px;max-width:360px;width:100%;margin:0 auto}
+.foot{text-align:center;font-size:10px;color:#4b3f7a;padding:8px}
+/* fight */
+#scr-fight{background:#000}
+.hud{display:grid;grid-template-columns:1fr auto 1fr;gap:6px;align-items:start;padding:6px 8px;background:#0b0818;border-bottom:3px solid #000;padding-top:max(6px,env(safe-area-inset-top))}
+.side .nm{display:block;image-rendering:pixelated;image-rendering:crisp-edges}
+.side.r .nm{margin-left:auto}
+.side.r{text-align:right}
+.side{display:flex;flex-wrap:wrap;gap:4px 6px;align-items:center;min-width:0}.sb{flex:1;min-width:0}
+.nmrow{width:100%;display:flex;min-height:14px}.side.r .nmrow{justify-content:flex-end}
+.face{width:50px;height:50px;flex:none;border:2px solid #000;box-shadow:0 0 0 2px var(--line);background:#1a1430}
+.side .bar{height:12px;margin-bottom:5px}
+.side .bar.hp{height:14px;box-shadow:0 0 0 2px #c9940a,0 0 0 4px #000}
+.side .bar.hp::after{content:'';position:absolute;inset:0;z-index:2;background:repeating-linear-gradient(90deg,transparent 0 9px,rgba(0,0,0,.55) 9px 10px)}
+.side .bar.st{height:6px}
+.side.r .bar>i{left:auto;right:0}
+.hp .fill{background:linear-gradient(#5dff8f 0 40%,#22b955 40%)}
+.hp .ghost{background:#fff;opacity:.85}
+.st .fill{background:var(--cyan)}
+.hp.low .fill{background:linear-gradient(#ff7a7a 0 40%,#d4202f 40%)}
+.ftimer{font-size:22px;font-weight:bold;color:var(--yel);background:#000;border:2px solid #000;box-shadow:0 0 0 2px #c9940a,inset 0 0 0 2px #3a2a00;padding:2px 6px;min-width:46px;text-align:center;text-shadow:2px 2px 0 #7a1020}
+.awrap{position:relative;width:100%;aspect-ratio:16/9;background:#000;overflow:hidden;cursor:pointer;touch-action:none}
+.awrap canvas{width:100%;height:100%}
+#fx{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+.ft{position:absolute;transform:translate(-50%,-50%);font-weight:bold;font-size:16px;white-space:nowrap;text-shadow:2px 0 #000,-2px 0 #000,0 2px #000,0 -2px #000;animation:rise .9s steps(9) forwards}
+.ft.big{font-size:22px}
+@keyframes rise{0%{margin-top:6px;opacity:1}15%{margin-top:-8px}100%{margin-top:-34px;opacity:0}}
+#banner{position:absolute;left:50%;top:50%;transform:translate(-50%,-60%);height:22%;width:auto;max-width:96%;pointer-events:none;display:none}
+#banner.on{display:block;animation:popc .35s steps(4)}
+@keyframes popc{0%{transform:translate(-50%,-60%) scale(2.2);opacity:0}100%{transform:translate(-50%,-60%) scale(1);opacity:1}}
+@keyframes pop{0%{transform:scale(2.2);opacity:0}100%{transform:scale(1);opacity:1}}
+.fctl{flex:1;display:flex;flex-direction:column;gap:8px;padding:8px 10px;background:var(--bg);min-height:0;overflow-y:auto;padding-bottom:max(8px,env(safe-area-inset-bottom))}
+.chips{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.mchip{background:#0b0818;border:3px solid #000;box-shadow:inset 0 0 0 2px #2b2150;text-align:center;padding:6px 2px;font-size:11px;font-weight:bold;text-transform:uppercase;color:var(--dim)}
+.mchip.on{box-shadow:inset 0 0 0 2px var(--yel);color:var(--yel);background:#2a1f00}
+.adr{display:flex;align-items:center;gap:8px;font-size:11px;font-weight:bold;color:var(--org)}
+.adr .bar{flex:1;height:12px}
+.adr .fill{background:linear-gradient(90deg,#ff8a2b,#ffd23f)}
+.adr.full .fill{background:#fff;animation:fl .3s steps(2) infinite}
+@keyframes fl{50%{background:var(--yel)}}
+.tapbtn{background:#b3122a;font-size:26px;min-height:64px;letter-spacing:2px;touch-action:none;-webkit-user-select:none}
+.fctl .tapbtn{flex:1 1 auto;min-height:clamp(130px,30vh,340px)}
+@media (max-height:700px){.fctl .hint{display:none}.fctl{gap:6px}}
+#trTap{min-height:clamp(140px,30vh,260px);font-size:30px}
+.tapbtn.pressed{filter:brightness(1.35);transform:translateY(3px) scale(.985);box-shadow:inset 4px 4px 0 rgba(0,0,0,.45)}
+.tapbtn.sup{background:#c9940a;color:#140c00;animation:fl2 .4s steps(2) infinite}
+@keyframes fl2{50%{background:#ffd23f}}
+.flog{font-size:11px;color:var(--dim);line-height:1.5;height:46px;overflow:hidden;flex:none;background:#07050f;border:2px solid #000;padding:5px 8px}
+.flog div:first-child{color:var(--txt)}
+.frow{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.hint{font-size:10px;color:#6c5ea0;text-align:center}
+/* modal */
+.modal{position:absolute;inset:0;background:rgba(5,3,12,.86);display:none;align-items:center;justify-content:center;padding:14px;z-index:20}
+.modal.on{display:flex}
+.mbox{background:var(--panel);border:3px solid #000;box-shadow:inset 0 0 0 3px var(--line),8px 8px 0 #000;padding:16px;width:100%;max-width:400px;max-height:100%;overflow-y:auto;animation:pop .25s steps(3)}
+.mbox .title{font-size:24px;font-weight:bold;text-align:center;margin-bottom:10px;letter-spacing:2px;text-shadow:3px 3px 0 #000}
+.mbox p{font-size:13px;line-height:1.5;margin-bottom:8px}
+.rew{display:flex;justify-content:center;gap:10px;margin:10px 0;flex-wrap:wrap}
+.rew div{background:#000;border:2px solid var(--line);padding:6px 10px;font-weight:bold}
+#trCv{width:100%;aspect-ratio:16/9;border:3px solid #000;cursor:pointer;touch-action:none}
+.trinfo{display:flex;justify-content:space-between;font-weight:bold;margin:8px 0 6px;font-size:14px}
+.help h4{color:var(--cyan);margin:10px 0 4px;text-transform:uppercase;font-size:13px}
+.help p,.help li{font-size:12px;line-height:1.5;color:#d8ccf5}
+.help ul{padding-left:18px}
+#ad{z-index:30}
+#adSlot{min-height:200px;background:#000;border:3px solid #000;box-shadow:inset 0 0 0 2px var(--org);display:grid;place-items:center;overflow:hidden}
+.adstub{text-align:center;color:var(--dim);font-size:13px;line-height:1.6;padding:16px}
+.adstub b{display:block;font-size:20px;color:var(--org);margin-bottom:6px}
+#toast{position:absolute;left:50%;top:70px;transform:translateX(-50%);background:#000;border:3px solid var(--yel);color:var(--yel);padding:8px 12px;font-size:13px;font-weight:bold;z-index:40;display:none;max-width:90%;text-align:center;box-shadow:4px 4px 0 #000}
+#toast.on{display:block;animation:pop .2s steps(3)}
+.namein{display:block;width:100%;background:#000;color:var(--yel);border:3px solid #000;box-shadow:inset 0 0 0 2px var(--yel);padding:12px;font:bold 20px "Lucida Console","Courier New",monospace;text-align:center;text-transform:uppercase;letter-spacing:2px;user-select:text;-webkit-user-select:text;outline:none}
+.namein:focus{box-shadow:inset 0 0 0 2px #fff}
+.heroname{display:block;image-rendering:pixelated;image-rendering:crisp-edges;margin-bottom:6px}
+</style>
+</head>
+<body>
+<div id="app">
+  <!-- TITLE -->
+  <div id="scr-title" class="screen on">
+    <canvas id="titleCv" width="320" height="180"></canvas>
+    <div class="logo"><div class="a">УЛИЧНЫЙ<br>ЧЕМПИОН</div><div class="b">КАРЬЕРА</div></div>
+    <div class="menu">
+      <button class="btn red" id="btnContinue" data-act="continue">Продолжить</button>
+      <button class="btn grn" data-act="newgame">Новая карьера</button>
+      <button class="btn" data-act="help">Как играть</button>
+      <button class="btn" data-act="sound" id="btnSound">Звук: вкл</button>
+    </div>
+    <div class="foot">16 противников · 3 дуэта · 1 пояс · ноль правил</div>
+  </div>
+
+  <!-- HUB -->
+  <div id="scr-hub" class="screen">
+    <div class="top" id="topbar"></div>
+    <div class="scroll" id="tabBody"></div>
+    <nav class="nav" id="nav">
+      <button data-act="tab" data-v="fighter"><span class="ic">🥊</span>Боец</button>
+      <button data-act="tab" data-v="gym"><span class="ic">🏋</span>Зал</button>
+      <button data-act="tab" data-v="moves"><span class="ic">👊</span>Приёмы</button>
+      <button data-act="tab" data-v="league"><span class="ic">🏆</span>Лига</button>
+    </nav>
+  </div>
+
+  <!-- FIGHT -->
+  <div id="scr-fight" class="screen">
+    <div class="hud">
+      <div class="side"><div class="nmrow"><canvas class="nm" id="pName" width="10" height="10"></canvas></div><canvas class="face" id="pFace" width="30" height="30"></canvas><div class="sb"><div class="bar hp" id="pHpBar"><i class="ghost" id="pGhost"></i><i class="fill" id="pHp"></i></div><div class="bar st"><i class="fill" id="pSt"></i></div></div></div>
+      <div class="ftimer" id="fTimer">60</div>
+      <div class="side r"><div class="nmrow"><canvas class="nm" id="oName" width="10" height="10"></canvas></div><div class="sb"><div class="bar hp" id="oHpBar"><i class="ghost" id="oGhost"></i><i class="fill" id="oHp"></i></div><div class="bar st"><i class="fill" id="oSt"></i></div></div><canvas class="face" id="oFace" width="30" height="30"></canvas></div>
+    </div>
+    <div class="awrap" id="arena"><canvas id="fightCv" width="320" height="180"></canvas><div id="fx"></div><canvas id="banner" width="10" height="10"></canvas></div>
+    <div class="fctl">
+      <div class="chips" id="fChips"></div>
+      <div class="adr" id="adrRow">АДРЕНАЛИН<div class="bar"><i class="fill" id="pAdr"></i></div></div>
+      <button class="btn tapbtn" id="tapBtn">⚡ ТАПАЙ! ⚡</button>
+      <div class="flog" id="flog"></div>
+      <div class="hint" id="fHint">Тапай двумя пальцами — боец бьёт чаще. Шкала полна → СУПЕРУДАР!</div>
+      <div class="frow"><button class="btn sm" id="speedBtn" data-act="speed">Скорость x1</button><button class="btn sm" data-act="surrender">Сдаться</button></div>
+    </div>
+  </div>
+
+  <!-- TRAINING -->
+  <div id="train" class="modal"><div class="mbox">
+    <div class="title" id="trTitle" style="color:var(--yel)">ТРЕНИРОВКА</div>
+    <canvas id="trCv" width="240" height="135"></canvas>
+    <div class="trinfo"><span id="trTaps">Удары: 0</span><span id="trTime">6.0 c</span></div>
+    <div class="bar" style="height:12px"><i id="trBar" style="background:var(--cyan);width:100%"></i></div>
+    <div class="gap"></div>
+    <div class="dim" id="trMsg" style="text-align:center;min-height:36px"></div>
+    <div class="gap"></div>
+    <button class="btn red tapbtn" id="trTap">ЖМИ!</button>
+    <div class="gap"></div>
+    <button class="btn" id="trClose" data-act="trclose">Закрыть</button>
+  </div></div>
+
+  <div id="modal" class="modal"><div class="mbox" id="mbox"></div></div>
+
+  <!-- РЕКЛАМА: окно для рекламы за награду («Выспаться» после бесплатных раз) -->
+  <div id="ad" class="modal"><div class="mbox">
+    <div class="title" style="color:var(--org);font-size:18px">📺 РЕКЛАМА</div>
+    <!-- ▼▼▼ СЮДА ВСТАВЛЯЕТСЯ HTML-БАННЕР / ВИДЕО РЕКЛАМОДАТЕЛЯ ▼▼▼ -->
+    <div id="adSlot"></div>
+    <!-- ▲▲▲ КОНЕЦ МЕСТА ДЛЯ РЕКЛАМЫ ▲▲▲ -->
+    <div class="gap"></div>
+    <div class="dim" id="adTimer" style="text-align:center"></div>
+    <div class="gap"></div>
+    <button class="btn grn" id="adClaim" data-act="adclaim" disabled>Получить награду</button>
+    <div class="gap"></div>
+    <button class="btn" data-act="adcancel">Закрыть без награды</button>
+  </div></div>
+  <div id="toast"></div>
+</div>
+
+<script>
+'use strict';
+/* =========================================================
+   УЛИЧНЫЙ ЧЕМПИОН: КАРЬЕРА — однофайловый прототип
+   ========================================================= */
+const $=s=>document.querySelector(s);
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const rnd=(a,b)=>a+Math.random()*(b-a);
+const fmt=n=>Math.round(n).toLocaleString('ru-RU');
+
+/* ---------- ДАННЫЕ ---------- */
+const MAX_LVL=30, MAX_STAT=30, FIGHT_COST=20, TRAIN_COST=20, TRAIN_TIME=6000, TAP_CAP=90, FIGHT_TIME=60000;
+const STATS={
+  str:{n:'Сила',ic:'💪',d:'Урон всех ударов',tr:'Тяжёлый мешок'},
+  spd:{n:'Скорость',ic:'⚡',d:'Частота атак и точность',tr:'Скакалка'},
+  end:{n:'Выносливость',ic:'❤',d:'Здоровье, стамина, защита',tr:'Беговая дорожка'},
+  agi:{n:'Ловкость',ic:'🌀',d:'Уклонение и критические удары',tr:'Уклоны от мяча'}
+};
+const MOVES={
+  jab:{n:'Джеб',type:'atk',dmg:4,acc:.93,sta:4,spd:.62,pierce:.15,lvl:1,cost:0,d:'Быстрый прямой. Мало урона, почти не промахивается.'},
+  hook:{n:'Хук',type:'atk',dmg:8,acc:.82,sta:8,spd:.9,pierce:.25,lvl:2,cost:40,d:'Боковой удар. Хороший баланс урона и скорости.'},
+  uppercut:{n:'Апперкот',type:'atk',dmg:11,acc:.74,sta:11,spd:1.05,pierce:.5,lvl:4,cost:120,d:'Снизу в челюсть. Наполовину пробивает блок.'},
+  heavy:{n:'Тяжёлый удар',type:'atk',dmg:16,acc:.64,sta:16,spd:1.35,pierce:.6,lvl:6,cost:260,d:'Медленный размах со всей силы. Ломает блок.'},
+  block:{n:'Блок',type:'def',sta:0,spd:.7,dur:1300,lvl:1,cost:0,d:'Стойка ~1.3 c: быстрые удары почти не проходят. Восстанавливает дыхание медленнее.'},
+  dodge:{n:'Уклонение',type:'def',sta:3,spd:.6,dur:1100,lvl:3,cost:70,d:'Шанс полностью уйти от удара и сразу контратаковать.'}
+};
+const SUPER={n:'СУПЕРУДАР',type:'atk',dmg:20,acc:1,sta:0,spd:1,pierce:1};
+const MOVE_ORDER=['jab','hook','uppercut','heavy','block','dodge'];
+const ARENAS=[
+  {n:'Подворотня',neon:'#ff4fd8',sky:['#0b0820','#1a1040','#2e1550'],type:0,rain:true},
+  {n:'Гаражи',neon:'#ff8a2b',sky:['#0a0a14','#1d1428','#3a1e2a'],type:1},
+  {n:'Пустырь у завода',neon:'#ff3b4f',sky:['#08060e','#1a0c18','#36121e'],type:2},
+  {n:'Крыша небоскрёба',neon:'#38e8ff',sky:['#04081a','#0b1838','#1b2f5e'],type:3,rain:true},
+  {n:'Подпольный ринг',neon:'#ffd23f',sky:['#05030a','#0a0614','#1a0e2a'],type:4}
+];
+const P=(skin,hair,top,pants,glove,extra)=>Object.assign({skin,hair,top,pants,glove,shoe:'#e8e8e8'},extra||{});
+/* Лига: 16 соперников. dmg — множитель урона соперника (растёт к концу лиги).
+   Каждый 5-й (5, 10, 15) — ДУЭТ: duo:true и два бойца в members, второй выходит после нокаута первого. */
+const OPP=[
+  {name:'Гопник Вася',title:'Король подъезда',dmg:1,st:{str:2,spd:2,end:2,agi:1},moves:['jab','hook'],money:25,xp:40,pal:P('#e8b48a','#2a2018','#1f3fbf','#1f3fbf','#c22222',{sleeve:1,stripe:'#fff',cap:'#111'})},
+  {name:'Толик Рыжий',title:'Гроза рынка',dmg:1,st:{str:4,spd:3,end:4,agi:2},moves:['jab','hook','block'],money:45,xp:60,pal:P('#f0c4a0','#d2541c',null,'#3a3a3a','#2a7d2a',{shoe:'#5a3a20',hs:'spiky'})},
+  {name:'Мага Боксёр',title:'КМС по боксу',dmg:1,st:{str:5,spd:7,end:5,agi:5},moves:['jab','hook','dodge'],money:75,xp:90,pal:P('#d9a173','#111',null,'#b01020','#d01818',{band:'#fff'})},
+  {name:'Бизон',title:'Байкер из гаража',dmg:1.03,st:{str:9,spd:4,end:9,agi:3},moves:['hook','heavy','block'],money:120,xp:130,pal:P('#e0a888','#5a3a20','#222','#2b3550','#333',{beard:1,wide:2,shoe:'#111',hs:'long',boots:'#2a2018',scale:1.08})},
+  {name:'Братья Шпана',title:'Двое из ларька',dmg:1.05,duo:true,money:160,xp:160,members:[
+    {name:'Шпала',st:{str:7,spd:5,end:7,agi:3},moves:['jab','hook','block'],pal:P('#e8b890','#2a2018','#1f7a3a','#1f7a3a','#c8c8c8',{sleeve:1,stripe:'#fff',cap:'#111'})},
+    {name:'Шкет',st:{str:6,spd:8,end:5,agi:7},moves:['jab','hook','dodge'],pal:P('#f0c4a0','#c8a040','#a01a2a','#2a2a3a','#e8e8e8',{sleeve:1,shoe:'#c22',hs:'spiky'})}]},
+  {name:'Кенджи',title:'Мастер карате',dmg:1.07,st:{str:8,spd:11,end:8,agi:10},moves:['jab','uppercut','dodge'],money:190,xp:190,pal:P('#f0c898','#111','#f2f2f2','#f2f2f2','#f2f2f2',{sleeve:1,band:'#d01818',belt:'#111',shoe:'#f0c898'})},
+  {name:'Медведь',title:'Борец без правил',dmg:1.1,st:{str:13,spd:6,end:14,agi:5},moves:['hook','heavy','block'],money:260,xp:240,pal:P('#d89070','#6b4a2a',null,'#202060','#704010',{beard:1,wide:4,hs:'bald',boots:'#3a2a1a',scale:1.15})},
+  {name:'Санитар',title:'Сбежал из закрытой клиники',dmg:1.12,st:{str:14,spd:9,end:13,agi:9},moves:['hook','uppercut','block'],money:300,xp:280,pal:P('#e8d0c0','#888','#e0f0f0','#e0f0f0','#5aa0a0',{sleeve:1,mask:'#bfe0e0',shoe:'#fff',hs:'bald'})},
+  {name:'Тень',title:'Кикбоксер из ниоткуда',dmg:1.15,st:{str:14,spd:14,end:13,agi:14},moves:['jab','uppercut','dodge'],money:360,xp:320,pal:P('#8a6a5a','#000','#151515','#151515','#6a10c0',{sleeve:1,band:'#6a10c0',mask:'#151515',shoe:'#222'})},
+  {name:'Близнецы Ли',title:'Два кулака — одно сердце',dmg:1.18,duo:true,money:460,xp:420,members:[
+    {name:'Ли Старший',st:{str:14,spd:15,end:13,agi:14},moves:['jab','uppercut','dodge'],pal:P('#f0c898','#111','#d01818','#111','#ffd23f',{sleeve:1,band:'#ffd23f',shoe:'#111',hs:'long'})},
+    {name:'Ли Младший',st:{str:13,spd:17,end:12,agi:16},moves:['jab','hook','dodge'],pal:P('#f0c898','#111','#1838d0','#111','#f2f2f2',{sleeve:1,band:'#f2f2f2',shoe:'#111'})}]},
+  {name:'Мясник',title:'Хозяин мясного ряда',dmg:1.2,st:{str:19,spd:9,end:20,agi:8},moves:['hook','heavy','block'],money:520,xp:460,pal:P('#e0a080','#222','#e8e8e8','#444','#8a1010',{beard:1,wide:4,belt:'#8a1010',shoe:'#222',hs:'bald',boots:'#222',scale:1.15})},
+  {name:'Жоау',title:'Капоэйра — танцующий вихрь',dmg:1.23,st:{str:16,spd:19,end:15,agi:20},moves:['jab','uppercut','dodge'],money:590,xp:530,pal:P('#8a5a3a','#111',null,'#f2f2f2','#3ee07a',{band:'#ffd23f',belt:'#3ee07a',shoe:'#8a5a3a',hs:'long'})},
+  {name:'Сержант',title:'Бывший спецназ',dmg:1.26,st:{str:20,spd:17,end:20,agi:17},moves:['hook','uppercut','block'],money:680,xp:600,pal:P('#d8a078','#4a5a2a','#4a5a2a','#3a4a24','#222',{sleeve:1,shoe:'#222',boots:'#2a2a1a'})},
+  {name:'Неон',title:'Звезда нелегальных стримов',dmg:1.3,st:{str:21,spd:21,end:19,agi:21},moves:['jab','heavy','dodge'],money:800,xp:700,pal:P('#f0c4a0','#ff4fd8','#111','#111','#38e8ff',{stripe:'#ff4fd8',shoe:'#ff4fd8',hs:'mohawk',shades:1})},
+  {name:'Стражи Короля',title:'Последний рубеж',dmg:1.33,duo:true,money:1000,xp:850,members:[
+    {name:'Молот',st:{str:24,spd:15,end:25,agi:14},moves:['hook','heavy','block'],pal:P('#c88a60','#111','#222','#d4a017','#555',{beard:1,wide:4,shoe:'#111',hs:'mohawk',boots:'#111',scale:1.18})},
+    {name:'Кобра',st:{str:21,spd:24,end:20,agi:25},moves:['jab','uppercut','dodge'],pal:P('#e8c098','#111','#1a5a2a','#1a5a2a','#ffd23f',{sleeve:1,mask:'#1a5a2a',shoe:'#111',hs:'long'})}]},
+  {name:'Король Асфальта',title:'Чемпион улиц',dmg:1.4,st:{str:27,spd:24,end:27,agi:23},moves:['hook','uppercut','heavy'],money:1500,xp:1200,pal:P('#c88a60','#f5d040',null,'#d4a017','#ffd23f',{belt:'#ffd23f',champ:1,wide:2,hs:'long',stache:1,boots:'#d01818',scale:1.12})}
+];
+const oppMember=(o,k)=>o.duo?o.members[k]:o;
+const FIGHT_TIME_DUO=90000;
+const PLAYER_PAL=P('#f0bc90','#3a2414','#e8e8e8','#202a60','#ff3b4f',{band:'#ff3b4f'});
+const RANKS=['Новичок','Дворовый боец','Гроза двора','Уличный боец','Задира','Гроза района','Мастер подворотен','Тяжеловес улиц','Ночной кошмар','Легенда района','Ветеран подполья','Гроза рынка','Мастер стиля','Живое оружие','Звезда подполья','Претендент','ЧЕМПИОН УЛИЦ'];
+const GYM=[{n:'Подвальная качалка',cost:0},{n:'Районный зал',cost:150},{n:'Боксёрский клуб',cost:450},{n:'Профи-центр',cost:1100},{n:'Элитная академия',cost:2400}];
+const FOOD=[
+  {id:'shawa',n:'Шаверма',ic:'🌯',cost:15,en:35},
+  {id:'prot',n:'Протеиновый коктейль',ic:'🥤',cost:45,en:80}
+];
+const arenaOf=i=>i<12?Math.floor(i/3):4; // по 3 боя на уличную арену, последние 4 — на ринге
+const needXp=l=>Math.round(60+(l-1)*40+(l-1)*(l-1)*6);
+const needProg=v=>20+v*10;
+const gymMult=()=>1+(S.gym-1)*.35;
+const maxHpOf=st=>Math.round(60+st.end*10);
+const maxStaOf=st=>Math.round(40+st.end*4+st.spd*2);
+const intervalOf=st=>clamp(1500-st.spd*45,450,1500);
+const dodgeOf=st=>clamp(.42+st.agi*.022,.25,.85);
+const critOf=st=>clamp(.04+st.agi*.008,0,.4);
+
+/* ---------- СОХРАНЕНИЕ ---------- */
+const SAVE_KEY='streetChampion_career_v1';
+const DEF_SAVE=()=>({v:1,lvl:1,xp:0,pts:0,money:30,day:1,energy:100,maxEnergy:100,
+  st:{str:3,spd:3,end:3,agi:3},prog:{str:0,spd:0,end:0,agi:0},gym:1,
+  owned:['jab','block'],load:['jab','block'],beaten:0,wins:0,losses:0,sound:true,started:false,champ:false,sleeps:0,name:'Ты',ts:0});
+// имя бойца: до 14 символов, только буквы/цифры/пробел/точка/дефис, которые есть в пиксельном шрифте
+const NAME_MAX=14;
+function cleanName(v){
+  if(typeof v!=='string') return '';
+  const t=v.replace(/\s+/g,' ').trim().slice(0,NAME_MAX);
+  return [...t.toUpperCase()].every(ch=>FONT5[ch]&&!'!?·()/'.includes(ch))?t:'';
+}
+const RANDOM_NAMES=['Кулак','Молния','Бетон','Шторм','Гром','Танк','Барс','Серый Волк','Сокол','Кремень',
+  'Бульдог','Стальной','Ураган','Дизель','Рикошет','Таран','Зверь','Призрак','Гвоздь','Клинок',
+  'Факел','Север','Тайфун','Буран','Вихрь','Гранит','Титан','Сапсан','Ворон','Кастет',
+  'Динамо','Монолит','Тесак','Дракон','Комета','Мустанг','Ястреб','Коготь','Рысь','Шрам',
+  'Буйвол','Самурай','Тигр','Кувалда','Фитиль','Гарпун','Носорог','Метеор','Циклон','Железный Иван'];
+// «мешок» случайных имён: каждое выпадает один раз, пока не кончатся все 50, затем мешок перемешивается заново
+let nameBag=[], lastRandomName='';
+function nextRandomName(){
+  if(!nameBag.length){ nameBag=RANDOM_NAMES.slice(); for(let i=nameBag.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [nameBag[i],nameBag[j]]=[nameBag[j],nameBag[i]]; }
+    if(nameBag[nameBag.length-1]===lastRandomName) nameBag.unshift(nameBag.pop()); }
+  return lastRandomName=nameBag.pop();
+}
+let S=DEF_SAVE();
+function sanitize(d){
+  const s=DEF_SAVE(); if(!d||typeof d!=='object') return s;
+  const num=(v,def,min,max)=>(v!=null&&v!==''&&Number.isFinite(+v))?clamp(Math.floor(+v),min,max):def;
+  s.lvl=num(d.lvl,1,1,MAX_LVL); s.xp=num(d.xp,0,0,1e9); s.pts=num(d.pts,0,0,999);
+  s.money=num(d.money,30,0,1e9); s.day=num(d.day,1,1,1e6);
+  s.maxEnergy=num(d.maxEnergy,100,100,1000); s.energy=num(d.energy,100,0,s.maxEnergy);
+  for(const k in s.st){ if(d.st) s.st[k]=num(d.st[k],3,1,MAX_STAT); if(d.prog) s.prog[k]=num(d.prog[k],0,0,1e6); }
+  s.gym=num(d.gym,1,1,GYM.length); s.beaten=num(d.beaten,0,0,OPP.length);
+  s.wins=num(d.wins,0,0,1e6); s.losses=num(d.losses,0,0,1e6); s.sleeps=num(d.sleeps,0,0,1e9);
+  const own=new Set(['jab','block']); if(Array.isArray(d.owned)) d.owned.forEach(m=>{ if(MOVES[m]) own.add(m); });
+  s.owned=MOVE_ORDER.filter(m=>own.has(m));
+  s.load=Array.isArray(d.load)?[...new Set(d.load.filter(m=>s.owned.includes(m)))].slice(0,3):[];
+  if(!s.load.some(m=>MOVES[m].type==='atk')) s.load=['jab',...s.load.filter(m=>m!=='jab')].slice(0,3);
+  s.name=cleanName(d.name)||'Ты'; s.ts=num(d.ts,0,0,9e15); // ts — время сохранения, для облака Telegram
+  s.sound=d.sound!==false; s.started=!!d.started; s.champ=s.beaten>=OPP.length; // лига расширена до 16 — старый флаг чемпиона не переносим
+  return s;
+}
+function save(){ S.ts=Date.now(); const json=JSON.stringify(S); try{ localStorage.setItem(SAVE_KEY,json); }catch(e){} tgCloudSave(json); }
+function loadSave(){
+  let raw=null; try{ raw=localStorage.getItem(SAVE_KEY); }catch(e){}
+  if(!raw) return false;
+  try{ S=sanitize(JSON.parse(raw)); addXp(0); return S.started; }catch(e){ S=DEF_SAVE(); return false; }
+}
+/* ---------- DEV MODE: настройки пишет отдельный файл dev-mode.html ---------- */
+const DEV_KEY='streetChampion_dev';
+let DEV={};
+function loadDev(){ try{ DEV=JSON.parse(localStorage.getItem(DEV_KEY))||{}; }catch(e){ DEV={}; } if(!DEV||typeof DEV!=='object') DEV={}; }
+const dev=k=>DEV.enabled?DEV[k]:undefined;
+function spendEnergy(n){ if(!dev('infEnergy')) S.energy=Math.max(0,S.energy-n); }
+function devDamage(a,d,dmg){
+  if(!DEV.enabled||F.sim) return dmg;
+  if(a.isPlayer){ if(DEV.oneHit) return d.hp; return Math.max(1,Math.round(dmg*(+DEV.dmgMul||1))); }
+  if(DEV.god) return 0;
+  return Math.max(0,Math.round(dmg*(DEV.enemyMul!=null?+DEV.enemyMul:1)));
+}
+loadDev();
+function addXp(x){
+  S.xp+=Math.max(0,Math.round(x)); let ups=0;
+  while(S.lvl<MAX_LVL && S.xp>=needXp(S.lvl)){ S.xp-=needXp(S.lvl); S.lvl++; S.pts+=2; S.maxEnergy+=5; ups++; }
+  if(S.lvl>=MAX_LVL) S.xp=Math.min(S.xp,needXp(S.lvl));
+  return ups;
+}
+function addProg(k,amount){
+  S.prog[k]+=amount; let ups=0;
+  while(S.st[k]<MAX_STAT && S.prog[k]>=needProg(S.st[k])){ S.prog[k]-=needProg(S.st[k]); S.st[k]++; ups++; }
+  if(S.st[k]>=MAX_STAT) S.prog[k]=0;
+  return ups;
+}
+
+/* ---------- ЗВУК (WebAudio, без файлов) ---------- */
+let AC=null, NOISE=null;
+function initAudio(){
+  if(AC) { if(AC.state==='suspended') AC.resume(); return; }
+  try{
+    AC=new (window.AudioContext||window.webkitAudioContext)();
+    NOISE=AC.createBuffer(1,AC.sampleRate*.4,AC.sampleRate);
+    const d=NOISE.getChannelData(0); for(let i=0;i<d.length;i++) d[i]=Math.random()*2-1;
+  }catch(e){ AC=null; }
+}
+function tone(f1,f2,dur,type,vol,delay){
+  const t=AC.currentTime+(delay||0), o=AC.createOscillator(), g=AC.createGain();
+  o.type=type||'square'; o.frequency.setValueAtTime(f1,t); o.frequency.exponentialRampToValueAtTime(Math.max(20,f2),t+dur);
+  g.gain.setValueAtTime(vol,t); g.gain.exponentialRampToValueAtTime(.001,t+dur);
+  o.connect(g).connect(AC.destination); o.start(t); o.stop(t+dur+.02);
+}
+function noise(dur,vol,freq){
+  const t=AC.currentTime, s=AC.createBufferSource(), f=AC.createBiquadFilter(), g=AC.createGain();
+  s.buffer=NOISE; f.type='lowpass'; f.frequency.value=freq||1800;
+  g.gain.setValueAtTime(vol,t); g.gain.exponentialRampToValueAtTime(.001,t+dur);
+  s.connect(f).connect(g).connect(AC.destination); s.start(t); s.stop(t+dur);
+}
+function sfx(n){
+  if(F&&F.sim) return;
+  tgHaptic(n); // вибрация в Telegram
+  if(!S.sound||!AC) return;
+  try{
+    switch(n){
+      case 'hit': noise(.09,.4,1400); tone(170,60,.1,'square',.12); break;
+      case 'crit': noise(.16,.5,2400); tone(260,40,.2,'sawtooth',.15); break;
+      case 'block': noise(.05,.25,600); tone(90,70,.06,'square',.1); break;
+      case 'whiff': noise(.1,.12,4000); break;
+      case 'ko': tone(300,40,.6,'sawtooth',.2); noise(.4,.4,900); break;
+      case 'tap': tone(520,700,.03,'square',.04); break;
+      case 'bell': tone(1200,1150,.5,'triangle',.18); tone(1200,1150,.5,'triangle',.14,.25); break;
+      case 'coin': tone(880,880,.07,'square',.08); tone(1320,1320,.12,'square',.08,.07); break;
+      case 'lvl': [523,659,784,1046].forEach((f,i)=>tone(f,f,.12,'square',.09,i*.1)); break;
+      case 'lose': [392,330,262].forEach((f,i)=>tone(f,f*.98,.2,'triangle',.12,i*.18)); break;
+      case 'ui': tone(660,660,.04,'square',.05); break;
+      case 'super': tone(200,900,.25,'sawtooth',.12); break;
+    }
+  }catch(e){}
+}
+
+/* ---------- ПИКСЕЛЬНАЯ ГРАФИКА (16 бит: 320×180, тени в 3–4 тона, дизеринг, обводка) ---------- */
+const W=320, H=180, GROUND=166, PX=137, OX=183, K=1.5;
+const sc=v=>Math.round(v*K);
+function shade(hex,k){
+  const n=parseInt(hex.slice(1),16); let r=n>>16,g=n>>8&255,b=n&255;
+  if(k<0){ r*=1+k; g*=1+k; b*=1+k; } else { r+=(255-r)*k; g+=(255-g)*k; b+=(255-b)*k; }
+  return '#'+((1<<24)|(Math.round(r)<<16)|(Math.round(g)<<8)|Math.round(b)).toString(16).slice(1);
+}
+function mix(a,b,k){
+  const A=parseInt(a.slice(1),16), B=parseInt(b.slice(1),16), f=(s)=>Math.round(((A>>s)&255)*(1-k)+((B>>s)&255)*k);
+  return '#'+((1<<24)|(f(16)<<16)|(f(8)<<8)|f(0)).toString(16).slice(1);
+}
+const ramp=c=>[shade(c,.32),c,shade(c,-.3),shade(c,-.55)]; // свет, база, тень, глубокая тень
+const back=r=>[r[1],r[2],r[3],r[3]];                        // дальняя сторона тела — на тон темнее
+function prepPal(p){
+  if(p._ok) return p;
+  p.topC=p.top||p.skin;
+  p.rs=ramp(p.skin); p.rt=ramp(p.topC); p.rp=ramp(p.pants); p.rg=ramp(p.glove); p.rh=ramp(p.hair); p.rsh=ramp(p.shoe);
+  p.rb=p.boots?ramp(p.boots):null; p._ok=1; return p;
+}
+function R(g,x,y,w,h,c){ g.fillStyle=c; g.fillRect(Math.round(x),Math.round(y),w,h); }
+function limb(g,x1,y1,x2,y2,w,c){
+  g.fillStyle=c; const dx=x2-x1, dy=y2-y1, n=Math.max(Math.abs(dx),Math.abs(dy),1);
+  for(let i=0;i<=n;i++) g.fillRect(Math.round(x1+dx*i/n-w/2),Math.round(y1+dy*i/n-w/2),w,w);
+}
+// «трубка» конечности с объёмом: тень снизу/сзади, блик сверху
+function tube(g,x1,y1,x2,y2,w,r){
+  const dx=x2-x1, dy=y2-y1, n=Math.max(Math.abs(dx),Math.abs(dy),1), pts=[];
+  for(let i=0;i<=n;i++) pts.push([Math.round(x1+dx*i/n-w/2),Math.round(y1+dy*i/n-w/2)]);
+  g.fillStyle=r[2]; for(const q of pts) g.fillRect(q[0],q[1],w,w);
+  g.fillStyle=r[1]; for(const q of pts) g.fillRect(q[0],q[1],w-1,w-1);
+  g.fillStyle=r[0];
+  if(Math.abs(dx)>=Math.abs(dy)) for(const q of pts) g.fillRect(q[0]+1,q[1],Math.max(1,w-3),1);
+  else for(const q of pts) g.fillRect(q[0]+1,q[1]+1,1,Math.max(1,w-3));
+}
+// сустав (локоть/колено) по двум точкам и длине сегмента
+function ik(ax,ay,bx,by,L,pref){
+  const dx=bx-ax, dy=by-ay, d=Math.hypot(dx,dy)||1, h=d<2*L?Math.sqrt(L*L-d*d/4):0;
+  let nx=-dy/d, ny=dx/d;
+  if(pref==='down'?(ny<0||(Math.abs(ny)<.2&&nx<0)):nx<0){ nx=-nx; ny=-ny; }
+  return [(ax+bx)/2+nx*h,(ay+by)/2+ny*h];
+}
+const POSE={
+  idle:{bx:0,by:0,fg:[8,-40],bg:[4,-37]},
+  windup:{bx:-2,by:1,fg:[3,-39],bg:[3,-36]},
+  jab:{bx:2,by:0,fg:[20,-40],bg:[4,-37]},
+  hook:{bx:3,by:0,fg:[16,-39],bg:[3,-36],big:1},
+  uppercut:{bx:2,by:-1,fg:[12,-53],bg:[4,-36]},
+  heavy:{bx:5,by:1,fg:[22,-37],bg:[0,-34],big:1},
+  super:{bx:6,by:1,fg:[23,-38],bg:[1,-34],big:1},
+  block:{bx:-1,by:1,fg:[8,-44],bg:[8,-37]},
+  dodge:{bx:-6,by:4,fg:[2,-36],bg:[-1,-34]},
+  hit:{bx:-3,by:1,fg:[4,-35],bg:[0,-33],tilt:-1},
+  tired:{bx:0,by:3,fg:[7,-29],bg:[3,-28]},
+  win:{bx:0,by:0,fg:[7,-58],bg:[-6,-57]},
+  jump:{bx:0,by:0,fg:[9,-30],bg:[-5,-30],jy:-6,fb:[-3,-1],ff:[3,-1]},
+  stand:{bx:0,by:0,fg:[9,-30],bg:[-5,-30],fb:[-3,0],ff:[3,0]},
+  run1:{bx:2,by:0,fg:[10,-36],bg:[-4,-31],fb:[-8,0],ff:[8,-2]},
+  run2:{bx:2,by:-1,fg:[3,-31],bg:[2,-36],fb:[-2,-2],ff:[4,0]},
+  koBody:{bx:0,by:0,fg:[9,-31],bg:[-6,-31],fb:[-3,0],ff:[3,0],tilt:-1},
+  windupH:{bx:-4,by:2,fg:[0,-37],bg:[2,-34]},          // замах тяжёлого удара
+  windupU:{bx:0,by:4,fg:[7,-27],bg:[3,-35]},           // присед перед апперкотом
+  recover:{bx:1,by:1,fg:[12,-39],bg:[4,-37]},          // возврат руки после удара
+  fall:{bx:-9,by:9,fg:[-2,-30],bg:[-7,-28],tilt:-2,fb:[-9,0],ff:[3,0]}, // начало падения
+  hurt:{bx:0,by:1,fg:[8,-38],bg:[4,-35]}               // стойка с низким здоровьем
+};
+const IDLE_CYCLE=[[0,0],[1,1],[1,2],[0,1]]; // 4 кадра стойки: [сдвиг корпуса, сдвиг перчаток]
+function glove(g,x,y,r,big){
+  const s=big?11:9, h=big?10:8, gx=Math.round(x-s/2), gy=Math.round(y-h/2);
+  R(g,gx-3,gy+2,3,h-3,'#e6e2da'); R(g,gx-3,gy+h-2,3,1,'#a8a49c'); // бинт/манжета
+  R(g,gx,gy,s,h,r[3]); R(g,gx,gy,s-1,h-1,r[2]); R(g,gx+1,gy,s-2,h-2,r[1]);
+  R(g,gx+2,gy+1,s-5,2,r[0]); R(g,gx+1,gy+1,1,1,r[0]);
+  R(g,gx+2,gy+h-3,s-4,1,r[2]); // шов большого пальца
+}
+function foot(g,x,y,r,boot){
+  if(boot){ R(g,x-4,y-13,9,11,boot[1]); R(g,x-4,y-13,2,11,boot[2]); R(g,x+2,y-12,1,9,boot[0]); R(g,x-4,y-13,9,1,boot[0]); }
+  R(g,x-4,y-4,12,4,r[1]); R(g,x-4,y-4,2,4,r[2]); R(g,x-2,y-4,6,1,r[0]); R(g,x-4,y-1,12,1,r[3]);
+}
+function arm(g,sh,gl,pal,isBack,big){
+  const el=ik(sh[0],sh[1],gl[0],gl[1],15,'down');
+  const base=pal.sleeve?pal.rt:pal.rs, r=isBack?back(base):base, rf=isBack?back(pal.rs):pal.rs;
+  tube(g,sh[0],sh[1],el[0],el[1],7,r);
+  tube(g,el[0],el[1],gl[0],gl[1],6,pal.sleeve?r:rf);
+  if(!isBack){ R(g,sh[0]-3,sh[1]-3,8,7,r[1]); R(g,sh[0]-2,sh[1]-3,5,1,r[0]); R(g,sh[0]-3,sh[1]+3,8,1,r[2]); }
+  glove(g,gl[0],gl[1],isBack?back(pal.rg):pal.rg,big&&!isBack);
+}
+function leg(g,hip,ft,pal,isBack,shorts){
+  const kn=ik(hip[0],hip[1],ft[0],ft[1]-4,16,'fwd');
+  const rp=isBack?back(pal.rp):pal.rp, rs=isBack?back(pal.rs):pal.rs;
+  tube(g,kn[0],kn[1],ft[0],ft[1]-5,7,shorts?rs:rp);
+  tube(g,hip[0],hip[1],kn[0],kn[1],9,rp);
+  foot(g,ft[0],ft[1],isBack?back(pal.rsh):pal.rsh,pal.rb?(isBack?back(pal.rb):pal.rb):null);
+}
+function torso(g,pal,cx,top,bot,Wd){
+  const r=pal.rt, s=pal.rs, bare=!pal.top;
+  for(let y=top;y<bot;y++){
+    const k=(y-top)/(bot-top), hw=Math.round(10+Wd/2-3.5*k);
+    // торс как цилиндр: тень сзади, блик-полоса ближе к свету, лёгкий спад на переднем ребре
+    R(g,cx-hw,y,hw*2,1,r[1]); R(g,cx-hw,y,3,1,r[2]); R(g,cx-hw,y,1,1,r[3]); R(g,cx+Math.round(hw*.3),y,2,1,r[0]); R(g,cx+hw-1,y,1,1,r[2]);
+  }
+  if(bare){
+    R(g,cx-7,top+2,6,1,s[0]); R(g,cx+1,top+2,7,1,s[0]);
+    R(g,cx-7,top+7,6,1,s[2]); R(g,cx+1,top+7,7,1,s[2]); R(g,cx,top+3,1,15,s[2]);
+    for(let i=0;i<3;i++){ R(g,cx-4,top+10+i*3,3,1,s[2]); R(g,cx+2,top+10+i*3,3,1,s[2]); R(g,cx-4,top+9+i*3,3,1,s[0]); R(g,cx+2,top+9+i*3,3,1,s[0]); }
+  } else {
+    if(!pal.sleeve&&pal.top!=='#222'){ R(g,cx-3,top,6,2,s[1]); R(g,cx-2,top+2,4,1,s[1]); R(g,cx-1,top+3,2,1,s[1]); } // вырез майки
+    R(g,cx-6,top+8,12,1,r[2]); R(g,cx-4,top+14,8,1,r[2]); // складки
+    if(pal.top==='#222'){ R(g,cx-2,top,5,bot-top,s[1]); R(g,cx-2,top,1,bot-top,s[2]); R(g,cx-6,top+3,2,2,'#c8c8c8'); } // жилетка
+    if(pal.stripe){ R(g,cx+5,top,2,bot-top,pal.stripe); R(g,cx-8,top,1,bot-top,pal.stripe); }
+  }
+}
+function head(g,pal,hx,hy,pose){
+  const s=pal.rs, h=pal.rh, top=hy-15, hs=pal.hs||'short';
+  R(g,hx-2,hy-2,7,5,s[2]); R(g,hx-2,hy-2,2,5,s[3]); // шея
+  R(g,hx-5,top+1,12,12,s[1]); R(g,hx-4,top,10,1,s[1]); R(g,hx-4,top+13,10,1,s[1]); R(g,hx-2,top+14,8,1,s[2]);
+  R(g,hx-5,top+2,2,10,s[2]); R(g,hx+3,top+1,3,2,s[0]); R(g,hx+6,top+3,1,5,s[0]);
+  R(g,hx-2,top+6,2,4,s[2]); R(g,hx-1,top+7,1,2,s[3]); // ухо
+  R(g,hx-3,top+12,9,1,s[2]); // челюсть
+  const shut=pose==='hit'||pose==='tired'||pose==='koBody'||pose==='fall', hurt=pose==='hurt';
+  if(shut){ R(g,hx+2,top+7,4,1,'#141018'); }
+  else if(hurt){ R(g,hx+2,top+7,4,1,'#fff'); R(g,hx+4,top+7,2,1,'#141018'); R(g,hx+2,top+6,4,1,'#6a2a5a'); } // подбитый глаз
+  else { R(g,hx+2,top+6,4,2,'#fff'); R(g,hx+4,top+6,2,2,'#141018'); R(g,hx+4,top+6,1,1,'#3a3a5a'); }
+  R(g,hx+1,top+4,5,1,h[2]); if(pose!=='win') R(g,hx+4,top+5,2,1,h[2]); // бровь (сердитая)
+  R(g,hx+7,top+7,1,3,s[1]); R(g,hx+7,top+9,1,1,s[2]); R(g,hx+5,top+9,2,1,s[2]); // нос
+  R(g,hx+3,top+11,4,1,pose==='hit'||hurt?'#a01828':pose==='win'?'#fff':s[3]); // рот
+  if(pose==='hit'||hurt) R(g,hx+6,top+12,1,2,'#c01830'); // кровь из губы
+  if(hurt){ R(g,hx+5,top+8,2,1,'#c01830'); R(g,hx-2,top+3,3,1,'#8a3a5a'); } // кровь из носа, ссадина
+  // причёски
+  if(hs!=='bald'){
+    R(g,hx-5,top-1,12,4,h[1]); R(g,hx-6,top+1,3,8,h[1]); R(g,hx-4,top-2,9,1,h[1]); R(g,hx-2,top-1,6,1,h[0]); R(g,hx-6,top+5,1,4,h[2]);
+    R(g,hx+5,top+2,1,2,h[1]); R(g,hx-1,top+3,2,3,h[1]); // бакенбард
+  } else { R(g,hx-1,top,5,1,s[0]); R(g,hx+1,top+1,2,1,s[0]); }
+  if(hs==='spiky') for(let i=0;i<5;i++){ R(g,hx-5+i*3,top-4,2,3,h[1]); R(g,hx-5+i*3,top-5,1,1,h[1]); }
+  if(hs==='long'){ R(g,hx-8,top,4,18,h[1]); R(g,hx-8,top,1,18,h[2]); R(g,hx-6,top+1,1,14,h[0]); }
+  if(hs==='mohawk'){ R(g,hx-6,top-1,12,3,s[1]); R(g,hx-1,top-6,4,7,h[1]); R(g,hx,top-6,1,6,h[0]); }
+  if(pal.cap){ R(g,hx-6,top-3,13,5,pal.cap); R(g,hx-5,top-3,11,1,shade(pal.cap,.3)); R(g,hx+5,top+1,6,2,pal.cap); R(g,hx+5,top+2,6,1,shade(pal.cap,-.4)); }
+  if(pal.band){ R(g,hx-5,top+2,12,2,pal.band); R(g,hx-10,top+3,5,1,pal.band); R(g,hx-9,top+4,2,3,pal.band); }
+  if(pal.shades){ R(g,hx+1,top+5,7,3,'#0a0a12'); R(g,hx+2,top+5,2,1,'#6a6aff'); }
+  if(pal.mask){ R(g,hx-3,top+8,11,7,pal.mask); R(g,hx-3,top+8,11,1,shade(pal.mask,.25)); }
+  if(pal.beard){ R(g,hx-1,top+9,9,6,h[1]); R(g,hx,top+14,6,2,h[2]); R(g,hx+3,top+11,4,1,s[3]); R(g,hx+2,top+9,5,1,h[0]); }
+  if(pal.stache){ R(g,hx+1,top+10,7,1,h[1]); R(g,hx+1,top+11,1,3,h[1]); R(g,hx+7,top+11,1,3,h[1]); }
+}
+function drawBody(g,pal,pose,t){
+  const p=POSE[pose]||POSE.idle;
+  const cyc=(pose==='idle'||pose==='hurt')?IDLE_CYCLE[Math.floor(t/(pose==='hurt'?190:150))%4]:[0,0];
+  const bob=(pose==='block'||pose==='tired')?(Math.sin(t/(pose==='tired'?120:220))>0?1:0):cyc[0];
+  const J=sc(p.jy||0), bx=sc(p.bx), by=sc(p.by)+bob+J, Wd=Math.round((pal.wide||0)*K);
+  const fb=p.fb||[-7,0], ff=p.ff||[6,0];
+  const FB=[sc(fb[0]),sc(fb[1])+J], FF=[sc(ff[0])+(cyc[0]?1:0),sc(ff[1])+J];
+  const BGp=[sc(p.bg[0]),sc(p.bg[1])+J+cyc[1]], FGp=[sc(p.fg[0]),sc(p.fg[1])+J+cyc[1]];
+  const shorts=!pal.top&&!pal.long, cx=bx+1;
+  arm(g,[bx-6,by-48],BGp,pal,true,false);
+  leg(g,[bx-4,by-29],FB,pal,true,shorts);
+  leg(g,[bx+4,by-29],FF,pal,false,shorts);
+  // таз / трусы
+  const rp=pal.rp, hw=8+Wd/2;
+  R(g,cx-hw,by-33,hw*2,8,rp[1]); R(g,cx-hw,by-33,2,8,rp[2]); R(g,cx+hw-2,by-32,1,6,rp[0]);
+  if(shorts){ R(g,cx-hw,by-26,4,3,rp[1]); R(g,cx+hw-5,by-26,5,3,rp[1]); R(g,cx-1,by-30,2,4,rp[2]); }
+  torso(g,pal,cx,by-51,by-32,Wd);
+  R(g,cx-hw,by-33,hw*2,2,pal.belt||rp[3]);
+  if(pal.champ){ R(g,cx-6,by-35,13,7,'#c99a10'); R(g,cx-5,by-34,11,5,'#ffd23f'); R(g,cx-4,by-34,4,1,'#fff6c0'); R(g,cx-1,by-33,3,3,'#d01818'); R(g,cx,by-33,1,1,'#ff9090'); }
+  head(g,pal,bx+sc(p.tilt||0)+1,by-55,pose);
+  arm(g,[bx+6,by-48],FGp,pal,false,!!p.big);
+}
+// буферы спрайта и обводки
+const SW=170, SH=118, SOX=85, SOY=112;
+const SPR=document.createElement('canvas'); SPR.width=SW; SPR.height=SH; const sg=SPR.getContext('2d');
+const OUT=document.createElement('canvas'); OUT.width=SW; OUT.height=SH; const og=OUT.getContext('2d');
+const RIM=document.createElement('canvas'); RIM.width=SW; RIM.height=SH; const rimg=RIM.getContext('2d');
+// rim — цвет контурного отсвета (неон/прожектор) по верхне-заднему краю фигуры
+function buildSprite(pal,pose,t,flash,rim){
+  prepPal(pal);
+  sg.setTransform(1,0,0,1,0,0); sg.clearRect(0,0,SW,SH);
+  // в нокауте спрайт повёрнут на 90°: ноги к сопернику, голова назад
+  if(pose==='ko') sg.setTransform(0,-1,1,0,SOX+8,SOY-11); else sg.setTransform(1,0,0,1,SOX,SOY);
+  drawBody(sg,pal,pose==='ko'?'koBody':pose,t);
+  sg.setTransform(1,0,0,1,0,0);
+  og.globalCompositeOperation='source-over'; og.clearRect(0,0,SW,SH);
+  og.drawImage(SPR,1,0); og.drawImage(SPR,-1,0); og.drawImage(SPR,0,1); og.drawImage(SPR,0,-1);
+  og.globalCompositeOperation='source-in'; og.fillStyle='#0a0812'; og.fillRect(0,0,SW,SH);
+  og.globalCompositeOperation='source-over'; og.drawImage(SPR,0,0);
+  if(rim){
+    rimg.globalCompositeOperation='source-over'; rimg.clearRect(0,0,SW,SH); rimg.drawImage(SPR,0,0);
+    rimg.globalCompositeOperation='source-in'; rimg.fillStyle=rim; rimg.fillRect(0,0,SW,SH);
+    rimg.globalCompositeOperation='destination-out'; rimg.drawImage(SPR,2,1); // остаётся только край, обращённый к свету
+    og.globalAlpha=.75; og.drawImage(RIM,0,0); og.globalAlpha=1;
+  }
+  if(flash>0){ og.globalCompositeOperation='source-atop'; og.fillStyle='rgba(255,255,255,'+Math.min(1,flash)+')'; og.fillRect(0,0,SW,SH); og.globalCompositeOperation='source-over'; }
+  return OUT;
+}
+function renderFighter(ctx,pal,pose,x,y,face,t,flash,rim,xs){
+  const o=buildSprite(pal,pose,t,flash,rim), s=(pal.scale||1)*(xs||1); // тяжеловесы крупнее (scale), xs — доп. масштаб для экрана VS
+  ctx.save(); ctx.imageSmoothingEnabled=false; ctx.translate(Math.round(x),Math.round(y)); ctx.scale(face<0?-s:s,s); ctx.drawImage(o,-SOX,-SOY); ctx.restore();
+}
+// портрет-лицо для HUD (как в аркадных файтингах); hurt — побитая версия
+function drawFace(cv,pal,face,flash,hurt){
+  const g=cv.getContext('2d'); g.imageSmoothingEnabled=false;
+  const o=buildSprite(pal,hurt?'hurt':'idle',0,flash);
+  ditherGrad(g,0,0,cv.width,cv.height,hurt?['#3a0a14','#2a0a12','#1a0610']:['#24183e','#1a1230','#120c22']);
+  g.save(); if(face<0){ g.translate(cv.width,0); g.scale(-1,1); }
+  g.drawImage(o,SOX-14,SOY-82,30,30,0,0,30,30); g.restore();
+}
+function shadowAt(ctx,x,y,w){
+  ctx.fillStyle='rgba(0,0,0,.55)';
+  for(let yy=0;yy<5;yy++){ const hw=Math.round(w/2*Math.sqrt(1-Math.pow((yy-2)/2.6,2)));
+    for(let xx=-hw;xx<hw;xx++) if(yy===2||((xx+yy)&1)===0) ctx.fillRect(Math.round(x)+xx,y-3+yy,1,1); }
+}
+// чёткий пиксельный текст: рисуем шрифтом и обрезаем полупрозрачность
+const TXC=document.createElement('canvas'); TXC.width=320; TXC.height=40; const txg=TXC.getContext('2d',{willReadFrequently:true});
+function pixelText(g,text,x,y,color,size,align){
+  size=size||10; txg.clearRect(0,0,320,40);
+  txg.font='bold '+size+'px Verdana,Arial,sans-serif'; txg.textBaseline='top'; txg.fillStyle='#fff'; txg.fillText(text,1,1);
+  const w=Math.min(318,Math.ceil(txg.measureText(text).width)+2), hgt=size+5, d=txg.getImageData(0,0,w,hgt).data;
+  const ox=align==='center'?Math.round(x-w/2):Math.round(x);
+  g.fillStyle=color;
+  for(let yy=0;yy<hgt;yy++) for(let xx=0;xx<w;xx++) if(d[(yy*w+xx)*4+3]>110) g.fillRect(ox+xx,Math.round(y)+yy,1,1);
+  return w;
+}
+function makeSign(text,color,size){
+  size=size||10; txg.font='bold '+size+'px Verdana,Arial,sans-serif';
+  const tw=Math.ceil(txg.measureText(text).width)+4, w=tw+10, h=size+12, mk=()=>{ const c=document.createElement('canvas'); c.width=w; c.height=h; return c; };
+  const on=mk(), off=mk(), glow=document.createElement('canvas'); glow.width=w+6; glow.height=h+6;
+  for(const [c,col] of [[on,color],[off,shade(color,-.6)]]){ const g=c.getContext('2d');
+    R(g,0,0,w,h,'#0c0a14'); g.strokeStyle=col; g.lineWidth=1; g.strokeRect(1.5,1.5,w-3,h-3);
+    pixelText(g,text,w/2,6,shade(col,-.3),size,'center'); pixelText(g,text,w/2,5,col===color?shade(color,.5):col,size,'center'); } // трубка: светлая сердцевина + тень
+  const gg=glow.getContext('2d'); gg.globalAlpha=.16; for(let dx=-3;dx<=3;dx+=1.5) for(let dy=-3;dy<=3;dy+=1.5) gg.drawImage(on,3+dx,3+dy);
+  return {on,off,glow,w,h};
+}
+function mulberry(a){ return function(){ a|=0; a=a+0x6D2B79F5|0; let t=Math.imul(a^a>>>15,1|a); t=t+Math.imul(t^t>>>7,61|t)^t; return ((t^t>>>14)>>>0)/4294967296; }; }
+// вертикальный градиент полосами с дизерингом между ними (как на Mega Drive)
+function ditherGrad(g,x,y0,w,y1,cols){
+  const n=cols.length, bh=(y1-y0)/n;
+  for(let i=0;i<n;i++){ const ya=Math.round(y0+i*bh), yb=Math.round(y0+(i+1)*bh); R(g,x,ya,w,yb-ya,cols[i]);
+    if(i>0){ g.fillStyle=cols[i-1]; for(let xx=x;xx<x+w;xx++){ if(xx%2===0) g.fillRect(xx,ya,1,1); if(xx%4===1) g.fillRect(xx,ya+1,1,1); } } }
+}
+function ditherRect(g,x,y,w,h,c,step){ g.fillStyle=c; step=step||2; for(let yy=0;yy<h;yy++) for(let xx=(yy%2);xx<w;xx+=step) g.fillRect(x+xx,y+yy,1,1); }
+const skyCols=s=>[s[0],mix(s[0],s[1],.5),s[1],mix(s[1],s[2],.5),s[2],shade(s[2],.12)];
+function skyline(g,r,base,minH,maxH,col,win,lit){
+  let x=-6; while(x<g.canvas.width+6){ const w=14+(r()*26|0), h=minH+(r()*(maxH-minH)|0);
+    R(g,x,base-h,w,h+60,col); R(g,x,base-h,w,1,shade(col,.25)); R(g,x,base-h,1,h,shade(col,.12));
+    if(r()<.3){ R(g,x+(w/2|0),base-h-8,1,8,col); R(g,x+(w/2|0),base-h-9,1,1,'#ff3b4f'); }
+    if(r()<.2){ R(g,x+3,base-h-6,8,6,col); R(g,x+4,base-h-3,6,1,shade(col,.2)); }
+    if(win) for(let wy=base-h+4;wy<base;wy+=5) for(let wx=x+2;wx<x+w-2;wx+=4) if(r()<lit){ const c=r()<.75?'#ffd86b':(r()<.5?'#9fe0ff':'#ff9ad8'); R(g,wx,wy,2,2,c); R(g,wx,wy+1,2,1,shade(c,-.35)); }
+    x+=w+(r()<.3?3:0); }
+}
+/* ---------- ПСЕВДО-3D: точка схода, объёмные коробки, пол с построчным параллаксом ----------
+   Приёмы: одноточечная перспектива для стен и предметов; пол как в Street Fighter II — каждая строка
+   сдвигается при движении камеры со своей скоростью (дальняя медленнее, ближняя быстрее). */
+const VPX=160, VPY=60;   // точка схода
+const PN=12, FP=48;      // запас ближнего слоя и пола по краям — под сдвиг камеры
+const BG=[];
+const PAR=6;             // запас дальнего слоя
+function layer(w,h){ const c=document.createElement('canvas'); c.width=w; c.height=h; return c; }
+// заливка многоугольника построчно: края пиксельные, без сглаживания
+function poly(g,pts,c){
+  let y0=Infinity,y1=-Infinity; for(const p of pts){ y0=Math.min(y0,p[1]); y1=Math.max(y1,p[1]); }
+  g.fillStyle=c;
+  for(let y=Math.floor(y0);y<Math.ceil(y1);y++){ const yc=y+.5, xs=[];
+    for(let i=0;i<pts.length;i++){ const a=pts[i], b=pts[(i+1)%pts.length];
+      if((a[1]<=yc&&b[1]>yc)||(b[1]<=yc&&a[1]>yc)) xs.push(a[0]+(yc-a[1])/(b[1]-a[1])*(b[0]-a[0])); }
+    xs.sort((p,q)=>p-q);
+    for(let i=0;i+1<xs.length;i+=2){ const xa=Math.round(xs[i]), xb=Math.round(xs[i+1]); if(xb>xa) g.fillRect(xa,y,xb-xa,1); } }
+}
+function line1(g,x1,y1,x2,y2,c){ g.fillStyle=c; const n=Math.max(Math.abs(x2-x1),Math.abs(y2-y1),1); for(let i=0;i<=n;i++) g.fillRect(Math.round(x1+(x2-x1)*i/n),Math.round(y1+(y2-y1)*i/n),1,1); }
+const toVP=(x,y,d)=>[x+(VPX-x)*d,y+(VPY-y)*d]; // точка, «утопленная» вглубь на долю d
+// коробка с видимыми боковой и верхней гранями; front=null — переднюю грань рисует вызывающий
+function box3d(g,x,y,w,h,d,front,side,top){
+  const a=[x,y],b=[x+w,y],c=[x+w,y+h],e=[x,y+h];
+  if(x+w<VPX) poly(g,[b,toVP(...b,d),toVP(...c,d),c],side);
+  if(x>VPX) poly(g,[a,toVP(...a,d),toVP(...e,d),e],side);
+  if(top&&y>VPY) poly(g,[a,b,toVP(...b,d),toVP(...a,d)],top);
+  if(front) R(g,x,y,w,h,front);
+}
+// швы кирпичной кладки на боковой грани уходят к точке схода
+function sideBricks(g,x,y,h,d,col){ for(let yy=y+5;yy<y+h;yy+=5){ const p=toVP(x,yy,d); line1(g,x,yy,p[0],p[1],col); } }
+function bricks(g,x0,y0,w,h,base){
+  R(g,x0,y0,w,h,base); const mort=shade(base,-.45), hi=shade(base,.18);
+  for(let y=y0;y<y0+h;y+=5){ const off=((y-y0)/5)%2?5:0; R(g,x0,y,w,1,mort);
+    for(let bx=x0-10+off;bx<x0+w;bx+=10){ if(bx>=x0) R(g,bx,y,1,5,mort); R(g,Math.max(x0,bx+1),y+1,Math.min(8,x0+w-bx-1),1,hi); } }
+}
+// бочка-цилиндр: тело с объёмной тенью и эллипс крышки
+function barrel(g,x,y,w,h,col){
+  for(let i=0;i<w;i++){ const k=i/(w-1), c=k<.2?shade(col,-.4):k<.55?col:k<.75?shade(col,.25):shade(col,-.2); R(g,x+i,y,1,h,c); }
+  R(g,x,y+5,w,2,shade(col,-.5)); R(g,x,y+h-7,w,2,shade(col,-.5));
+  for(let i=0;i<w;i++){ const dy=Math.round(Math.sqrt(1-Math.pow((i-(w-1)/2)/(w/2),2))*3); R(g,x+i,y-dy,1,dy*2+1,shade(col,-.55)); }
+  for(let i=1;i<w-1;i++){ const dy=Math.round(Math.sqrt(1-Math.pow((i-(w-1)/2)/(w/2),2))*3); R(g,x+i,y-dy,1,1,shade(col,.2)); }
+}
+// доля сдвига камеры для строки пола: дальняя кромка — медленнее, ближняя — быстрее
+const rowK=(y,top)=>.45+.55*clamp((y-top)/(H-top),0,1);
+// продольные швы пола: сходятся к точке схода
+function floorRays(g,top,bottom,step,col){
+  for(let i=-16;i<=16;i++){ const fx=VPX+i*step; for(let y=top;y<bottom;y++){ const x=VPX+(fx-VPX)*(y-VPY)/(H-VPY); g.fillStyle=col; g.fillRect(Math.round(x),y,1,1); } }
+}
+function makeStreetFloor(A,r,roof){
+  const f=layer(W+FP*2,H), g=f.getContext('2d'), top=146, X0=-FP, WW=W+FP*2; g.translate(FP,0);
+  if(!roof){
+    ditherGrad(g,X0,top,WW,H,['#3a3548','#332e40','#2b2738','#24202f']);
+    for(let i=0;i<700;i++) R(g,X0+r()*WW,top+r()*(H-top),1,1,r()<.5?'#15121e':'#453f55');
+    for(const yy of [149,153,158,164,171,179]) R(g,X0,yy,WW,1,'#1a1724');   // поперечные швы — ближе к зрителю реже
+    floorRays(g,top,H,30,'#1a1724');                                       // продольные — к точке схода
+    R(g,X0,top,WW,2,'#5a5468'); R(g,X0,top,WW,1,'#7a7488');
+    if(A.rain) for(let i=0;i<7;i++){ const py=152+r()*24, s=.6+(py-150)/50, pw=(18+r()*26)*s, px=X0+r()*(WW-pw);
+      poly(g,[[px+3,py],[px+pw-3,py],[px+pw,py+2*s],[px,py+2*s]],'#15121e'); ditherRect(g,px+3,py+1,pw-6,1,A.neon,2); } // лужи с отражением неона
+  } else {
+    ditherGrad(g,X0,top,WW,H,['#2e3344','#282c3c','#222636','#1c2030']);
+    floorRays(g,top,H,40,'#181c28'); for(const yy of [151,158,167,178]) R(g,X0,yy,WW,1,'#181c28');
+    for(let a=0;a<360;a+=.5){ const x=160+Math.cos(a*Math.PI/180)*80, y=166+Math.sin(a*Math.PI/180)*11; R(g,x,y,1,1,'#c9a020'); } // площадка «H» в перспективе
+    pixelText(g,'H',160,158,'#c9a020',12,'center');
+  }
+  return {c:f,top};
+}
+// ринг: ковёр-трапеция (дальняя кромка уже), края и стойки сходятся к точке схода
+const RING={top:122,front:170,BL:80,BR:240,FL:18,FR:302,HB:33,HF:58,RF:[.32,.6,.88]};
+function makeRingFloor(){
+  const f=layer(W+FP*2,H), g=f.getContext('2d'), Q=RING; g.translate(FP,0);
+  R(g,-FP,Q.top,W+FP*2,H-Q.top,'#0c0a12');
+  const L=y=>Q.BL+(Q.FL-Q.BL)*(y-Q.top)/(Q.front-Q.top), Rr=y=>Q.BR+(Q.FR-Q.BR)*(y-Q.top)/(Q.front-Q.top);
+  const cols=['#6e7390','#80869f','#9399b4','#a6acc6','#babfd8','#c8cee6'];
+  for(let y=Q.top;y<Q.front;y++){ const k=(y-Q.top)/(Q.front-Q.top), ci=Math.min(5,Math.floor(k*6)); R(g,L(y),y,Rr(y)-L(y),1,cols[ci]);
+    if(ci>0&&y%2===0) ditherRect(g,Math.round(L(y)),y,Math.round(Rr(y)-L(y)),1,cols[ci-1],4); }
+  for(let i=-3;i<=3;i++){ const fx=160+i*44; for(let y=Q.top;y<Q.front;y++){ const x=VPX+(fx-VPX)*(y-VPY)/(Q.front-VPY); R(g,x,y,1,1,'rgba(80,86,110,.35)'); } }
+  g.globalAlpha=.28; for(let y=-8;y<=8;y++) for(let x=-56;x<=56;x++) if(x*x/3136+y*y/64<=1&&(x+y)%2===0) R(g,160+x,150+y,1,1,'#8f1d7c'); g.globalAlpha=1; // логотип на ковре
+  line1(g,Q.BL,Q.top,Q.FL,Q.front,'#e8e8f4'); line1(g,Q.BR,Q.top,Q.FR,Q.front,'#e8e8f4'); R(g,Q.BL,Q.top,Q.BR-Q.BL,1,'#e8e8f4');
+  R(g,-FP,Q.front,W+FP*2,H-Q.front,'#1a2a6a'); R(g,-FP,Q.front,W+FP*2,1,'#5a7ada'); R(g,-FP,Q.front+1,W+FP*2,1,'#0e1a4a'); // фартук ринга
+  pixelText(g,'ПОДПОЛЬНАЯ ЛИГА',160,Q.front,'#ffd23f',8,'center');
+  return {c:f,top:Q.top};
+}
+// стойки и канаты ринга рисуются каждый кадр: задние и передние сдвигаются камерой с разной скоростью
+function ringPost(ctx,x,y,h,w,pad){
+  R(ctx,x-w/2,y-h,w,h,'#b8b8c8'); R(ctx,x-w/2,y-h,1,h,'#e8e8f4'); R(ctx,x+w/2-1,y-h,1,h,'#6a6a7a');
+  for(const f of RING.RF){ const py=Math.round(y-h*f), ph=Math.max(3,Math.round(h*.12)); R(ctx,x-w/2-1,py-ph/2,w+2,ph,pad); R(ctx,x-w/2,py-ph/2,w,1,shade(pad,.45)); }
+}
+function drawRingBack(ctx,cam){
+  const Q=RING, ob=Math.round(cam*rowK(Q.top,Q.top)), of=Math.round(cam*rowK(Q.front,Q.top)), rc=['#1838d0','#f2f2f2','#d01818'];
+  Q.RF.forEach((f,k)=>{ const yb=Math.round(Q.top-Q.HB*f), yf=Math.round(Q.front-Q.HF*f);
+    R(ctx,Q.BL+ob,yb,Q.BR-Q.BL,1,rc[k]);                          // задний канат
+    line1(ctx,Q.BL+ob,yb,Q.FL+of,yf,rc[k]); line1(ctx,Q.BR+ob,yb,Q.FR+of,yf,rc[k]); }); // боковые канаты уходят вглубь
+  ringPost(ctx,Q.BL+ob,Q.top,Q.HB,3,'#d01818'); ringPost(ctx,Q.BR+ob,Q.top,Q.HB,3,'#1838d0');
+}
+function drawRingFront(ctx,cam){
+  const Q=RING, of=Math.round(cam*rowK(Q.front,Q.top)), rc=['#1838d0','#f2f2f2'];
+  ctx.globalAlpha=.85; [Q.RF[0],Q.RF[1]].forEach((f,k)=>{ const y=Math.round(Q.front-Q.HF*f); R(ctx,Q.FL+of,y,Q.FR-Q.FL,2,rc[k]); R(ctx,Q.FL+of,y,Q.FR-Q.FL,1,shade(rc[k],.45)); }); ctx.globalAlpha=1;
+  ringPost(ctx,Q.FL+of,Q.front,Q.HF,6,'#d01818'); ringPost(ctx,Q.FR+of,Q.front,Q.HF,6,'#1838d0');
+}
+function makeBG(ai){
+  const A=ARENAS[ai], far=layer(W+PAR*2,H), c=layer(W+PN*2,H); // дальний слой, ближний слой (стены, предметы)
+  let g=far.getContext('2d'); const r=mulberry(ai*977+13), t=A.type; let sign=null;
+  if(t===4) return makeRing(A,r);
+  ditherGrad(g,0,0,W+PAR*2,150,skyCols(A.sky));
+  for(let i=0;i<70;i++){ g.globalAlpha=.3+r()*.7; R(g,r()*(W+PAR*2),r()*70,1,1,'#fff'); } g.globalAlpha=1;
+  if(t!==2){ for(let y=-11;y<=11;y++) for(let x=-11;x<=11;x++) if(x*x+y*y<=121) R(g,268+x,26+y,1,1,(x+y>7)?'#c9bf9a':(x+y<-9?'#fffbe8':'#f4eccc'));
+    R(g,262,22,3,3,'#d8cfa8'); R(g,271,30,4,3,'#d8cfa8'); R(g,268,18,2,2,'#d8cfa8'); ditherRect(g,254,12,30,30,'rgba(255,250,220,.25)',3); }
+  else { for(let i=0;i<8;i++) ditherRect(g,i*44,20+i%3*6,40,14,'rgba(255,140,60,.18)',2); }
+  skyline(g,r,t===3?150:120,24,70,shade(A.sky[0],-.35),true,.12);
+  skyline(g,r,t===3?150:134,16,52,shade(A.sky[1],-.45),true,.2);
+  ditherRect(g,0,96,W+PAR*2,40,'rgba(120,110,160,.10)',2); // дымка у горизонта — воздушная перспектива
+  g=c.getContext('2d'); g.translate(PN,0);
+  if(t===0){ // подворотня: стены уходят вглубь, как коридор
+    box3d(g,0,24,86,126,.3,null,'#2a1210','#3a1d1d'); sideBricks(g,86,24,126,.3,'#1a0a0a');
+    box3d(g,234,24,86,126,.3,null,'#2a1218','#3a1d24'); sideBricks(g,234,24,126,.3,'#1a0a10');
+    bricks(g,-PN,24,86+PN,126,'#5a2a26'); bricks(g,234,24,86+PN,126,'#4a2a30');
+    R(g,85,24,1,126,'#7a3a34'); R(g,234,24,1,126,'#6a3a44'); // освещённые рёбра углов
+    R(g,22,94,30,56,'#18121e'); R(g,24,96,26,54,'#2c2236'); R(g,24,96,26,2,'#3c3248'); R(g,44,122,3,3,'#c8a040'); // дверь
+    box3d(g,18,86,38,6,.06,'#3a3a44','#24242c','#4a4a56'); R(g,26,80,22,6,'#ffe9a0'); ditherRect(g,14,92,46,20,'rgba(255,233,160,.35)',2);
+    for(let y=40;y<120;y+=20){ R(g,234,y,40,2,'#18161e'); for(let i=0;i<20;i+=2) R(g,236+i*2,y-i,2,1,'#18161e'); R(g,272,y-20,2,20,'#18161e'); }
+    box3d(g,250,124,52,26,.12,'#1f5a32','#123a20','#2f7a46'); R(g,252,126,48,2,'#3f8a56'); R(g,258,130,3,14,'#163f24'); R(g,290,130,3,14,'#163f24'); // мусорный бак-коробка
+    box3d(g,236,138,14,12,.08,'#151318','#0c0a10','#24202a'); box3d(g,302,140,14,10,.08,'#151318','#0c0a10','#24202a');
+    pixelText(g,'STREET',8,60,'#ff4fd8',11); pixelText(g,'KINGS',12,73,'#38e8ff',11);
+    sign=makeSign('БАР',A.neon,12); sign.x=124; sign.y=50;
+  } else if(t===1){ // гаражи: общий ряд с крышей, видимой сверху
+    box3d(g,-PN-4,92,W+PN*2+8,58,.25,null,'#24202c','#3a3444');
+    for(let i=0;i<6;i++){ const gx=i*56-12, col=['#5a4632','#46505a','#64392c','#424e36'][i%4];
+      R(g,gx,96,54,54,col); R(g,gx-1,92,56,5,'#1a1622'); R(g,gx-1,92,56,1,'#4a4454');
+      if(i===2){ R(g,gx+4,100,46,50,'#120e16'); ditherRect(g,gx+4,100,46,50,'rgba(255,200,90,.25)',2); R(g,gx+20,100,14,3,'#ffe9a0');
+        box3d(g,gx+10,124,34,18,.08,'#3a3a4a','#24242e','#4a4a5a'); R(g,gx+14,118,24,7,'#3a3a4a'); R(g,gx+12,140,8,8,'#111'); R(g,gx+34,140,8,8,'#111'); } // машина внутри
+      else { for(let y=100;y<150;y+=3){ R(g,gx+4,y,46,2,col); R(g,gx+4,y+2,46,1,shade(col,-.4)); }
+        R(g,gx+4,99,46,1,shade(col,.3)); ditherRect(g,gx+4+(r()*20|0),112+(r()*20|0),14,10,'#8a4a20',3); R(g,gx+24,128,8,3,'#c8b060'); } }
+    for(const tx of [8,294]) for(let k=0;k<3;k++) barrel(g,tx,141-k*7,20,6,'#2a2630'); // стопки шин
+    sign=makeSign('ШИНЫ 24',A.neon,10); sign.x=118; sign.y=62;
+  } else if(t===2){ // пустырь у завода
+    box3d(g,150,84,150,46,.12,'#24161a','#160c10','#2e1c22');
+    box3d(g,170,30,18,100,.08,'#2a1a1a','#1a0e0e','#3a2424'); box3d(g,206,46,14,84,.08,'#2a1a1a','#1a0e0e','#3a2424');
+    for(let x=154;x<296;x+=12) for(let y=90;y<126;y+=10) R(g,x,y,6,5,r()<.3?'#ffb060':'#160c10');
+    for(let y=104;y<150;y++) for(let x=-PN;x<W+PN;x++) if(((x+y)%7===0)||((x-y+700)%7===0)) R(g,x,y,1,1,'#4a4454');
+    R(g,-PN,102,W+PN*2,2,'#6a6474'); for(let px=0;px<W;px+=40){ R(g,px,102,3,48,'#5a5464'); R(g,px,102,1,48,'#8a8494'); }
+    for(const bx of [12,284]) barrel(g,bx,128,22,22,'#7a4418');
+    sign=makeSign('ЗАВОД №7',A.neon,10); sign.x=24; sign.y=44;
+  } else { // крыша
+    box3d(g,-PN,126,W+PN*2,20,.06,'#22283a','#1a1e2c','#2c3246');
+    for(let px=-PN;px<W+PN;px+=14){ R(g,px,108,2,20,'#6a7290'); } R(g,-PN,108,W+PN*2,2,'#8a92b0'); R(g,-PN,116,W+PN*2,1,'#5a6280');
+    R(g,22,56,5,52,'#3a2a20'); R(g,52,56,5,52,'#3a2a20'); R(g,30,80,20,2,'#3a2a20');
+    barrel(g,14,26,52,32,'#6a4a2e'); R(g,10,20,60,4,'#4a3220'); R(g,36,12,8,8,'#4a3220'); // водонапорная бочка
+    box3d(g,250,96,48,30,.14,'#6a7080','#4a5060','#8a90a0'); for(let y=102;y<124;y+=3) R(g,256,y,36,1,'#4a5060'); // кондиционер
+    sign=makeSign('ОТЕЛЬ',A.neon,12); sign.x=130; sign.y=34;
+  }
+  if(t<=1){ // фонарь
+    R(g,296,40,4,110,'#18161e'); R(g,297,40,1,110,'#2c2836'); R(g,280,38,20,4,'#18161e'); R(g,276,42,12,4,'#ffe9a0');
+    g.globalAlpha=.08; g.fillStyle='#ffe9a0'; g.beginPath(); g.moveTo(276,46); g.lineTo(288,46); g.lineTo(316,150); g.lineTo(236,150); g.closePath(); g.fill(); g.globalAlpha=1;
+  }
+  g.setTransform(1,0,0,1,0,0); // края ближнего слоя продлеваем, чтобы при сдвиге камеры не было щелей
+  g.drawImage(c,PN,0,1,H,0,0,PN,H); g.drawImage(c,PN+W-1,0,1,H,PN+W,0,PN,H);
+  const fl=makeStreetFloor(A,r,t===3);
+  return {far,c,sign,floor:fl.c,floorTop:fl.top};
+}
+function makeRing(A,r){ // арена в духе WrestleMania, в перспективе
+  const far=layer(W+PAR*2,H), c=layer(W+PN*2,H); let g=far.getContext('2d');
+  ditherGrad(g,0,0,W+PAR*2,120,['#05030a','#0a0614','#120a20','#1a0e2a']);
+  R(g,0,6,W+PAR*2,3,'#2a2a34'); for(let x=8;x<W+PAR*2;x+=24){ R(g,x,9,6,5,'#1a1a22'); R(g,x+1,13,4,2,'#ffe9a0'); }
+  R(g,46,16,240,16,'#8a0e1e'); R(g,46,16,240,1,'#d02a3a'); R(g,46,31,240,1,'#4a0610');
+  pixelText(g,'УЛИЧНЫЙ ЧЕМПИОН',166,18,'#ffd23f',11,'center');
+  const crowd=[]; // трибуны: дальние ряды мельче и темнее
+  for(let row=0;row<11;row++){ const y=38+row*7, dim=-.68+row*.04;
+    for(let x=(row%2)*3;x<W+PAR*2;x+=6){ if(r()<.08) continue;
+      const sk=['#e8b48a','#c88a60','#8a5a3a','#f0c8a0'][r()*4|0], sh=['#d01818','#1838d0','#ffd23f','#3ee07a','#f2f2f2','#8f1d7c','#ff8a2b'][r()*7|0];
+      crowd.push({x:x-PAR,y,row,sh:shade(sh,dim),sk:shade(sk,dim),fan:r()<.18}); } }
+  g=c.getContext('2d'); g.translate(PN,0);
+  box3d(g,-PN,112,W+PN*2,10,.04,'#0c0a12','#08060c','#2a2632'); R(g,-PN,112,W+PN*2,1,'#3a3444'); for(let x=-PN;x<W+PN;x+=16) R(g,x,113,1,9,'#2a2632'); // ограждение
+  g.setTransform(1,0,0,1,0,0);
+  const fl=makeRingFloor();
+  return {far,c,sign:null,ring:true,crowd,floor:fl.c,floorTop:fl.top};
+}
+let RAIN=[]; for(let i=0;i<90;i++) RAIN.push({x:Math.random()*380,y:Math.random()*H,s:1.6+Math.random()*1.4});
+const CROWD=[]; { const r=mulberry(7);
+  for(let i=0;i<22;i++){ const left=i<11, k=left?i:i-11, row=k%2;
+    CROWD.push({x:left?2+k*8+r()*3:W-12-k*8-r()*3,row,h:22+(r()*7|0),ph:r()*6,
+      skin:['#e8b48a','#c88a60','#8a5a3a','#f0c8a0'][r()*4|0],hair:['#1a1410','#5a3a20','#c8a040','#2a2a2a'][r()*4|0],
+      shirt:['#a01a2a','#1a3a8a','#2a6a3a','#6a6a6a','#8a5a1a','#5a1a6a','#d0d0d0'][r()*7|0]}); }
+  CROWD.sort((a,b)=>a.row-b.row); }
+function person(ctx,c,x,y,arms,dim){
+  const sk=shade(c.skin,dim), sh=shade(c.shirt,dim), hr=shade(c.hair,dim), sd=shade(c.shirt,dim-.25);
+  if(arms){ R(ctx,x-2,y-5,2,11,sh); R(ctx,x+8,y-5,2,11,sh); R(ctx,x-2,y-7,2,2,sk); R(ctx,x+8,y-7,2,2,sk); }
+  R(ctx,x-1,y+7,10,4,sh); R(ctx,x,y+11,8,c.h-4,sh); R(ctx,x-1,y+7,2,c.h,sd); R(ctx,x+7,y+8,1,c.h-2,shade(c.shirt,dim+.15)); // плечи и торс
+  R(ctx,x+1,y,6,7,sk); R(ctx,x+1,y+5,6,2,shade(c.skin,dim-.2)); R(ctx,x+1,y,6,2,hr); R(ctx,x,y+1,1,3,hr);
+}
+const VIG=document.createElement('canvas'); VIG.width=W; VIG.height=H; { const g=VIG.getContext('2d');
+  for(let i=0;i<6;i++){ ditherRect(g,0,i,W,1,'rgba(0,0,0,.5)',2+i); ditherRect(g,i,0,1,H,'rgba(0,0,0,.5)',2+i); ditherRect(g,W-1-i,0,1,H,'rgba(0,0,0,.5)',2+i); } }
+// вспышка удара: 8 лучей, которые разлетаются от центра; блок — голубая дуга
+function drawSpark(ctx,s){
+  const k=Math.min(1,s.t/s.life), L=Math.round((s.big?16:10)*(.45+k*.7));
+  if(s.type==='block'){
+    for(let i=-L;i<=L;i++){ const xx=Math.round(i*i/(L*1.3)); R(ctx,s.x-s.dir*xx,s.y+i,2,1,i%3?'#9fe0ff':'#fff'); }
+    R(ctx,s.x-1,s.y-1,3,3,'#fff'); return;
+  }
+  const cols=s.big?['#fff','#ffd23f','#ff3b4f']:['#fff','#fff3a0','#ff8a2b'];
+  for(let a=0;a<8;a++){ const dx=[1,1,0,-1,-1,-1,0,1][a], dy=[0,1,1,1,0,-1,-1,-1][a], len=a%2?Math.round(L*.6):L;
+    for(let i=Math.round(len*k*.6);i<len;i++){ const sz=i<len*.5?2:1; R(ctx,s.x+dx*i,s.y+dy*i,sz,sz,cols[i<len*.4?0:i<len*.75?1:2]); } }
+  if(k<.5){ R(ctx,s.x-3,s.y-3,7,7,cols[1]); R(ctx,s.x-2,s.y-2,5,5,cols[0]); }
+}
+// «смаз» удара: полупрозрачный след перчатки от замаха к цели
+function drawSmear(ctx,f){
+  const p=POSE[f.pose], w=POSE[f.smearFrom]||POSE.windup; if(!p) return;
+  const s=f.pal.scale||1, a=f.smear/90;
+  for(let i=1;i<=4;i++){ const k=i/5, gx=sc(w.fg[0]+(p.fg[0]-w.fg[0])*k), gy=sc(w.fg[1]+(p.fg[1]-w.fg[1])*k);
+    ctx.globalAlpha=a*(.12+k*.25); R(ctx,f.x+f.face*gx*s-4,GROUND+gy*s-3,9,7,i>2?'#fff':f.pal.glove); }
+  ctx.globalAlpha=1;
+}
+function drawScene(ctx,ai,list,t,o){
+  o=o||{}; const A=ARENAS[ai];
+  if(!BG[ai]) BG[ai]=makeBG(ai);
+  const B=BG[ai], sx=o.shake?rnd(-o.shake,o.shake):0, sy=o.shake?Math.round(rnd(-o.shake,o.shake)*.6):0;
+  const cam=Math.sin(t/2600)*4+sx, ch=o.cheer||0, rim=B.ring?'#fff3c0':A.neon; // камера плавно покачивается — видно глубину
+  const kNear=.5, kF=rowK(GROUND,B.floorTop);
+  ctx.save();
+  R(ctx,0,0,W,H,'#05030a');
+  ctx.translate(0,sy);
+  ctx.drawImage(B.far,Math.round(-PAR+cam*.2),0);                    // дальний слой — медленнее всех
+  if(B.ring){ const ox=Math.round(cam*.32);                           // трибуны: волна и прыжки на сильных ударах
+    for(const p of B.crowd){ const wave=Math.sin(t/170-p.x*.05+p.row*.6)>.6?1:0, jump=p.fan&&ch>.25?Math.round(Math.max(0,Math.sin(t/80+p.x))*3):0, y=p.y-wave-jump;
+      R(ctx,p.x+ox,y+3,5,4,p.sh); R(ctx,p.x+ox+1,y,3,3,p.sk);
+      if(jump){ R(ctx,p.x+ox-1,y-3,1,4,p.sk); R(ctx,p.x+ox+5,y-3,1,4,p.sk); } } }
+  for(let y=B.floorTop;y<H;y++){ const dx=Math.round(cam*rowK(y,B.floorTop)); ctx.drawImage(B.floor,FP-dx,y,W,1,0,y,W,1); } // пол: каждая строка со своим сдвигом
+  ctx.drawImage(B.c,Math.round(-PN+cam*kNear),0);
+  const on=Math.round(cam*kNear);
+  ctx.translate(on,0);
+  if(B.sign){ const s=B.sign, lit=(Math.sin(t/90)+Math.sin(t/37)>-1.6);
+    if(lit) ctx.drawImage(s.glow,s.x-3,s.y-3); ctx.drawImage(lit?s.on:s.off,s.x,s.y); }
+  if(A.type===2){ // огонь в бочках и дым труб
+    for(const bx of [23,295]){ for(let i=0;i<7;i++){ const h=4+Math.random()*12; R(ctx,bx-7+i*2,126-h,2,h,i%2?'#ff8a2b':'#ffd23f'); R(ctx,bx-6+i*2,126-h*.5,1,h*.5,'#fff3a0'); }
+      ditherRect(ctx,bx-16,104,32,22,'rgba(255,138,43,.35)',2); }
+    for(let i=0;i<5;i++){ const k=((t/40+i*30)%150)/150; ditherRect(ctx,174+k*30,26-k*30,8+k*14,6+k*8,'rgba(120,110,120,'+(.5*(1-k))+')',2); }
+  }
+  ctx.translate(-on,0);
+  if(B.ring){
+    for(const lx of [80,240]){ const ang=Math.sin(t/1400+lx)*30; ctx.globalAlpha=.07; ctx.fillStyle='#fff6d0';
+      ctx.beginPath(); ctx.moveTo(lx,8); ctx.lineTo(lx+ang-30,170); ctx.lineTo(lx+ang+30,170); ctx.closePath(); ctx.fill(); ctx.globalAlpha=1; }
+    for(let i=0;i<(2+ch*6);i++) if(Math.random()<.35){ const x=Math.random()*W, y=38+Math.random()*70; R(ctx,x,y,2,2,'#fff'); R(ctx,x-1,y+.5,4,1,'#fff'); }
+    drawRingBack(ctx,cam);
+  } else {
+    const oc=Math.round(cam*.6);
+    for(const c of CROWD){ const jump=Math.round(Math.max(0,Math.sin(t/110+c.ph))*(1+ch*3)), y=GROUND-14-c.h-(c.row?6:0)-jump;
+      person(ctx,c,c.x+oc,y,ch>.3&&Math.sin(t/80+c.ph)>0,c.row?-.55:-.4); }
+  }
+  // бойцы стоят на одной глубине пола и сдвигаются вместе с ней
+  const of=Math.round(cam*kF);
+  ctx.translate(of,0);
+  const vis=f=>{ if(f.pose==='ko'&&f.koT!=null&&f.koT<220) return 'fall';
+    if(f.pose==='idle'&&f.maxHp&&f.hp/f.maxHp<.3) return 'hurt'; return f.pose; };
+  const bounce=f=>f.pose==='ko'&&f.koT>=220&&f.koT<420?Math.round(5*Math.sin((f.koT-220)/200*Math.PI)):0;
+  for(const f of list) shadowAt(ctx,f.x-(f.pose==='ko'?f.face*28:0),GROUND+1,(f.pose==='ko'?64:34)*(f.pal.scale||1));
+  for(const f of list) renderFighter(ctx,f.pal,vis(f),f.x,GROUND-bounce(f),f.face,t,f.flash||0,rim);
+  for(const f of list) if(f.smear>0) drawSmear(ctx,f);
+  if(o.parts) for(const p of o.parts){ ctx.globalAlpha=Math.min(1,p.life/150); R(ctx,p.x,p.y,p.s,p.s,p.c); } ctx.globalAlpha=1;
+  if(o.fx) for(const s of o.fx) drawSpark(ctx,s);
+  for(const f of list) if(f.pose==='ko'&&!(f.koT<220)){ for(let i=0;i<4;i++){ const a=t/250+i*1.6; R(ctx,f.x-f.face*54+Math.cos(a)*9,GROUND-24+Math.sin(a)*3,2,2,i%2?'#ffd23f':'#fff'); } }
+  ctx.translate(-of,0);
+  if(B.ring) drawRingFront(ctx,cam);
+  if(A.rain){ ctx.fillStyle='rgba(170,190,255,.5)'; for(const d of RAIN){ d.y+=d.s*2; d.x-=d.s*.6; if(d.y>H){ d.y=-4; d.x=Math.random()*380; } ctx.fillRect(Math.round(d.x),Math.round(d.y),1,d.s>2.4?5:3); } } // ближние капли длиннее
+  ctx.restore();
+  ctx.drawImage(VIG,0,0);
+  if(o.flashAll){ ctx.globalAlpha=o.flashAll; R(ctx,0,0,W,H,'#fff'); ctx.globalAlpha=1; }
+}
+
+/* ---------- БОЙ ---------- */
+let F=null, fightSpeed=1;
+const INTRO_T=2900, VS_END=1100; // вступление: экран VS, затем «ГОТОВ?» / «БОЙ!»
+const ATK_POSES=new Set(['jab','hook','uppercut','heavy','super']);
+const windPose=id=>id==='heavy'||id==='super'?'windupH':id==='uppercut'?'windupU':'windup';
+// надпись пиксельным шрифтом с чёрной обводкой в отдельный canvas (имена в HUD, баннеры)
+// Собственный пиксельный шрифт 5×7 (кириллица, цифры, знаки) — чёткий в любом размере, без сглаживания
+const FONT5={
+'А':['.###.','#...#','#...#','#####','#...#','#...#','#...#'],'Б':['#####','#....','#....','####.','#...#','#...#','####.'],
+'В':['####.','#...#','#...#','####.','#...#','#...#','####.'],'Г':['#####','#....','#....','#....','#....','#....','#....'],
+'Д':['.###.','.#.#.','.#.#.','.#.#.','.#.#.','#####','#...#'],'Е':['#####','#....','#....','####.','#....','#....','#####'],
+'Ж':['#.#.#','#.#.#','.###.','..#..','.###.','#.#.#','#.#.#'],'З':['.###.','#...#','....#','..##.','....#','#...#','.###.'],
+'И':['#...#','#...#','#..##','#.#.#','##..#','#...#','#...#'],'Й':['.#.#.','#...#','#..##','#.#.#','##..#','#...#','#...#'],
+'К':['#...#','#..#.','#.#..','##...','#.#..','#..#.','#...#'],'Л':['..###','.#..#','.#..#','.#..#','.#..#','.#..#','#...#'],
+'М':['#...#','##.##','#.#.#','#.#.#','#...#','#...#','#...#'],'Н':['#...#','#...#','#...#','#####','#...#','#...#','#...#'],
+'О':['.###.','#...#','#...#','#...#','#...#','#...#','.###.'],'П':['#####','#...#','#...#','#...#','#...#','#...#','#...#'],
+'Р':['####.','#...#','#...#','####.','#....','#....','#....'],'С':['.###.','#...#','#....','#....','#....','#...#','.###.'],
+'Т':['#####','..#..','..#..','..#..','..#..','..#..','..#..'],'У':['#...#','#...#','#...#','.####','....#','#...#','.###.'],
+'Ф':['..#..','.###.','#.#.#','#.#.#','#.#.#','.###.','..#..'],'Х':['#...#','#...#','.#.#.','..#..','.#.#.','#...#','#...#'],
+'Ц':['#..#.','#..#.','#..#.','#..#.','#..#.','#####','....#'],'Ч':['#...#','#...#','#...#','.####','....#','....#','....#'],
+'Ш':['#.#.#','#.#.#','#.#.#','#.#.#','#.#.#','#.#.#','#####'],'Щ':['#.#.#','#.#.#','#.#.#','#.#.#','#.#.#','#####','....#'],
+'Ъ':['##...','.#...','.#...','.###.','.#..#','.#..#','.###.'],'Ы':['#...#','#...#','#...#','##..#','#.#.#','#.#.#','##..#'],
+'Ь':['#....','#....','#....','####.','#...#','#...#','####.'],'Э':['.###.','#...#','....#','..###','....#','#...#','.###.'],
+'Ю':['#..#.','#.#.#','#.#.#','###.#','#.#.#','#.#.#','#..#.'],'Я':['.####','#...#','#...#','.####','..#.#','.#..#','#...#'],
+'0':['.###.','#...#','#..##','#.#.#','##..#','#...#','.###.'],'1':['..#..','.##..','..#..','..#..','..#..','..#..','.###.'],
+'2':['.###.','#...#','....#','..##.','.#...','#....','#####'],'4':['...#.','..##.','.#.#.','#..#.','#####','...#.','...#.'],
+'5':['#####','#....','####.','....#','....#','#...#','.###.'],'6':['..##.','.#...','#....','####.','#...#','#...#','.###.'],
+'7':['#####','....#','...#.','..#..','.#...','.#...','.#...'],'8':['.###.','#...#','#...#','.###.','#...#','#...#','.###.'],
+'9':['.###.','#...#','#...#','.####','....#','...#.','.##..'],'?':['.###.','#...#','....#','...#.','..#..','.....','..#..'],
+'/':['....#','...#.','...#.','..#..','.#...','.#...','#....'],'V':['#...#','#...#','#...#','#...#','.#.#.','.#.#.','..#..'],
+'S':['.####','#....','#....','.###.','....#','....#','####.'],
+'!':['#','#','#','#','#','.','#'],'.':['.','.','.','.','.','.','#'],'·':['.','.','.','#','.','.','.'],
+'(':['.#','#.','#.','#.','#.','#.','.#'],')':['#.','.#','.#','.#','.#','.#','#.'],'-':['...','...','...','###','...','...','...'],
+' ':['...','...','...','...','...','...','...']};
+FONT5['Ё']=FONT5['Е']; FONT5['3']=FONT5['З'];
+for(const [lat,cyr] of [['A','А'],['B','В'],['C','С'],['E','Е'],['H','Н'],['K','К'],['M','М'],['O','О'],['P','Р'],['T','Т'],['X','Х'],['Y','У']]) FONT5[lat]=FONT5[cyr];
+const glyph=ch=>FONT5[ch]||FONT5[' '];
+function bitmapWidth(text,s){ let w=0; for(const ch of text) w+=(glyph(ch)[0].length+1)*s; return Math.max(0,w-s); }
+// рисует текст шрифтом 5×7 с масштабом s (целое); нижние строки букв чуть темнее — «аркадный» перелив
+function bitmapText(g,text,x,y,color,s,bottom){
+  let cx=x;
+  for(const ch of text){ const gl=glyph(ch);
+    for(let r=0;r<7;r++) for(let c=0;c<gl[r].length;c++) if(gl[r][c]==='#'){ g.fillStyle=bottom&&r>=4?bottom:color; g.fillRect(cx+c*s,y+r*s,s,s); }
+    cx+=(gl[0].length+1)*s; }
+}
+// надпись одним цветом с ровной чёрной обводкой в 1 px (имена в HUD, баннеры); size>=14 — шрифт в 2 раза крупнее
+// shadow — цветная тень только для баннеров («НОКАУТ!», «VS»)
+function pixelLabel(cv,text,color,size,shadow){
+  const s=size>=14?2:1, w=bitmapWidth(text,s)+4+s, h=7*s+4+s; cv.width=w; cv.height=h;
+  const g=cv.getContext('2d'); g.clearRect(0,0,w,h);
+  if(shadow) bitmapText(g,text,2+s,2+s,shadow,s);
+  for(const [dx,dy] of [[-1,0],[1,0],[0,-1],[0,1],[-1,-1],[1,1],[1,-1],[-1,1]]) bitmapText(g,text,2+dx,2+dy,'#000',s);
+  bitmapText(g,text,2,2,color,s);
+}
+// имя в HUD: масштаб только 2×, 1.5× или 1× — без размазывания дробным увеличением
+function setName(id,text){
+  const cv=document.getElementById(id); pixelLabel(cv,text.toUpperCase(),'#fff',9);
+  const avail=Math.max(60,(Math.min(innerWidth,520)-16-70)/2-4), // строка имени — на всю ширину своей половины HUD
+    k=cv.width*2<=avail?2:cv.width*1.5<=avail?1.5:1;
+  cv.style.width=Math.round(cv.width*k)+'px'; cv.style.height=Math.round(cv.height*k)+'px';
+}
+// имя на экране VS шрифтом 5×7: крупно (2×), если помещается в половину экрана
+// длинное имя переносится на две строки, чтобы остаться крупным; возвращает нижнюю границу текста
+function vsName(ctx,text,cx,y){
+  const room=Math.min(cx,W-cx)*2-8;
+  let lines=[text]; if(bitmapWidth(text,2)>room&&text.includes(' ')){ const i=text.indexOf(' '); lines=[text.slice(0,i),text.slice(i+1)]; }
+  const s=lines.every(l=>bitmapWidth(l,2)<=room)?2:1;
+  lines.forEach((l,n)=>{ const w=bitmapWidth(l,s), x=Math.round(cx-w/2), yy=y+n*(7*s+3);
+    for(const [dx,dy] of [[-1,0],[1,0],[0,-1],[0,1],[-1,-1],[1,1],[1,-1],[-1,1]]) bitmapText(ctx,l,x+dx,yy+dy,'#000',s);
+    bitmapText(ctx,l,x,yy,'#ffd23f',s); });
+  return y+lines.length*(7*s+3);
+}
+// экран «VS» перед боем, как в аркадах
+const VSC=document.createElement('canvas'); pixelLabel(VSC,'VS','#ffd23f',16,'#d01818');
+function drawVS(ctx,F,t){
+  const el=INTRO_T-F.introT;
+  R(ctx,0,0,W,H,'#0a0410');
+  ctx.fillStyle='#7a0e1e'; ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(176,0); ctx.lineTo(144,H); ctx.lineTo(0,H); ctx.fill();
+  ctx.fillStyle='#10286a'; ctx.beginPath(); ctx.moveTo(176,0); ctx.lineTo(W,0); ctx.lineTo(W,H); ctx.lineTo(144,H); ctx.fill();
+  for(let y=0;y<H;y+=3) ditherRect(ctx,0,y,W,1,'rgba(0,0,0,.35)',2);
+  ctx.fillStyle='#ffd23f'; ctx.beginPath(); ctx.moveTo(174,0); ctx.lineTo(178,0); ctx.lineTo(146,H); ctx.lineTo(142,H); ctx.fill();
+  const slide=Math.max(0,1-el/350), px=Math.round(76-slide*140), ox=Math.round(244+slide*140);
+  const opp=OPP[F.idx], mem=opp.duo?opp.members:[opp];
+  if(mem[1]) renderFighter(ctx,mem[1].pal,'idle',ox+34,172,-1,t,0,null,1.4);
+  renderFighter(ctx,F.p.pal,'idle',px,172,1,t,0,'#ff5a6a',1.6);
+  renderFighter(ctx,mem[0].pal,'idle',ox,172,-1,t,0,'#5a8aff',1.6);
+  vsName(ctx,S.name.toUpperCase(),px,6); const nameBottom=vsName(ctx,(opp.duo?opp.name:mem[0].name).toUpperCase(),ox,6);
+  for(const [dx,dy] of [[-1,0],[1,0],[0,-1],[0,1]]) pixelText(ctx,'«'+opp.title+'»',ox+dx,nameBottom+2+dy,'#000',8,'center');
+  pixelText(ctx,'«'+opp.title+'»',ox,nameBottom+2,'#c8d4ff',8,'center');
+  pixelText(ctx,ARENAS[F.arena].n.toUpperCase(),W/2,H-14,'#fff',8,'center');
+  const k=Math.min(1,Math.max(0,(el-250)/180)); if(k>0){ const s=Math.round(3+3*(1-k)); ctx.imageSmoothingEnabled=false;
+    ctx.drawImage(VSC,Math.round(W/2-VSC.width*s/2),Math.round(H/2-VSC.height*s/2)-6,VSC.width*s,VSC.height*s); }
+  if(el<120){ ctx.globalAlpha=1-el/120; R(ctx,0,0,W,H,'#fff'); ctx.globalAlpha=1; }
+}
+function makeFighter(name,st,moves,pal,face,x,isPlayer,dm){
+  const maxHp=maxHpOf(st), maxSta=maxStaOf(st);
+  return {name,st:{...st},moves:moves.slice(),pal,face,x0:x,x,push:0,hp:maxHp,maxHp,ghost:maxHp,sta:maxSta,maxSta,
+    timer:500+Math.random()*500,stance:null,stanceT:0,pose:'idle',poseT:0,pending:null,flash:0,cur:null,adr:0,isPlayer:!!isPlayer,hits:0,dealt:0,dm:dm||1,enter:0};
+}
+function newFight(idx,sim,pst,pload){
+  const o=OPP[idx], m0=oppMember(o,0);
+  const p=makeFighter('Ты',pst||S.st,pload||S.load,PLAYER_PAL,1,PX,true);
+  const e=makeFighter(m0.name,m0.st,m0.moves,m0.pal,-1,OX,false,o.dmg);
+  return {idx,arena:arenaOf(idx),p,o:e,queue:o.duo?o.members.slice(1):[],team:o.duo?o.members.length:1,round:1,deadMax:0,swapT:0,
+    time:o.duo?FIGHT_TIME_DUO:FIGHT_TIME,state:sim?'fight':'intro',introT:INTRO_T,endT:0,hitstop:0,fx:[],speed:sim?1:fightSpeed,
+    log:[],shake:0,parts:[],cheer:0,winner:null,sim:!!sim,lastTap:0,flashAll:0,banner:''};
+}
+function addLog(m){ if(F.sim) return; F.log.unshift(m); F.log.length=Math.min(F.log.length,4); $('#flog').innerHTML=F.log.map(x=>'<div>'+x+'</div>').join(''); }
+function floatTxt(f,text,color,big){
+  if(F.sim) return;
+  const d=document.createElement('div'); d.className='ft'+(big?' big':''); d.textContent=text; d.style.color=color;
+  d.style.left=((f.x+rnd(-6,6))/W*100)+'%'; d.style.top=((GROUND-95+rnd(-6,6))/H*100)+'%';
+  $('#fx').appendChild(d); setTimeout(()=>d.remove(),950);
+}
+function sparks(x,y,n,colors){ if(F.sim) return; for(let i=0;i<n;i++) F.parts.push({x,y,vx:rnd(-1.6,1.6),vy:rnd(-2,.4),life:rnd(200,450),s:Math.random()<.3?2:1,c:colors[i%colors.length]}); }
+function chooseMove(f,o){
+  const opts=f.moves.filter(id=>MOVES[id]&&MOVES[id].sta<=f.sta);
+  const atk=opts.filter(id=>MOVES[id].type==='atk');
+  if(!atk.length && (opts.length===0 || Math.random()<.6)) return null; // нет сил — отдышаться
+  const hpR=f.hp/f.maxHp, staR=f.sta/f.maxSta; let tot=0; const w=[];
+  for(const id of opts){
+    const m=MOVES[id]; let k;
+    if(m.type==='atk'){
+      k=1+m.dmg/10;
+      if(o.stance==='block') k*=.4+m.pierce*2;
+      if(o.hp/o.maxHp<.25) k*=1+m.dmg/12;
+      if(staR<.35) k/=1+m.sta/6;
+    } else {
+      k=.55;
+      if(o.pending) k+=.9;
+      if(hpR<.35) k*=1.4;
+      if(f.stance) k*=.3;
+      if(id==='dodge') k*=.6+f.st.agi*.06;
+    }
+    w.push(k); tot+=k;
+  }
+  let r=Math.random()*tot;
+  for(let i=0;i<opts.length;i++){ r-=w[i]; if(r<=0) return opts[i]; }
+  return opts[opts.length-1];
+}
+function act(f,o){
+  const id=chooseMove(f,o);
+  if(!id){ f.pose='tired'; f.poseT=700; f.sta=Math.min(f.maxSta,f.sta+12+f.st.end); f.timer=900; f.cur=null; f.stance=null; f.stanceT=0;
+    if(f.isPlayer||Math.random()<.5) addLog(f.name+(f.isPlayer?' переводишь дух…':' переводит дух…')); return; }
+  const m=MOVES[id]; f.cur=id; f.sta-=m.sta;
+  const base=intervalOf(f.st)*m.spd;
+  if(m.type==='def'){ f.stance=id; f.stanceT=m.dur; f.pose=id; f.poseT=0; f.timer=base; }
+  else { f.stance=null; f.stanceT=0; f.pending={m:id,t:200}; f.pose=windPose(id); f.poseT=0; f.timer=base+200; }
+}
+function startSuper(f){
+  f.adr=0; f.stance=null; f.stanceT=0; f.pending={m:'super',t:260}; f.pose=windPose('super'); f.poseT=0; f.cur='super';
+  f.timer=intervalOf(f.st)+260; F.flashAll=.5; sfx('super');
+  floatTxt(f,'СУПЕР!','#ffd23f',true); addLog('<b style="color:#ffd23f">'+f.name+': СУПЕРУДАР!</b>');
+}
+function resolveAttack(a,d,id){
+  const isSup=id==='super', m=isSup?SUPER:MOVES[id];
+  a.smearFrom=a.pose; a.pose=isSup?'super':id; a.poseT=isSup?450:280; a.smear=90; // смаз руки на первых кадрах удара
+  const hx=d.x-d.face*3, hy=GROUND-(id==='uppercut'?69:60);
+  if(d.stance==='dodge'&&!isSup){
+    if(Math.random()<clamp(dodgeOf(d.st)-a.st.spd*.008,.2,.85)){
+      d.stance=null; d.stanceT=0; d.pose='dodge'; d.poseT=320; if(!d.pending) d.timer=Math.min(d.timer,220);
+      floatTxt(d,'УКЛОН','#38e8ff'); sfx('whiff'); addLog(d.name+' уходит от удара!'); return;
+    }
+  }
+  const acc=isSup?1:clamp(m.acc+(a.st.spd-d.st.spd)*.012+a.st.agi*.004,.35,.97);
+  if(Math.random()>acc){ floatTxt(d,'МИМО','#9a8cc0'); sfx('whiff'); return; }
+  let dmg=m.dmg*(1+a.st.str*.13)*a.dm*rnd(.88,1.12);
+  const crit=!isSup&&Math.random()<critOf(a.st); if(crit) dmg*=1.6;
+  let blocked=false;
+  if(d.stance==='block'&&!isSup){ dmg*=m.pierce; blocked=true; d.sta=Math.max(0,d.sta-m.dmg*.6); }
+  dmg=Math.max(1,Math.round(dmg/(1+d.st.end*.025)));
+  dmg=devDamage(a,d,dmg);
+  d.hp=Math.max(0,d.hp-dmg); a.hits++; a.dealt+=dmg;
+  d.flash=blocked?.35:.85; d.push=blocked?2:(crit||isSup||m.dmg>=11?8:4);
+  if(!blocked){ d.pose='hit'; d.poseT=230; if(!d.pending) d.timer+=160; }
+  F.shake=Math.max(F.shake,blocked?1:(crit||isSup?6:m.dmg>=11?4:2)); F.cheer=Math.min(1,F.cheer+(blocked?.1:.35));
+  a.adr=Math.min(100,a.adr+(blocked?3:7)); d.adr=Math.min(100,d.adr+(blocked?1:5));
+  sparks(hx,hy,blocked?5:crit||isSup?16:9,blocked?['#9fe0ff','#fff']:['#fff','#ffd23f','#ff8a2b']);
+  if(!F.sim){ F.fx.push({x:hx,y:hy,t:0,life:blocked?140:200,type:blocked?'block':'hit',big:crit||isSup||m.dmg>=11,dir:d.face});
+    F.hitstop=Math.max(F.hitstop,blocked?45:crit||isSup?140:m.dmg>=11?100:70); } // стоп-кадр: удар «чувствуется»
+  floatTxt(d,(blocked?'БЛОК -':crit?'КРИТ -':'-')+dmg,blocked?'#9fe0ff':crit||isSup?'#ffd23f':'#ff5a6a',crit||isSup);
+  sfx(blocked?'block':(crit||isSup)?'crit':'hit');
+  if(!blocked&&(crit||isSup||Math.random()<.35)) addLog(a.name+': '+m.n.toLowerCase()+(crit?' — критический!':'')+' ('+dmg+')');
+  if(d.hp<=0) ko(a,d);
+}
+function ko(w,l){
+  l.pose='ko'; l.poseT=0; l.pending=null; l.stance=null; w.pending=null; w.pose='win'; w.poseT=0;
+  if(!l.isPlayer&&F.queue.length){ // дуэт: на смену выходит напарник
+    w.stance=null; w.stanceT=0; F.state='swap'; F.swapT=1600; F.shake=6; F.cheer=1; if(!F.sim) F.hitstop=220;
+    sfx('ko'); showBanner('НОКАУТ!'); addLog('<b style="color:#ffd23f">'+l.name+' в нокауте! Выходит напарник…</b>'); return;
+  }
+  F.state='end'; F.endT=2300; F.winner=w.isPlayer?'p':'o'; F.shake=8; F.cheer=1; if(!F.sim) F.hitstop=260;
+  sfx('ko'); showBanner('НОКАУТ!'); addLog('<b style="color:#ffd23f">'+l.name+' в нокауте!</b>');
+}
+function updateFighter(f,o,dt){
+  f.sta=Math.min(f.maxSta,f.sta+dt/1000*(3+f.st.end*.35)*(f.stance==='block'?.6:1));
+  if(f.stanceT>0){ f.stanceT-=dt; if(f.stanceT<=0){ f.stance=null; f.stanceT=0; if(f.pose==='block'||f.pose==='dodge') f.pose='idle'; } }
+  if(f.poseT>0){ f.poseT-=dt; if(f.poseT<=0){ f.poseT=0; const wasAtk=ATK_POSES.has(f.pose);
+    f.pose=f.pending?windPose(f.pending.m):wasAtk?'recover':(f.stance||'idle'); if(wasAtk&&!f.pending) f.poseT=90; } }
+  if(f.pending){ f.pending.t-=dt; if(f.pending.t<=0){ const id=f.pending.m; f.pending=null; resolveAttack(f,o,id); } return; }
+  if((!f.isPlayer||F.sim)&&f.adr>=100){ startSuper(f); return; }
+  f.timer-=dt; if(f.timer<=0) act(f,o);
+}
+function nextMember(){
+  const m=F.queue.shift(); F.deadMax+=F.o.maxHp; F.round++;
+  F.o=makeFighter(m.name,m.st,m.moves,m.pal,-1,OX,false,F.o.dm); F.o.enter=150; F.o.timer=1200;
+  F.p.pose='idle'; F.p.poseT=0; F.p.timer=Math.max(F.p.timer,600); F.state='fight'; hudCache={};
+  addLog('На ринг выходит <b>'+m.name+'</b>!');
+  if(!F.sim){ setName('oName',m.name+' ('+F.round+'/'+F.team+')'); const txt=m.name.toUpperCase()+'!'; showBanner(txt); setTimeout(()=>{ if(F&&F.banner===txt) hideBanner(); },1300); }
+}
+// доля оставшегося здоровья всей команды соперника (для решения по очкам)
+function teamRatio(){ const q=F.queue.reduce((s,m)=>s+maxHpOf(m.st),0); return (F.o.hp+q)/(F.o.maxHp+q+F.deadMax); }
+function cosmetic(f,dt){
+  if(f.enter>0){ f.enter=Math.max(0,f.enter-dt*.2); f.pose=f.enter>0?(Math.floor(f.enter/10)%2?'run1':'run2'):'idle'; }
+  f.flash=Math.max(0,f.flash-dt/160); f.push+=(0-f.push)*Math.min(1,dt/140); f.x=f.x0-f.face*f.push*K+f.enter;
+  f.smear=Math.max(0,(f.smear||0)-dt);
+  if(f.pose==='ko'){ const prev=f.koT||0; f.koT=prev+dt; // падение: удар о пол и пыль
+    if(prev<220&&f.koT>=220&&F&&!F.sim){ F.shake=Math.max(F.shake,5); sfx('block'); for(let i=0;i<14;i++) F.parts.push({x:f.x-f.face*rnd(-10,50),y:GROUND-1,vx:rnd(-1.2,1.2),vy:rnd(-1.4,-.3),life:rnd(250,500),s:2,c:i%2?'#8a8494':'#5a5464'}); } }
+  else f.koT=0;
+  f.ghost+= (f.hp-f.ghost)*Math.min(1,dt/500);
+}
+function updateFight(dt){
+  if(!F) return;
+  for(const s of F.fx) s.t+=dt; F.fx=F.fx.filter(s=>s.t<s.life);
+  if(F.hitstop>0&&!F.sim){ F.hitstop-=dt; F.shake=Math.max(0,F.shake-dt/80); return; } // стоп-кадр: всё замирает
+  const p=F.p, o=F.o;
+  if(F.state==='intro'){
+    F.introT-=dt;
+    if(F.introT<=VS_END) showBanner(F.introT>550?'ГОТОВ?':'БОЙ!');
+    if(F.introT<=0){ F.state='fight'; hideBanner(); }
+  } else if(F.state==='fight'){
+    F.time-=dt;
+    if(!F.sim&&dev('fullAdr')) p.adr=100;
+    updateFighter(p,o,dt);
+    if(F.state==='fight') updateFighter(o,p,dt);
+    if(F.state==='fight'&&F.time<=0){
+      F.time=0; const pr=p.hp/p.maxHp, orr=teamRatio();
+      F.winner=pr>orr?'p':'o'; F.state='end'; F.endT=2300;
+      (F.winner==='p'?o:p).pose='tired'; (F.winner==='p'?p:o).pose='win'; p.pending=o.pending=null;
+      p.poseT=o.poseT=0; showBanner(F.winner==='p'?'ПО ОЧКАМ!':'ВРЕМЯ!'); sfx('bell');
+    }
+  } else if(F.state==='swap'){
+    F.swapT-=dt; if(F.swapT<=0) nextMember();
+  } else if(F.state==='end'){
+    F.endT-=dt; if(F.endT<=0){ F.state='done'; if(!F.sim) finishFight(); }
+  }
+  cosmetic(F.p,dt); cosmetic(F.o,dt);
+  if(!F) return;
+  F.shake=Math.max(0,F.shake-dt/50); F.cheer=Math.max(0,F.cheer-dt/1500); F.flashAll=Math.max(0,F.flashAll-dt/400);
+  for(const s of F.parts){ s.x+=s.vx*dt/16; s.y+=s.vy*dt/16; s.vy+=.12*dt/16; s.life-=dt; }
+  F.parts=F.parts.filter(s=>s.life>0);
+}
+let hudCache={};
+function setW(id,v){ v=Math.round(clamp(v,0,1)*1000)/10; if(hudCache[id]!==v){ hudCache[id]=v; document.getElementById(id).style.width=v+'%'; } }
+function renderHUD(){
+  const p=F.p,o=F.o;
+  setW('pHp',p.hp/p.maxHp); setW('oHp',o.hp/o.maxHp); setW('pGhost',p.ghost/p.maxHp); setW('oGhost',o.ghost/o.maxHp);
+  setW('pSt',p.sta/p.maxSta); setW('oSt',o.sta/o.maxSta); setW('pAdr',p.adr/100);
+  $('#pHpBar').classList.toggle('low',p.hp/p.maxHp<.3); $('#oHpBar').classList.toggle('low',o.hp/o.maxHp<.3);
+  const sec=Math.ceil(F.time/1000); if(hudCache.t!==sec){ hudCache.t=sec; $('#fTimer').textContent=sec; }
+  const full=p.adr>=100&&F.state==='fight';
+  if(hudCache.full!==full){ hudCache.full=full; $('#adrRow').classList.toggle('full',full); const b=$('#tapBtn'); b.classList.toggle('sup',full); b.textContent=full?'💥 СУПЕРУДАР! 💥':'⚡ ТАПАЙ! ⚡'; }
+  const pf=Math.round(p.flash*4), of=Math.round(o.flash*4); // лица перерисовываем только при изменении
+  const ph=p.hp/p.maxHp<.35, oh=o.hp/o.maxHp<.35; // побитые лица при низком здоровье
+  if(hudCache.pf!==pf||hudCache.po!==p.pal||hudCache.ph!==ph){ hudCache.pf=pf; hudCache.po=p.pal; hudCache.ph=ph; drawFace($('#pFace'),p.pal,1,pf/4,ph); }
+  if(hudCache.of!==of||hudCache.oo!==o.pal||hudCache.oh!==oh){ hudCache.of=of; hudCache.oo=o.pal; hudCache.oh=oh; drawFace($('#oFace'),o.pal,-1,of/4,oh); }
+  const cur=p.cur||''; if(hudCache.cur!==cur){ hudCache.cur=cur; document.querySelectorAll('.mchip').forEach(el=>el.classList.toggle('on',el.dataset.m===cur)); }
+}
+function showBanner(t){ if(F&&F.sim) return; const b=$('#banner'); if(F.banner!==t){ F.banner=t; pixelLabel(b,t,'#ffd23f',14,'#d01818'); b.classList.remove('on'); void b.offsetWidth; b.classList.add('on'); } }
+function hideBanner(){ $('#banner').classList.remove('on'); if(F) F.banner=''; }
+function startFight(idx){
+  if(idx>S.beaten||idx>=OPP.length) return toast('Сначала победи предыдущих соперников');
+  if(S.energy<FIGHT_COST) return toast('Мало энергии! Поешь или выспись (нужно '+FIGHT_COST+')');
+  spendEnergy(FIGHT_COST); save();
+  F=newFight(idx,false); hudCache={};
+  setName('pName',S.name); setName('oName',F.o.name+(F.team>1?' (1/'+F.team+')':''));
+  $('#fChips').innerHTML=S.load.map(m=>'<div class="mchip" data-m="'+m+'">'+MOVES[m].n+'</div>').concat(Array(3-S.load.length).fill('<div class="mchip">—</div>')).join('');
+  const od=OPP[idx];
+  $('#flog').innerHTML='<div>'+ARENAS[F.arena].n+'. '+(od.duo?'Дуэт: '+od.name+' ('+od.members.map(m=>m.name).join(' и ')+') — бьёшься с обоими по очереди!':'Соперник: '+od.name+' — «'+od.title+'»')+'</div>';
+  $('#fx').innerHTML=''; $('#speedBtn').textContent='Скорость x'+F.speed;
+  hideBanner(); showScreen('fight'); sfx('bell');
+}
+// утешительные деньги за поражение: с Бизона (4-й соперник) — 10% от того, что дала бы победа в этом бою
+const LOSS_PAY_FROM=3, LOSS_PAY_SHARE=.1;
+const winPay=i=>i<S.beaten?Math.round(OPP[i].money*.4):OPP[i].money;
+const lossPay=i=>i>=LOSS_PAY_FROM?Math.round(winPay(i)*LOSS_PAY_SHARE):0;
+function finishFight(){
+  const win=F.winner==='p', i=F.idx, o=OPP[i], first=win&&i===S.beaten&&!F.surrender;
+  let money=0,xp=0;
+  if(F.surrender){ S.losses++; }
+  else if(win){ money=Math.round(o.money*(first?1:.4)); xp=Math.round(o.xp*(first?1:.5)); S.wins++; if(first) S.beaten=i+1; }
+  else { xp=Math.round(o.xp*.25); money=lossPay(i); S.losses++; } // начиная с Бизона — утешительные 10% от награды за победу
+  S.money+=money; const ups=addXp(xp);
+  const champNow=first&&S.beaten>=OPP.length&&!S.champ; if(champNow) S.champ=true;
+  save();
+  const st=F.p; let html;
+  if(win){
+    html='<div class="title" style="color:var(--grn)">ПОБЕДА!</div><p style="text-align:center">'+(first?'Ты одолел <b>'+o.name+'</b>! Новый соперник открыт.':'Реванш выигран. Награда за повтор меньше.')+'</p>';
+  } else {
+    html='<div class="title" style="color:var(--red)">'+(F.surrender?'СДАЛСЯ':'ПОРАЖЕНИЕ')+'</div><p style="text-align:center">'+o.name+(o.duo?' оказались сильнее':' оказался сильнее')+'. Потренируйся и возвращайся!'+(money?' За стойкость — утешительные 10% призовых.':'')+'</p>';
+  }
+  html+='<div class="rew"><div class="money">+$'+money+'</div><div class="lv">+'+xp+' XP</div><div>Ударов: '+st.hits+'</div><div>Урон: '+st.dealt+'</div></div>';
+  if(ups) html+='<div class="note">НОВЫЙ УРОВЕНЬ '+S.lvl+'! +'+(ups*2)+' очка характеристик, +'+(ups*5)+' к макс. энергии</div>';
+  if(champNow) html+='<div class="note" style="color:var(--yel)">🏆 ТЫ — ЧЕМПИОН УЛИЦ! Пояс твой. Можно продолжать реванши и прокачку.</div>';
+  html+='<button class="btn grn" data-act="closefight">В карьеру</button>';
+  sfx(win?'coin':'lose'); if(ups) setTimeout(()=>sfx('lvl'),400);
+  openModal(html);
+}
+function playerTap(ev){
+  if(!F||F.state!=='fight') return;
+  const now=performance.now(); if(now-F.lastTap<35) return; F.lastTap=now; // ~28 тапов/с — хватает на два пальца
+  const p=F.p;
+  if(p.adr>=100&&!p.pending&&ev&&ev.currentTarget&&ev.currentTarget.id==='tapBtn'){ startSuper(p); return; }
+  if(!p.pending) p.timer=Math.max(0,p.timer-75);
+  p.adr=Math.min(100,p.adr+.6); sfx('tap');
+  let x=p.x+15,y=GROUND-60;
+  if(ev&&ev.currentTarget&&ev.currentTarget.id==='arena'){ const r=ev.currentTarget.getBoundingClientRect(); x=(ev.clientX-r.left)/r.width*W; y=(ev.clientY-r.top)/r.height*H; }
+  sparks(x,y,3,['#ffd23f','#fff']);
+}
+
+/* ---------- ТРЕНИРОВКА (кликер) ---------- */
+let TR=null;
+function openTrain(k){
+  if(S.st[k]>=MAX_STAT) return toast('Максимум достигнут!');
+  if(S.energy<TRAIN_COST) return toast('Мало энергии! Нужно '+TRAIN_COST);
+  const before=S.energy; spendEnergy(TRAIN_COST); save(); renderTop();
+  TR={k,spent:before-S.energy,state:'ready',time:TRAIN_TIME,taps:0,last:0,anim:0,bag:0,bagV:0,ball:0,pose:'idle',poseT:0};
+  $('#trTitle').textContent=STATS[k].ic+' '+STATS[k].tr;
+  $('#trMsg').innerHTML='Жми кнопку (или по картинке) как можно быстрее<br>в течение 6 секунд!';
+  $('#trTaps').textContent='Удары: 0'; $('#trTime').textContent=(TRAIN_TIME/1000).toFixed(1)+' c'; $('#trBar').style.width='100%';
+  $('#trTap').style.display=''; $('#trTap').textContent='ЖМИ!'; $('#trClose').textContent='Отмена (вернуть энергию)';
+  $('#train').classList.add('on');
+}
+function trainTap(){
+  if(!TR||TR.state==='done') return;
+  const now=performance.now(); if(now-TR.last<35) return; TR.last=now;
+  if(TR.state==='ready'){ TR.state='run'; $('#trClose').style.display='none'; }
+  TR.taps++; sfx('tap'); $('#trTaps').textContent='Удары: '+TR.taps;
+  TR.anim++; TR.poseT=150;
+  if(TR.k==='str'){ TR.pose='jab'; TR.bagV+=.06; }
+  else if(TR.k==='spd'){ TR.pose='jump'; }
+  else if(TR.k==='end'){ TR.pose=TR.anim%2?'run1':'run2'; TR.poseT=260; }
+  else { TR.pose='dodge'; TR.ball=1; }
+}
+function updateTrain(dt){
+  if(!TR) return;
+  TR.bagV-=TR.bag*.004*dt; TR.bagV*=Math.pow(.2,dt/1000); TR.bag+=TR.bagV*dt/16; TR.bag=clamp(TR.bag,-.5,.5);
+  if(TR.poseT>0){ TR.poseT-=dt; if(TR.poseT<=0) TR.pose=TR.k==='spd'?'stand':TR.k==='end'?'run1':'idle'; }
+  TR.ball=Math.max(0,TR.ball-dt/300);
+  if(TR.state==='run'){
+    TR.time-=dt; $('#trTime').textContent=Math.max(0,TR.time/1000).toFixed(1)+' c'; $('#trBar').style.width=Math.max(0,TR.time/TRAIN_TIME*100)+'%';
+    if(TR.time<=0) finishTrain();
+  }
+}
+function finishTrain(){
+  TR.state='done'; const k=TR.k, taps=Math.min(TR.taps,TAP_CAP);
+  const gain=Math.round((12+taps*1.2)*gymMult());
+  const before=S.st[k], ups=addProg(k,gain), lv=addXp(5);
+  save();
+  let msg='Прогресс «'+STATS[k].n+'»: <b style="color:var(--cyan)">+'+gain+'</b> · +5 XP';
+  if(ups) msg+='<br><b style="color:var(--grn)">'+STATS[k].n+' '+before+' → '+S.st[k]+'!</b>';
+  else msg+='<br>До следующего очка: '+(needProg(S.st[k])-S.prog[k]);
+  if(lv) msg+='<br><b style="color:var(--yel)">Новый уровень '+S.lvl+'! +'+lv*2+' очка</b>';
+  if(TR.taps>TAP_CAP) msg+='<br><span class="dim">(засчитано максимум '+TAP_CAP+' ударов)</span>';
+  $('#trMsg').innerHTML=msg; $('#trTap').style.display='none';
+  $('#trClose').style.display=''; $('#trClose').textContent='Готово';
+  sfx(ups||lv?'lvl':'coin');
+}
+function closeTrain(){
+  if(!TR) return;
+  if(TR.state==='run') return;
+  if(TR.state==='ready'){ S.energy=Math.min(S.maxEnergy,S.energy+TR.spent); save(); }
+  TR=null; $('#train').classList.remove('on'); renderHub();
+}
+const trCtx=document.getElementById('trCv').getContext('2d');
+const TW=240, TH=135, TG=126;
+let GYMBG=null;
+// зал в духе Punch Club — комната в одноточечной перспективе: задняя стена, боковые стены, пол и потолок сходятся к точке схода
+function makeGymBG(){
+  const c=document.createElement('canvas'); c.width=TW; c.height=TH; const g=c.getContext('2d');
+  const vx=120, vy=56, BL=52, BR=188, BT=10, BB=84;                       // точка схода и задняя стена
+  const at=(x,y,yy)=>x+(x-vx)*(yy-y)/(y-vy);                              // где луч «точка схода → (x,y)» пересекает строку yy
+  R(g,0,0,TW,TH,'#1a1426');                                               // потолок
+  for(let x=-200;x<TW+200;x+=26) line1(g,vx+(x-vx)*.18,vy+(0-vy)*.18,x,0,'#140f1e');
+  poly(g,[[BL,BT],[BL,BB],[at(BL,BB,TH),TH],[at(BL,BT,-80),-80]],'#2c2340');   // левая стена
+  poly(g,[[BR,BT],[at(BR,BT,-80),-80],[at(BR,BB,TH),TH],[BR,BB]],'#241c36');   // правая стена (в тени)
+  for(let yy=BT+8;yy<BB;yy+=8){ line1(g,BL,yy,0,yy+(yy-vy)*(BL)/(vx-BL),'#241c36'); line1(g,BR,yy,TW,yy+(yy-vy)*(TW-BR)/(BR-vx),'#1c1630'); } // швы панелей уходят вглубь
+  ditherGrad(g,BL,BT,BR-BL,BB,['#3a2e52','#40335a','#463862']);          // задняя стена
+  bricks(g,BL,62,BR-BL,BB-62,'#4a2c2c'); R(g,BL,60,BR-BL,2,'#7a5a40');
+  R(g,148,16,34,28,'#1a1424'); ditherGrad(g,150,18,30,42,['#0b1030','#1a1a48','#2e1f55']); // окно на ночной город
+  for(let i=0;i<9;i++) R(g,151+(i*13)%28,30+(i*7)%10,2,2,i%3?'#ffd86b':'#9fe0ff'); R(g,164,18,2,24,'#1a1424');
+  poly(g,[[8,16],[34,22],[34,58],[8,62]],'#a01828'); poly(g,[[8,16],[34,22],[34,25],[8,20]],'#d02a3a');   // плакат на левой стене — в ракурсе
+  poly(g,[[13,30],[29,33],[29,48],[13,50]],'#f0bc90'); poly(g,[[11,28],[18,29],[18,38],[11,38]],'#ff3b4f'); poly(g,[[24,31],[31,32],[31,40],[24,40]],'#ff3b4f');
+  poly(g,[[60,18],[84,18],[84,48],[60,48]],'#1838d0'); pixelText(g,'БОКС',72,20,'#ffd23f',9,'center'); R(g,68,32,8,12,'#ffd23f'); // плакат на задней стене
+  poly(g,[[206,26],[232,18],[232,74],[206,70]],'#9fc8e8'); poly(g,[[210,30],[214,29],[222,68],[218,68]],'#d8f0ff'); // зеркало на правой стене
+  box3d(g,150,72,34,12,.12,'#2a2a34','#1a1a22','#3a3a48');               // стойка с гантелями
+  for(let i=0;i<4;i++){ R(g,152+i*8,68,6,4,'#5a5a6a'); R(g,153+i*8,68,2,1,'#9a9aaa'); }
+  poly(g,[[BL,BB],[BR,BB],[at(BR,BB,TH),TH],[at(BL,BB,TH),TH]],'#5a3a22'); // пол
+  for(let i=-12;i<=12;i++){ const bx=vx+i*11; line1(g,bx,BB,vx+(bx-vx)*(TH-vy)/(BB-vy),TH,'#3a2414'); } // доски уходят вглубь
+  for(const yy of [88,93,99,107,117,130]){ const xl=at(BL,BB,yy), xr=at(BR,BB,yy); R(g,xl,yy,xr-xl,1,'#4a2e1a'); } // стыки — ближе реже
+  poly(g,[[BL,BB],[BR,BB],[BR+3,BB+2],[BL-3,BB+2]],'#7a5034');            // плинтус-свет у задней стены
+  R(g,vx,0,1,10,'#111'); R(g,vx-7,10,15,5,'#2a2a34'); R(g,vx-4,15,9,2,'#fff3c0'); ditherRect(g,vx-30,17,60,60,'rgba(255,240,190,.10)',2); // лампа
+  return c;
+}
+function drawTrain(t){
+  const g=trCtx; g.imageSmoothingEnabled=false;
+  if(!GYMBG) GYMBG=makeGymBG();
+  g.drawImage(GYMBG,0,0);
+  const pose=TR?TR.pose:'idle', k=TR?TR.k:'str', px=k==='str'?108:112;
+  if(k==='end'){ R(g,72,TG-8,82,10,'#1c1c24'); R(g,72,TG-8,82,2,'#3a3a48'); const off=Math.floor((TR.anim*5)%10);
+    for(let x=74-off;x<152;x+=10) if(x>=74) R(g,x,TG-5,3,5,'#4a4a58'); R(g,150,TG-58,5,52,'#2a2a34'); R(g,140,TG-62,22,7,'#3a3a48'); R(g,144,TG-60,10,3,'#3ee07a'); }
+  if(k==='str'){ g.save(); g.translate(152,0); g.rotate(-TR.bag);
+    R(g,0,0,1,36,'#9a9aa8'); R(g,-11,36,22,58,'#5a1010'); R(g,-11,36,20,56,'#8a1d1d'); R(g,-8,38,4,52,'#b83030'); R(g,-11,36,22,4,'#2a2a34'); R(g,-11,58,22,3,'#5a1010'); R(g,-11,88,22,4,'#2a2a34');
+    g.restore(); }
+  if(k==='agi'&&TR.ball>0){ const bx=236-(1-TR.ball)*110; R(g,bx,TG-70,7,7,'#c9940a'); R(g,bx,TG-70,6,6,'#ffd23f'); R(g,bx+1,TG-69,2,2,'#fff'); }
+  const fy=k==='end'?TG-8:TG;
+  shadowAt(g,px,fy+1,32);
+  renderFighter(g,PLAYER_PAL,pose,px,fy,1,t,0);
+  if(k==='spd'){ const up=pose==='jump', y0=fy-45-(up?9:0); g.strokeStyle='#e8e8e8'; g.lineWidth=1; g.beginPath(); g.moveTo(px-8,y0);
+    if(up) g.quadraticCurveTo(px+3,fy+10,px+14,y0); else g.quadraticCurveTo(px+3,fy-110,px+14,y0); g.stroke(); }
+}
+
+/* ---------- РЕКЛАМА ЗА НАГРАДУ ---------- */
+const AD_CONFIG={
+  freeSleeps:2,   // сколько раз «Выспаться» можно нажать бесплатно (за всю карьеру)
+  stubSeconds:5   // длительность заглушки, пока реклама не подключена
+};
+let AD=null;
+function closeAdOverlay(){ if(AD) clearInterval(AD.timer); $('#ad').classList.remove('on'); $('#adSlot').innerHTML=''; AD=null; }
+function showRewardedAd(onReward){
+  if(AD) return;
+  let done=false;
+  // reward() — вызвать, когда реклама досмотрена; cancel() — если закрыта раньше или произошла ошибка
+  const reward=()=>{ if(done) return; done=true; closeAdOverlay(); onReward(); };
+  const cancel=msg=>{ if(done) return; done=true; closeAdOverlay(); toast(msg||'Реклама не досмотрена — награды нет'); };
+  AD={reward,cancel,timer:0,left:Infinity};
+
+  /* ▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼ ВСТАВЬТЕ КОД РЕКЛАМОДАТЕЛЯ ЗДЕСЬ ▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼
+     Покажите рекламу и по её итогу вызовите reward() или cancel(), затем return.
+     SDK рекламной сети подключается тегом <script> в <head> (игра тогда потребует интернет).
+
+     Пример — Яндекс Игры (rewarded video):
+       ysdk.adv.showRewardedVideo({callbacks:{
+         onRewarded:()=>reward(),
+         onClose:()=>cancel(),
+         onError:()=>cancel('Реклама недоступна, попробуй позже')
+       }}); return;
+
+     Пример — Google H5 Games Ads:
+       adBreak({type:'reward',name:'sleep',
+         beforeReward:show=>show(), adViewed:()=>reward(), adDismissed:()=>cancel(),
+         adBreakDone:()=>cancel('Реклама недоступна, попробуй позже')}); return;
+
+     Пример — свой баннер/видео в окне: положите HTML в $('#adSlot').innerHTML
+     и удалите блок заглушки ниже, оставив таймер и кнопки.
+     ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲ КОНЕЦ ВСТАВКИ ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲ */
+
+  // Заглушка: показывает окно-плейсхолдер с обратным отсчётом (работает офлайн)
+  $('#adSlot').innerHTML='<div class="adstub"><b>ЗДЕСЬ БУДЕТ РЕКЛАМА</b>Место для баннера или видео рекламодателя</div>';
+  AD.left=AD_CONFIG.stubSeconds;
+  const tick=()=>{
+    if(!AD) return;
+    $('#adTimer').textContent=AD.left>0?'Награда через '+AD.left+' c…':'Можно забрать награду!';
+    $('#adClaim').disabled=AD.left>0;
+    AD.left--;
+    if(AD.left<-1) clearInterval(AD.timer);
+  };
+  tick(); AD.timer=setInterval(tick,1000);
+  $('#ad').classList.add('on');
+}
+
+/* ---------- ИНТЕРФЕЙС ---------- */
+let screen='title', tab='fighter';
+function showScreen(s){ screen=s; document.querySelectorAll('.screen').forEach(el=>el.classList.toggle('on',el.id==='scr-'+s)); if(s==='hub') renderHub(); }
+function toast(m){ const t=$('#toast'); t.textContent=m; t.classList.remove('on'); void t.offsetWidth; t.classList.add('on'); clearTimeout(toast.h); toast.h=setTimeout(()=>t.classList.remove('on'),2200); }
+function openModal(html){ $('#mbox').innerHTML=html; $('#modal').classList.add('on'); }
+function closeModal(){ $('#modal').classList.remove('on'); }
+function renderTop(){
+  const need=needXp(S.lvl), maxed=S.lvl>=MAX_LVL;
+  $('#topbar').innerHTML='<button class="chip lv" data-act="menu" aria-label="Меню" style="cursor:pointer">☰ УР '+S.lvl+'</button><div class="xpw"><div class="bar"><i style="background:var(--yel);width:'+(maxed?100:S.xp/need*100)+'%"></i></div><div class="dim" style="font-size:10px">'+(maxed?'MAX':S.xp+'/'+need+' XP')+'</div></div><span class="chip money">$'+fmt(S.money)+'</span><span class="chip day">'+(DEV.enabled?'<b style="color:var(--red)">DEV</b> ':'')+'ДЕНЬ '+S.day+'</span>'+
+    '<div class="enw"><span style="color:var(--org);font-weight:bold">⚡ЭНЕРГИЯ</span><div class="bar"><i style="background:linear-gradient(90deg,#ff8a2b,#ffd23f);width:'+(S.energy/S.maxEnergy*100)+'%"></i></div><b>'+S.energy+'/'+S.maxEnergy+'</b></div>';
+}
+function statRow(k){
+  const v=S.st[k], need=needProg(v), max=v>=MAX_STAT;
+  return '<div class="stat"><div><b>'+STATS[k].ic+' '+STATS[k].n+'</b><div class="dim" style="font-size:11px">'+STATS[k].d+'</div></div><div class="v">'+v+'</div>'+
+    '<button class="plus" data-act="addpt" data-v="'+k+'" '+(S.pts>0&&!max?'':'disabled')+' aria-label="Повысить">+</button>'+
+    '<div class="bar"><i style="background:var(--cyan);width:'+(max?100:S.prog[k]/need*100)+'%"></i></div></div>';
+}
+function tabFighter(){
+  const s=S.st, next=S.beaten<OPP.length?OPP[S.beaten]:null;
+  return '<div class="card hero"><canvas id="portrait" width="96" height="96"></canvas><div><canvas id="heroName" class="heroname" width="10" height="10"></canvas><div class="h">'+RANKS[Math.min(S.beaten,RANKS.length-1)]+'</div>'+
+    '<div class="dim">Победы: '+S.wins+' · Поражения: '+S.losses+'</div><div class="dim">Зал: '+GYM[S.gym-1].n+'</div>'+
+    '<div class="dim">'+(next?'Следующий: <b style="color:var(--red)">'+next.name+'</b>':'<b style="color:var(--yel)">🏆 Пояс чемпиона твой</b>')+'</div></div></div>'+
+    (S.pts?'<div class="note">Свободные очки: '+S.pts+' — жми «+» у характеристики!</div>':'')+
+    '<div class="card"><div class="h2">Характеристики</div>'+Object.keys(STATS).map(statRow).join('')+'<div class="dim" style="margin-top:6px">Полоска под характеристикой — прогресс тренировок.</div></div>'+
+    '<div class="card"><div class="h2">В бою</div><div class="grid2">'+
+    '<div class="kv"><span>Здоровье</span><b>'+maxHpOf(s)+'</b></div><div class="kv"><span>Стамина</span><b>'+maxStaOf(s)+'</b></div>'+
+    '<div class="kv"><span>Атака раз в</span><b>'+(intervalOf(s)/1000).toFixed(2)+' c</b></div><div class="kv"><span>Множ. урона</span><b>x'+(1+s.str*.13).toFixed(2)+'</b></div>'+
+    '<div class="kv"><span>Уклонение</span><b>'+Math.round(dodgeOf(s)*100)+'%</b></div><div class="kv"><span>Крит</span><b>'+Math.round(critOf(s)*100)+'%</b></div>'+
+    '</div></div><button class="btn red" data-act="tab" data-v="league">'+(next?'К бою →':'Лига →')+'</button>';
+}
+function tabGym(){
+  let h='<div class="h2">Тренировки · '+TRAIN_COST+' ⚡ · x'+gymMult().toFixed(2)+'</div>';
+  for(const k in STATS){ const v=S.st[k], max=v>=MAX_STAT;
+    h+='<button class="tcard" data-act="train" data-v="'+k+'" '+(max?'disabled':'')+'><div class="ico">'+STATS[k].ic+'</div><div class="tx"><div class="nm">'+STATS[k].tr+'</div><div class="dim">'+STATS[k].n+': '+v+(max?' (макс)':' · '+S.prog[k]+'/'+needProg(v))+'</div><div class="bar"><i style="background:var(--cyan);width:'+(max?100:S.prog[k]/needProg(v)*100)+'%"></i></div></div><div class="cost">-'+TRAIN_COST+'⚡</div></button>';
+  }
+  h+='<div class="h2" style="margin-top:14px">Отдых и еда</div>';
+  const freeLeft=dev('noAds')?'∞ (DEV)':Math.max(0,AD_CONFIG.freeSleeps-S.sleeps);
+  h+='<button class="tcard" data-act="sleep"><div class="ico">🛏</div><div class="tx"><div class="nm">Выспаться</div><div class="dim">Новый день, энергия на максимум<br>'+(freeLeft?'Бесплатно: осталось '+freeLeft:'<b style="color:var(--org)">📺 За просмотр рекламы</b>')+'</div></div><div class="cost">'+(freeLeft?'+⚡MAX':'📺 +⚡MAX')+'</div></button>';
+  for(const f of FOOD) h+='<button class="tcard" data-act="eat" data-v="'+f.id+'"><div class="ico">'+f.ic+'</div><div class="tx"><div class="nm">'+f.n+'</div><div class="dim">+'+f.en+' энергии</div></div><div class="cost" style="color:var(--grn)">$'+f.cost+'</div></button>';
+  const pay=workPay();
+  h+='<button class="tcard" data-act="work"><div class="ico">📦</div><div class="tx"><div class="nm">Подработка грузчиком</div><div class="dim">Тратит 30 энергии, платит наличкой</div></div><div class="cost" style="color:var(--grn)">+$'+pay+'</div></button>';
+  h+='<div class="h2" style="margin-top:14px">Зал</div>';
+  if(S.gym<GYM.length){ const nx=GYM[S.gym];
+    h+='<div class="card"><b>'+GYM[S.gym-1].n+'</b> → <b style="color:var(--yel)">'+nx.n+'</b><div class="dim" style="margin:4px 0 8px">Эффективность тренировок x'+gymMult().toFixed(2)+' → x'+(1+S.gym*.35).toFixed(2)+'</div><button class="btn yel" data-act="upgym" '+(S.money>=nx.cost?'':'disabled')+'>Улучшить за $'+nx.cost+'</button></div>';
+  } else h+='<div class="card"><b style="color:var(--yel)">'+GYM[S.gym-1].n+'</b><div class="dim">Лучший зал в городе.</div></div>';
+  return h;
+}
+const workPay=()=>20+S.beaten*5; // от $20 в начале до $100 после всей лиги
+function moveStats(m){
+  if(m.type==='atk') return '<div class="mvst"><span>Урон <b>'+m.dmg+'</b></span><span>Точн. <b>'+Math.round(m.acc*100)+'%</b></span><span>Темп <b>'+(1/m.spd).toFixed(1)+'</b></span><span>Стамина <b>'+m.sta+'</b></span><span>Сквозь блок <b>'+Math.round(m.pierce*100)+'%</b></span></div>';
+  return '<div class="mvst"><span>Длит. <b>'+(m.dur/1000).toFixed(1)+' c</b></span><span>Стамина <b>'+m.sta+'</b></span></div>';
+}
+function tabMoves(){
+  let h='<div class="h2">Комбинация (до 3 приёмов)</div><div class="slots">';
+  for(let i=0;i<3;i++){ const m=S.load[i]; h+='<div class="slot'+(m?'':' empty')+'">'+(m?MOVES[m].n:'пусто')+'</div>'; }
+  h+='</div><div class="dim" style="margin-bottom:10px">Боец сам выбирает приёмы из комбинации в бою. Нужен хотя бы один атакующий.</div>';
+  for(const id of MOVE_ORDER){ const m=MOVES[id], own=S.owned.includes(id), sel=S.load.includes(id), lockLv=S.lvl<m.lvl;
+    h+='<div class="mv'+(sel?' sel':'')+'"><div class="t"><span class="nm">'+m.n+'</span><span class="tag '+m.type+'">'+(m.type==='atk'?'атака':'защита')+'</span></div>'+moveStats(m)+'<div class="dim">'+m.d+'</div><div class="gap"></div>';
+    if(own) h+='<button class="btn sm '+(sel?'':'mag')+'" data-act="toggle" data-v="'+id+'">'+(sel?'Убрать из комбо':'В комбо')+'</button>';
+    else if(lockLv) h+='<button class="btn sm" disabled>🔒 С '+m.lvl+' уровня</button>';
+    else h+='<button class="btn sm yel" data-act="buy" data-v="'+id+'" '+(S.money>=m.cost?'':'disabled')+'>Выучить за $'+m.cost+'</button>';
+    h+='</div>';
+  }
+  return h;
+}
+function tabLeague(){
+  let h='<div class="h2">Подпольная лига · '+S.beaten+'/'+OPP.length+'</div>';
+  if(S.champ) h+='<div class="note">🏆 Ты чемпион улиц! Реванши приносят 40% денег и 50% опыта.</div>';
+  OPP.forEach((o,i)=>{ const done=i<S.beaten, next=i===S.beaten, lock=i>S.beaten, mem=o.duo?o.members:[o];
+    const stl=mem.map(m=>'<div class="ostat">'+(o.duo?'<b>'+m.name+'</b>: ':'')+'СИЛ '+m.st.str+' · СКР '+m.st.spd+' · ВЫН '+m.st.end+' · ЛОВ '+m.st.agi+'</div>').join('');
+    h+='<div class="opp'+(done?' done':'')+(next?' next':'')+(lock?' lock':'')+'"><canvas width="80" height="80" data-opp="'+i+'"></canvas><div class="tx"><div class="nm">'+(i+1)+'. '+(lock?'???':o.name)+(o.duo?' <span class="tag duo">👥 дуэт</span>':'')+'</div>'+
+      '<div class="dim">'+(lock?'Победи предыдущего':'«'+o.title+'» · '+ARENAS[arenaOf(i)].n)+'</div>'+
+      (lock?'':stl+'<div class="ostat" style="color:var(--red)">Урон x'+o.dmg.toFixed(2)+(o.duo?' · 2 бойца подряд':'')+'</div><div class="ostat" style="color:var(--grn)">$'+winPay(i)+' · '+(done?Math.round(o.xp*.5):o.xp)+' XP'+(lossPay(i)?' · <span style="color:var(--dim)">поражение: $'+lossPay(i)+'</span>':'')+'</div>')+
+      '</div>'+(lock?'':'<button class="btn '+(next?'red':'')+'" data-act="fight" data-v="'+i+'">'+(next?'Бой':'Реванш')+'</button>')+'</div>';
+  });
+  h+='<div class="dim" style="text-align:center">Бой стоит '+FIGHT_COST+' ⚡ энергии</div>';
+  return h;
+}
+function renderHub(){
+  renderTop();
+  const body=$('#tabBody'), sc=body.scrollTop;
+  body.innerHTML=tab==='fighter'?tabFighter():tab==='gym'?tabGym():tab==='moves'?tabMoves():tabLeague();
+  const hn=document.getElementById('heroName');
+  if(hn){ pixelLabel(hn,S.name.toUpperCase(),'#fff',9); hn.style.width=hn.width*2+'px'; hn.style.height=hn.height*2+'px'; } // имя бойца, 2×
+  body.scrollTop=sc;
+  document.querySelectorAll('#nav button').forEach(b=>b.classList.toggle('on',b.dataset.v===tab));
+  document.querySelectorAll('canvas[data-opp]').forEach(c=>{ const i=+c.dataset.opp, g=c.getContext('2d'); g.imageSmoothingEnabled=false; ditherGrad(g,0,0,80,74,['#0e0a1c','#161028','#201634']); R(g,0,74,80,6,'#2a2236'); const o=OPP[i], pose=i<S.beaten?'idle':'win', fl=i>S.beaten?1:0; // закрытые — силуэтом
+    if(o.duo){ renderFighter(g,o.members[1].pal,pose,54,78,-1,0,fl); renderFighter(g,o.members[0].pal,pose,26,78,1,0,fl); }
+    else renderFighter(g,o.pal,pose,38,78,1,0,fl); });
+}
+function drawPortrait(t){
+  const c=document.getElementById('portrait'); if(!c) return;
+  const g=c.getContext('2d'); g.imageSmoothingEnabled=false; ditherGrad(g,0,0,96,88,['#120c22','#1a1230','#24183e']); R(g,0,88,96,8,'#2a2236'); R(g,0,88,96,1,'#4a3e5c');
+  shadowAt(g,48,93,30); renderFighter(g,PLAYER_PAL,'idle',48,92,1,t,0);
+}
+function helpHTML(){
+  return '<div class="title" style="color:var(--cyan)">КАК ИГРАТЬ</div><div class="help">'+
+  '<p>Ты — никто из спального района. Цель — пройти 16 соперников подпольной лиги и забрать пояс «Короля Асфальта». Чем дальше, тем сильнее и больнее бьют враги.</p>'+
+  '<h4>👥 Дуэты</h4><ul><li>Каждый 5-й соперник — пара бойцов. Отправишь первого в нокаут — сразу выходит второй, а твоё здоровье не восстанавливается.</li><li>На бой с дуэтом даётся 90 секунд.</li></ul>'+
+  '<h4>🥊 Бой</h4><ul><li>Бой идёт автоматически: боец сам выбирает приёмы из твоей комбинации (до 3).</li><li><b>Тапай</b> по кнопке или арене — боец атакует чаще и копит адреналин.</li><li>Шкала адреналина полна → кнопка <b>СУПЕРУДАР</b>: неблокируемый удар.</li><li>Стамина тратится на удары. Кончилась — боец переводит дух.</li><li>60 секунд. Без нокаута побеждает тот, у кого больше % здоровья.</li></ul>'+
+  '<h4>🏋 Зал</h4><ul><li>Тренировка — кликер на 6 секунд: чем больше нажатий, тем больше прогресс.</li><li>Энергия тратится на бои, тренировки и работу. Восстанавливается сном и едой.</li><li>Улучшай зал — тренировки станут эффективнее.</li></ul>'+
+  '<h4>📈 Прогресс</h4><ul><li>Опыт → уровни → 2 свободных очка характеристик за уровень.</li><li>Начиная с Бизона, даже за проигранный бой дают 10% от призовых за победу (если не сдаваться).</li><li>Новые приёмы открываются с уровнем и покупаются за деньги.</li><li>Прогресс сохраняется автоматически в браузере.</li></ul>'+
+  '<h4>Приёмы</h4><ul><li><b>Блок</b> гасит быстрые удары, но апперкот и тяжёлый его пробивают.</li><li><b>Уклон</b> — шанс полностью избежать удара и контратаковать.</li></ul></div>'+
+  '<button class="btn grn" data-act="closemodal">Понятно</button>';
+}
+const ACT={
+  continue(){ showScreen('hub'); },
+  newgame(){
+    if(S.started) openModal('<div class="title" style="color:var(--red)">НОВАЯ КАРЬЕРА?</div><p style="text-align:center">Текущий прогресс будет удалён.</p><div class="row"><button class="btn" data-act="closemodal">Нет</button><button class="btn red" data-act="confirmnew">Да</button></div>');
+    else ACT.confirmnew();
+  },
+  confirmnew(){ // перед стартом новой карьеры — выбор имени
+    const first=tgName()||nextRandomName(); // в Telegram подсказываем имя из профиля
+    openModal('<div class="title" style="color:var(--yel)">ИМЯ БОЙЦА</div><p style="text-align:center">Как тебя будут звать на улицах?</p>'+
+      '<input id="nameIn" class="namein" type="text" maxlength="'+NAME_MAX+'" autocomplete="off" spellcheck="false" value="'+first+'">'+
+      '<div class="dim" id="nameErr" style="min-height:18px;margin:6px 0;color:var(--red)"></div>'+
+      '<button class="btn yel" data-act="rollname">🎲 Случайное имя</button><div class="gap"></div>'+
+      '<div class="row"><button class="btn" data-act="closemodal">Отмена</button><button class="btn grn" data-act="startcareer">Начать</button></div>');
+  },
+  rollname(){ const inp=$('#nameIn'); if(!inp) return; let n=nextRandomName(); if(n===inp.value.trim()) n=nextRandomName(); inp.value=n; $('#nameErr').textContent=''; },
+  startcareer(){
+    const inp=$('#nameIn'), name=cleanName(inp?inp.value:'');
+    if(!name){ $('#nameErr').textContent='Только русские буквы, цифры, пробел, точка или дефис (до '+NAME_MAX+' знаков).'; return; }
+    const snd=S.sound; S=DEF_SAVE(); S.sound=snd; S.started=true; S.name=name; save(); closeModal(); tab='fighter'; showScreen('hub'); setTimeout(()=>openModal(helpHTML()),50);
+  },
+  help(){ openModal(helpHTML()); },
+  sound(){ S.sound=!S.sound; save(); $('#btnSound').textContent='Звук: '+(S.sound?'вкл':'выкл'); },
+  closemodal(){ closeModal(); },
+  tab(el){ tab=el.dataset.v; $('#tabBody').scrollTop=0; renderHub(); },
+  addpt(el){ const k=el.dataset.v; if(S.pts<=0||S.st[k]>=MAX_STAT) return; S.pts--; S.st[k]++; save(); renderHub(); },
+  train(el){ openTrain(el.dataset.v); },
+  trclose(){ closeTrain(); },
+  sleep(){
+    if(S.energy>=S.maxEnergy) return toast('Энергия и так полная');
+    const doSleep=()=>{ S.sleeps++; S.day++; S.energy=S.maxEnergy; save(); toast('День '+S.day+'. Ты отлично выспался!'); renderHub(); };
+    if(S.sleeps<AD_CONFIG.freeSleeps||dev('noAds')) doSleep(); // первые 2 раза — бесплатно
+    else showRewardedAd(doSleep);                // дальше — только за просмотр рекламы
+  },
+  adclaim(){ if(AD&&AD.left<=0) AD.reward(); },
+  adcancel(){ if(AD) AD.cancel(); },
+  eat(el){ const f=FOOD.find(x=>x.id===el.dataset.v); if(!f) return;
+    if(S.money<f.cost) return toast('Не хватает денег');
+    if(S.energy>=S.maxEnergy) return toast('Энергия и так полная');
+    S.money-=f.cost; S.energy=Math.min(S.maxEnergy,S.energy+f.en); save(); sfx('coin'); toast(f.n+': +'+f.en+' энергии'); renderHub(); },
+  work(){ if(S.energy<30) return toast('Слишком устал для работы'); const pay=workPay(); spendEnergy(30); S.money+=pay; addXp(1); save(); sfx('coin'); toast('Разгрузил фуру: +$'+pay); renderHub(); },
+  upgym(){ if(S.gym>=GYM.length) return; const c=GYM[S.gym].cost; if(S.money<c) return toast('Не хватает денег'); S.money-=c; S.gym++; save(); sfx('lvl'); toast('Теперь ты тренируешься в: '+GYM[S.gym-1].n); renderHub(); },
+  buy(el){ const id=el.dataset.v, m=MOVES[id]; if(!m||S.owned.includes(id)) return;
+    if(S.lvl<m.lvl) return toast('Нужен уровень '+m.lvl); if(S.money<m.cost) return toast('Не хватает денег');
+    S.money-=m.cost; S.owned.push(id); S.owned=MOVE_ORDER.filter(x=>S.owned.includes(x)); if(S.load.length<3) S.load.push(id);
+    save(); sfx('lvl'); toast('Выучен приём: '+m.n); renderHub(); },
+  toggle(el){ const id=el.dataset.v; if(!S.owned.includes(id)) return;
+    if(S.load.includes(id)){ const rest=S.load.filter(x=>x!==id); if(!rest.some(x=>MOVES[x].type==='atk')) return toast('В комбо нужен хотя бы один удар!'); S.load=rest; }
+    else { if(S.load.length>=3) return toast('Максимум 3 приёма — сначала убери один'); S.load.push(id); }
+    save(); renderHub(); },
+  fight(el){ startFight(+el.dataset.v); },
+  speed(){ if(!F) return; fightSpeed=F.speed=F.speed===1?2:1; $('#speedBtn').textContent='Скорость x'+F.speed; },
+  menu(){ $('#btnContinue').style.display=S.started?'':'none'; showScreen('title'); },
+  surrender(){ if(!F||!['fight','intro','swap'].includes(F.state)) return; openModal('<div class="title" style="color:var(--red)">СДАТЬСЯ?</div><p style="text-align:center">Засчитается поражение без награды.</p><div class="row"><button class="btn" data-act="closemodal">Драться</button><button class="btn red" data-act="dosurrender">Сдаться</button></div>'); },
+  dosurrender(){ if(!F||!['fight','intro','swap'].includes(F.state)) return closeModal(); F.surrender=true; F.winner='o'; F.state='done'; closeModal(); finishFight(); },
+  closefight(){ closeModal(); F=null; $('#fx').innerHTML=''; tab=S.beaten>=OPP.length?'fighter':'league'; showScreen('hub'); }
+};
+document.addEventListener('click',e=>{
+  const el=e.target.closest('[data-act]'); if(!el||el.disabled) return;
+  const fn=ACT[el.dataset.act]; if(fn){ if(el.dataset.act!=='sound') sfx('ui'); fn(el); }
+});
+document.addEventListener('pointerdown',initAudio,{passive:true});
+document.addEventListener('contextmenu',e=>{ if(e.target.closest('canvas,.tapbtn,#arena')) e.preventDefault(); });
+$('#arena').addEventListener('pointerdown',e=>{ e.preventDefault(); playerTap(e); });
+function pressFx(el){ el.classList.add('pressed'); clearTimeout(el._pt); el._pt=setTimeout(()=>el.classList.remove('pressed'),70); }
+$('#tapBtn').addEventListener('pointerdown',e=>{ e.preventDefault(); pressFx(e.currentTarget); playerTap(e); });
+$('#trTap').addEventListener('pointerdown',e=>{ e.preventDefault(); pressFx(e.currentTarget); trainTap(); });
+$('#trCv').addEventListener('pointerdown',e=>{ e.preventDefault(); trainTap(); });
+document.addEventListener('keydown',e=>{
+  if(e.repeat) return;
+  if(e.target&&e.target.id==='nameIn'){ if(e.key==='Enter'){ e.preventDefault(); ACT.startcareer(); } return; } // ввод имени: Enter — начать
+  if(e.code==='Space'||e.code==='Enter'){ if(TR&&TR.state!=='done'){ e.preventDefault(); trainTap(); } else if(F&&screen==='fight'&&!$('#modal').classList.contains('on')){ e.preventDefault(); playerTap({currentTarget:$('#tapBtn')}); } }
+});
+
+/* ---------- ГЛАВНЫЙ ЦИКЛ ---------- */
+const fctx=$('#fightCv').getContext('2d'), tctx=$('#titleCv').getContext('2d');
+fctx.imageSmoothingEnabled=false; tctx.imageSmoothingEnabled=false;
+const TITLE_F=[{pal:PLAYER_PAL,pose:'idle',x:PX,face:1},{pal:OPP[OPP.length-1].pal,pose:'idle',x:OX,face:-1}];
+let last=performance.now(), titleAt=0;
+function loop(now){
+  const dt=Math.min(50,now-last); last=now;
+  try{
+    if(screen==='fight'&&F){
+      if(!$('#modal').classList.contains('on')) updateFight(dt*F.speed); // пауза, пока открыто окно
+      if(F){ if(F.state==='intro'&&F.introT>VS_END) drawVS(fctx,F,now);
+        else drawScene(fctx,F.arena,[F.p,F.o],now,{shake:F.shake,parts:F.parts,cheer:F.cheer,flashAll:F.flashAll,fx:F.fx}); renderHUD(); }
+    } else if(screen==='title'){
+      titleAt+=dt; const ph=Math.floor(titleAt/700)%6;
+      TITLE_F[0].pose=ph===2?'jab':ph===4?'hook':'idle'; TITLE_F[1].pose=ph===2?'block':ph===4?'hit':ph===5?'uppercut':'idle';
+      TITLE_F[0].pose=ph===5?'block':TITLE_F[0].pose;
+      drawScene(tctx,0,TITLE_F,now,{});
+    } else if(screen==='hub'&&tab==='fighter') drawPortrait(now);
+    if(TR){ updateTrain(dt); drawTrain(now); }
+  }catch(err){ console.error(err); }
+  tgSyncBack();
+  requestAnimationFrame(loop);
+}
+
+/* ---------- QA: безголовая симуляция баланса (консоль: simBattle(...)) ---------- */
+function simBattle(st,oi,load,n){
+  n=n||200; const keep=F; let wins=0,time=0,ko=0;
+  for(let k=0;k<n;k++){
+    F=newFight(oi,true,st,load);
+    let guard=0; while((F.state==='fight'||F.state==='swap')&&guard++<5000) updateFight(50);
+    if(F.winner==='p') wins++; if(F.p.hp<=0||F.o.hp<=0) ko++; time+=(OPP[oi].duo?FIGHT_TIME_DUO:FIGHT_TIME)-F.time;
+  }
+  F=keep; return {winRate:+(wins/n).toFixed(2),koRate:+(ko/n).toFixed(2),avgSec:+(time/n/1000).toFixed(1)};
+}
+window.simBattle=simBattle;
+
+/* ---------- Живое обновление из DevMode (dev-mode.html в соседней вкладке) ---------- */
+function applyExternal(){
+  if(screen==='hub') renderHub();
+  if(screen==='title') $('#btnContinue').style.display=S.started?'':'none';
+}
+window.addEventListener('storage',e=>{
+  if(e.key===DEV_KEY){ loadDev(); applyExternal(); }
+  else if(e.key===SAVE_KEY&&e.newValue){ try{ S=sanitize(JSON.parse(e.newValue)); addXp(0); }catch(err){} applyExternal(); }
+});
+
+/* ---------- TELEGRAM MINI APP ----------
+   Игра запускается из Telegram-бота как Mini App (https://core.telegram.org/bots/webapps).
+   Вне Telegram всё это молча отключено — игра работает как обычно, в том числе офлайн. */
+const TGA={app:null,cloud:false,back:null,confirm:null,timer:0};
+function tgInit(){
+  const w=window.Telegram&&window.Telegram.WebApp;
+  if(TGA.app||!w||!w.initData) return; // initData пустая — значит, открыто не из Telegram
+  TGA.app=w;
+  try{
+    w.ready(); w.expand();
+    if(w.isVersionAtLeast('7.7')) w.disableVerticalSwipes();          // свайп вниз не закрывает игру во время тапов
+    if(w.isVersionAtLeast('6.1')){ w.setHeaderColor('#120d24'); w.setBackgroundColor('#05040a'); w.BackButton.onClick(tgBack); }
+    TGA.cloud=w.isVersionAtLeast('6.9');
+  }catch(e){}
+  tgCloudLoad();
+}
+// имя из профиля Telegram — подсказка при создании бойца (если подходит под шрифт)
+function tgName(){ const u=TGA.app&&TGA.app.initDataUnsafe&&TGA.app.initDataUnsafe.user; return u?cleanName(u.first_name||''):''; }
+// вибрация на телефоне: по тем же событиям, что и звук
+function tgHaptic(n){
+  const w=TGA.app; if(!w||!w.isVersionAtLeast('6.1')) return;
+  try{ const h=w.HapticFeedback;
+    if(n==='tap') h.impactOccurred('light'); else if(n==='hit') h.impactOccurred('medium'); else if(n==='crit'||n==='ko') h.impactOccurred('heavy');
+    else if(n==='coin'||n==='lvl') h.notificationOccurred('success'); else if(n==='lose') h.notificationOccurred('error'); }catch(e){}
+}
+// сохранение в облаке Telegram: прогресс переносится между телефонами и не теряется при очистке кэша
+function tgCloudSave(json){
+  if(!TGA.cloud||json.length>4096) return;
+  clearTimeout(TGA.timer); TGA.timer=setTimeout(()=>{ try{ TGA.app.CloudStorage.setItem('save',json); }catch(e){} },1500);
+}
+function tgCloudLoad(){
+  if(!TGA.cloud) return;
+  try{ TGA.app.CloudStorage.getItem('save',(err,val)=>{
+    if(err||!val) return;
+    let d; try{ d=JSON.parse(val); }catch(e){ return; }
+    if((+d.ts||0)<=(S.ts||0)) return; // в облаке не новее, чем на телефоне
+    S=sanitize(d); addXp(0); try{ localStorage.setItem(SAVE_KEY,JSON.stringify(S)); }catch(e){}
+    applyExternal(); toast('Прогресс загружен из облака Telegram');
+  }); }catch(e){}
+}
+// системная кнопка «Назад» Telegram и подтверждение закрытия во время боя
+function tgSyncBack(){
+  const w=TGA.app; if(!w) return;
+  const show=screen!=='title'||$('#modal').classList.contains('on')||$('#train').classList.contains('on'), conf=screen==='fight';
+  try{
+    if(show!==TGA.back&&w.isVersionAtLeast('6.1')){ TGA.back=show; show?w.BackButton.show():w.BackButton.hide(); }
+    if(conf!==TGA.confirm&&w.isVersionAtLeast('6.2')){ TGA.confirm=conf; conf?w.enableClosingConfirmation():w.disableClosingConfirmation(); }
+  }catch(e){}
+}
+function tgBack(){
+  if($('#train').classList.contains('on')){ if(TR&&TR.state!=='run') closeTrain(); return; }
+  if($('#modal').classList.contains('on')){ const b=$('#mbox [data-act="closemodal"]')||$('#mbox [data-act="closefight"]'); if(b) b.click(); return; }
+  if(screen==='fight') ACT.surrender(); else if(screen==='hub') ACT.menu();
+}
+
+/* ---------- СТАРТ ---------- */
+const hasSave=loadSave();
+$('#btnContinue').style.display=hasSave?'':'none';
+$('#btnSound').textContent='Звук: '+(S.sound?'вкл':'выкл');
+tgInit(); // если SDK Telegram уже загрузился
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>
