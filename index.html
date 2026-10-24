@@ -568,7 +568,7 @@ function torso(g,pal,cx,top,bot,Wd){
     if(pal.stripe){ R(g,cx+5,top,2,bot-top,pal.stripe); R(g,cx-8,top,1,bot-top,pal.stripe); }
   }
 }
-function head(g,pal,hx,hy,pose){
+function drawHead(g,pal,hx,hy,pose){ // не «head»: это имя на iPhone в Telegram занимает элемент <head>
   const s=pal.rs, h=pal.rh, top=hy-15, hs=pal.hs||'short';
   R(g,hx-2,hy-2,7,5,s[2]); R(g,hx-2,hy-2,2,5,s[3]); // шея
   R(g,hx-5,top+1,12,12,s[1]); R(g,hx-4,top,10,1,s[1]); R(g,hx-4,top+13,10,1,s[1]); R(g,hx-2,top+14,8,1,s[2]);
@@ -618,7 +618,7 @@ function drawBody(g,pal,pose,t){
   torso(g,pal,cx,by-51,by-32,Wd);
   R(g,cx-hw,by-33,hw*2,2,pal.belt||rp[3]);
   if(pal.champ){ R(g,cx-6,by-35,13,7,'#c99a10'); R(g,cx-5,by-34,11,5,'#ffd23f'); R(g,cx-4,by-34,4,1,'#fff6c0'); R(g,cx-1,by-33,3,3,'#d01818'); R(g,cx,by-33,1,1,'#ff9090'); }
-  head(g,pal,bx+sc(p.tilt||0)+1,by-55,pose);
+  drawHead(g,pal,bx+sc(p.tilt||0)+1,by-55,pose);
   arm(g,[bx+6,by-48],FGp,pal,false,!!p.big);
 }
 // буфер спрайта
@@ -1620,6 +1620,7 @@ const TITLE_F=[{pal:PLAYER_PAL,pose:'idle',x:PX,face:1},{pal:OPP[OPP.length-1].p
 let last=performance.now(), titleAt=0;
 function loop(now){
   const dt=Math.min(50,now-last); last=now; FRAMES++;
+  if(FRAMES%60===1) step('имена',checkNames); // раз в секунду: не подменил ли кто-то функции игры
   if(screen==='fight'&&F){
     if(!$('#modal').classList.contains('on')) step('логика боя',()=>updateFight(dt*F.speed)); // пауза, пока открыто окно
     if(F){
@@ -1721,7 +1722,7 @@ function tgBack(){
 
 /* ---------- ДИАГНОСТИКА: ошибки на телефоне видны прямо в игре ----------
    Нажатие на номер сборки на заставке показывает сведения об устройстве; нажатие на панель — скрывает её. */
-const BUILD='36 · 2026-10-25'; // номер сборки — видно на заставке, свежая версия или старая из кэша Telegram
+const BUILD='37 · 2026-10-25'; // номер сборки — видно на заставке, свежая версия или старая из кэша Telegram
 let FRAMES=0, PRESENT_MODE='чёткий';
 const DIAG_SEEN={};
 function diag(where,e){
@@ -1743,6 +1744,12 @@ document.addEventListener('click',e=>{ if(e.target.closest('#diag')) $('#diag').
 $('#build').textContent='сборка '+BUILD;
 // шаг кадра с отдельной защитой: ошибка в одной части (картинка, полоски, вывод) не гасит остальные
 function step(name,fn){ try{ fn(); }catch(e){ diag(name,e); } }
+// сторож имён: встроенный скрипт Telegram на iPhone перезаписал глобальное имя head (функцию рисования головы) элементом <head>.
+// Запоминаем все функции игры при запуске; если какую-то подменили — возвращаем свою и пишем об этом в панель ошибок.
+const OWN_FN={};
+(function(){ const src=[].slice.call(document.scripts).map(s=>s.text).find(t=>t.indexOf('function buildSprite(')>=0)||'', re=/^function (\w+)\(/gm; let m;
+  while((m=re.exec(src))) if(typeof window[m[1]]==='function') OWN_FN[m[1]]=window[m[1]]; })();
+function checkNames(){ for(const n in OWN_FN) if(window[n]!==OWN_FN[n]){ diag('имена','глобальное имя «'+n+'» было перезаписано ('+Object.prototype.toString.call(window[n])+') — восстановлено'); window[n]=OWN_FN[n]; } }
 
 /* ---------- ЭКРАН: чёткие пиксели на любом телефоне ----------
    iPhone 14 … 18 Pro Max (390–440 CSS px, плотность 3×), Android (2–4×), планшеты.
