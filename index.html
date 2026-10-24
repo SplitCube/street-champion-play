@@ -13,7 +13,7 @@
 :root{--bg:#0d0a1a;--panel:#1a1430;--panel2:#261d45;--line:#3d2f6b;--txt:#f1e9ff;--dim:#9a8cc0;--red:#ff3b4f;--yel:#ffd23f;--grn:#3ee07a;--cyan:#38e8ff;--mag:#ff4fd8;--org:#ff8a2b}
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 html,body{height:100%;background:#05040a;color:var(--txt);font-family:"Lucida Console","Courier New",monospace;overflow:hidden;user-select:none;-webkit-user-select:none;touch-action:manipulation;-webkit-touch-callout:none}
-#app{position:relative;width:100%;max-width:520px;height:100%;height:100dvh;margin:0 auto;background:var(--bg);display:flex;flex-direction:column;overflow:hidden;box-shadow:0 0 0 3px #000,0 0 40px #2a1450}
+#app{position:relative;width:100%;max-width:520px;height:100%;height:100dvh;height:var(--app-h,100dvh);margin:0 auto;background:var(--bg);display:flex;flex-direction:column;overflow:hidden;box-shadow:0 0 0 3px #000,0 0 40px #2a1450}
 canvas{image-rendering:pixelated;image-rendering:crisp-edges;display:block}
 button{font-family:inherit;color:inherit;cursor:pointer;touch-action:manipulation}
 .screen{display:none;flex:1;flex-direction:column;min-height:0}
@@ -87,8 +87,8 @@ button{font-family:inherit;color:inherit;cursor:pointer;touch-action:manipulatio
 .opp .btn{width:auto;min-height:40px;padding:6px 10px;font-size:12px}
 .ostat{font-size:11px;color:var(--dim);margin-top:3px}
 /* title */
-#scr-title{justify-content:flex-start;background:#07050f}
-#titleCv{width:100%;aspect-ratio:16/9;border-bottom:3px solid #000}
+#scr-title{justify-content:flex-start;background:#07050f;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom)}
+#titleCv{width:100%;aspect-ratio:16/9;box-shadow:0 3px 0 #000} /* тень вместо рамки — не меняет размер холста */
 .logo{text-align:center;padding:14px 10px 6px}
 .logo .a{font-size:30px;font-weight:bold;color:var(--yel);letter-spacing:2px;line-height:1.05;text-shadow:3px 0 #000,-3px 0 #000,0 3px #000,0 -3px #000,4px 4px 0 var(--red),6px 6px 0 #000}
 .logo .b{font-size:18px;font-weight:bold;color:var(--cyan);letter-spacing:6px;margin-top:8px;text-shadow:2px 2px 0 #000}
@@ -144,14 +144,14 @@ button{font-family:inherit;color:inherit;cursor:pointer;touch-action:manipulatio
 .frow{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .hint{font-size:10px;color:#6c5ea0;text-align:center}
 /* modal */
-.modal{position:absolute;inset:0;background:rgba(5,3,12,.86);display:none;align-items:center;justify-content:center;padding:14px;z-index:20}
+.modal{position:absolute;inset:0;background:rgba(5,3,12,.86);display:none;align-items:center;justify-content:center;padding:max(14px,env(safe-area-inset-top)) 14px max(14px,env(safe-area-inset-bottom));z-index:20}
 .modal.on{display:flex}
 .mbox{background:var(--panel);border:3px solid #000;box-shadow:inset 0 0 0 3px var(--line),8px 8px 0 #000;padding:16px;width:100%;max-width:400px;max-height:100%;overflow-y:auto;animation:pop .25s steps(3)}
 .mbox .title{font-size:24px;font-weight:bold;text-align:center;margin-bottom:10px;letter-spacing:2px;text-shadow:3px 3px 0 #000}
 .mbox p{font-size:13px;line-height:1.5;margin-bottom:8px}
 .rew{display:flex;justify-content:center;gap:10px;margin:10px 0;flex-wrap:wrap}
 .rew div{background:#000;border:2px solid var(--line);padding:6px 10px;font-weight:bold}
-#trCv{width:100%;aspect-ratio:16/9;border:3px solid #000;cursor:pointer;touch-action:none}
+#trCv{width:100%;aspect-ratio:16/9;box-shadow:0 0 0 3px #000;margin:3px 0;cursor:pointer;touch-action:none} /* тень вместо рамки — не искажает пропорции */
 .trinfo{display:flex;justify-content:space-between;font-weight:bold;margin:8px 0 6px;font-size:14px}
 .help h4{color:var(--cyan);margin:10px 0 4px;text-transform:uppercase;font-size:13px}
 .help p,.help li{font-size:12px;line-height:1.5;color:#d8ccf5}
@@ -160,7 +160,9 @@ button{font-family:inherit;color:inherit;cursor:pointer;touch-action:manipulatio
 #adSlot{min-height:200px;background:#000;border:3px solid #000;box-shadow:inset 0 0 0 2px var(--org);display:grid;place-items:center;overflow:hidden}
 .adstub{text-align:center;color:var(--dim);font-size:13px;line-height:1.6;padding:16px}
 .adstub b{display:block;font-size:20px;color:var(--org);margin-bottom:6px}
-#toast{position:absolute;left:50%;top:70px;transform:translateX(-50%);background:#000;border:3px solid var(--yel);color:var(--yel);padding:8px 12px;font-size:13px;font-weight:bold;z-index:40;display:none;max-width:90%;text-align:center;box-shadow:4px 4px 0 #000}
+#rotate{display:none;position:fixed;inset:0;z-index:100;background:#05040a;color:var(--yel);font-weight:bold;font-size:18px;line-height:1.6;text-align:center;align-items:center;justify-content:center;padding:20px}
+@media (orientation:landscape) and (max-height:500px){#rotate{display:flex}} /* телефон боком — игра рассчитана на вертикальный экран */
+#toast{position:absolute;left:50%;top:calc(70px + env(safe-area-inset-top));transform:translateX(-50%);background:#000;border:3px solid var(--yel);color:var(--yel);padding:8px 12px;font-size:13px;font-weight:bold;z-index:40;display:none;max-width:90%;text-align:center;box-shadow:4px 4px 0 #000}
 #toast.on{display:block;animation:pop .2s steps(3)}
 .namein{display:block;width:100%;background:#000;color:var(--yel);border:3px solid #000;box-shadow:inset 0 0 0 2px var(--yel);padding:12px;font:bold 20px "Lucida Console","Courier New",monospace;text-align:center;text-transform:uppercase;letter-spacing:2px;user-select:text;-webkit-user-select:text;outline:none}
 .namein:focus{box-shadow:inset 0 0 0 2px #fff}
@@ -242,6 +244,7 @@ button{font-family:inherit;color:inherit;cursor:pointer;touch-action:manipulatio
     <button class="btn" data-act="adcancel">Закрыть без награды</button>
   </div></div>
   <div id="toast"></div>
+  <div id="rotate"><div>📱 ↻<br>Поверните телефон вертикально</div></div>
 </div>
 
 <script>
@@ -1009,12 +1012,12 @@ function pixelLabel(cv,text,color,size,shadow){
   for(const [dx,dy] of [[-1,0],[1,0],[0,-1],[0,1],[-1,-1],[1,1],[1,-1],[-1,1]]) bitmapText(g,text,2+dx,2+dy,'#000',s);
   bitmapText(g,text,2,2,color,s);
 }
-// имя в HUD: масштаб только 2×, 1.5× или 1× — без размазывания дробным увеличением
+// имя в HUD: масштаб до 2×, кратный физическим пикселям экрана — без размазывания
 function setName(id,text){
   const cv=document.getElementById(id); pixelLabel(cv,text.toUpperCase(),'#fff',9);
   const avail=Math.max(60,(Math.min(innerWidth,520)-16-70)/2-4), // строка имени — на всю ширину своей половины HUD
-    k=cv.width*2<=avail?2:cv.width*1.5<=avail?1.5:1;
-  cv.style.width=Math.round(cv.width*k)+'px'; cv.style.height=Math.round(cv.height*k)+'px';
+    k=crispK(cv.width,avail,2);
+  cv.style.width=cv.width*k+'px'; cv.style.height=cv.height*k+'px';
 }
 // имя на экране VS шрифтом 5×7: крупно (2×), если помещается в половину экрана
 // длинное имя переносится на две строки, чтобы остаться крупным; возвращает нижнюю границу текста
@@ -1329,7 +1332,7 @@ function closeTrain(){
   if(TR.state==='ready'){ S.energy=Math.min(S.maxEnergy,S.energy+TR.spent); save(); }
   TR=null; $('#train').classList.remove('on'); renderHub();
 }
-const trCtx=document.getElementById('trCv').getContext('2d');
+const TRBUF=document.createElement('canvas'); TRBUF.width=240; TRBUF.height=135; const trCtx=TRBUF.getContext('2d'); // буфер зала; на экран — present()
 const TW=240, TH=135, TG=126;
 let GYMBG=null;
 // зал в духе Punch Club — комната в одноточечной перспективе: задняя стена, боковые стены, пол и потолок сходятся к точке схода
@@ -1509,7 +1512,7 @@ function renderHub(){
   const body=$('#tabBody'), sc=body.scrollTop;
   body.innerHTML=tab==='fighter'?tabFighter():tab==='gym'?tabGym():tab==='moves'?tabMoves():tabLeague();
   const hn=document.getElementById('heroName');
-  if(hn){ pixelLabel(hn,S.name.toUpperCase(),'#fff',9); hn.style.width=hn.width*2+'px'; hn.style.height=hn.height*2+'px'; } // имя бойца, 2×
+  if(hn){ pixelLabel(hn,S.name.toUpperCase(),'#fff',9); const hk=crispK(hn.width,200,2); hn.style.width=hn.width*hk+'px'; hn.style.height=hn.height*hk+'px'; } // имя бойца, до 2×
   body.scrollTop=sc;
   document.querySelectorAll('#nav button').forEach(b=>b.classList.toggle('on',b.dataset.v===tab));
   document.querySelectorAll('canvas[data-opp]').forEach(c=>{ const i=+c.dataset.opp, g=c.getContext('2d'); g.imageSmoothingEnabled=false; ditherGrad(g,0,0,80,74,['#0e0a1c','#161028','#201634']); R(g,0,74,80,6,'#2a2236'); const o=OPP[i], pose=i<S.beaten?'idle':'win', fl=i>S.beaten?1:0; // закрытые — силуэтом
@@ -1605,7 +1608,7 @@ document.addEventListener('keydown',e=>{
 });
 
 /* ---------- ГЛАВНЫЙ ЦИКЛ ---------- */
-const fctx=$('#fightCv').getContext('2d'), tctx=$('#titleCv').getContext('2d');
+const FBUF=layer(W,H), TBUF=layer(W,H), fctx=FBUF.getContext('2d'), tctx=TBUF.getContext('2d'); // игра рисует в буферы 320×180; на экран — present()
 fctx.imageSmoothingEnabled=false; tctx.imageSmoothingEnabled=false;
 const TITLE_F=[{pal:PLAYER_PAL,pose:'idle',x:PX,face:1},{pal:OPP[OPP.length-1].pal,pose:'idle',x:OX,face:-1}];
 let last=performance.now(), titleAt=0;
@@ -1615,14 +1618,14 @@ function loop(now){
     if(screen==='fight'&&F){
       if(!$('#modal').classList.contains('on')) updateFight(dt*F.speed); // пауза, пока открыто окно
       if(F){ if(F.state==='intro'&&F.introT>VS_END) drawVS(fctx,F,now);
-        else drawScene(fctx,F.arena,[F.p,F.o],now,{shake:F.shake,parts:F.parts,cheer:F.cheer,flashAll:F.flashAll,fx:F.fx}); renderHUD(); }
+        else drawScene(fctx,F.arena,[F.p,F.o],now,{shake:F.shake,parts:F.parts,cheer:F.cheer,flashAll:F.flashAll,fx:F.fx}); renderHUD(); present(FBUF,$('#fightCv')); }
     } else if(screen==='title'){
       titleAt+=dt; const ph=Math.floor(titleAt/700)%6;
       TITLE_F[0].pose=ph===2?'jab':ph===4?'hook':'idle'; TITLE_F[1].pose=ph===2?'block':ph===4?'hit':ph===5?'uppercut':'idle';
       TITLE_F[0].pose=ph===5?'block':TITLE_F[0].pose;
-      drawScene(tctx,0,TITLE_F,now,{});
+      drawScene(tctx,0,TITLE_F,now,{}); present(TBUF,$('#titleCv'));
     } else if(screen==='hub'&&tab==='fighter') drawPortrait(now);
-    if(TR){ updateTrain(dt); drawTrain(now); }
+    if(TR){ updateTrain(dt); drawTrain(now); present(TRBUF,$('#trCv')); }
   }catch(err){ console.error(err); }
   tgSyncBack();
   requestAnimationFrame(loop);
@@ -1659,7 +1662,9 @@ function tgInit(){
   if(TGA.app||!w||!w.initData) return; // initData пустая — значит, открыто не из Telegram
   TGA.app=w;
   try{
-    w.ready(); w.expand();
+    w.ready(); w.expand(); fitViewport();
+    if(w.onEvent) w.onEvent('viewportChanged',fitViewport);                 // высота окна Telegram меняется — подстраиваемся
+    if(w.isVersionAtLeast('8.0')&&w.lockOrientation) w.lockOrientation();  // не поворачивать игру боком
     if(w.isVersionAtLeast('7.7')) w.disableVerticalSwipes();          // свайп вниз не закрывает игру во время тапов
     if(w.isVersionAtLeast('6.1')){ w.setHeaderColor('#120d24'); w.setBackgroundColor('#05040a'); w.BackButton.onClick(tgBack); }
     TGA.cloud=w.isVersionAtLeast('6.9');
@@ -1705,11 +1710,41 @@ function tgBack(){
   if(screen==='fight') ACT.surrender(); else if(screen==='hub') ACT.menu();
 }
 
+/* ---------- ЭКРАН: чёткие пиксели на любом телефоне ----------
+   iPhone 14 … 18 Pro Max (390–440 CSS px, плотность 3×), Android (2–4×), планшеты.
+   Игра рисует в маленький буфер (320×180), а на экран он выводится в физических пикселях устройства:
+   сначала целое увеличение без сглаживания, затем точная подгонка — все «пиксели» одного размера. */
+const UP=document.createElement('canvas'), upg=UP.getContext('2d');
+function present(buf,cv){
+  const cw=cv.clientWidth, ch=cv.clientHeight; if(!cw||!ch) return; // размер без учёта анимаций (transform)
+  const d=window.devicePixelRatio||1, w=Math.round(cw*d), h=Math.round(ch*d);
+  if(cv.width!==w||cv.height!==h){ cv.width=w; cv.height=h; }
+  const k=Math.max(1,Math.ceil(w/buf.width)), uw=buf.width*k, uh=buf.height*k;
+  if(UP.width!==uw||UP.height!==uh){ UP.width=uw; UP.height=uh; }
+  upg.imageSmoothingEnabled=false; upg.clearRect(0,0,uw,uh); upg.drawImage(buf,0,0,uw,uh);
+  const g=cv.getContext('2d'); g.imageSmoothingEnabled=true; g.imageSmoothingQuality='high'; g.drawImage(UP,0,0,w,h);
+}
+// масштаб пиксельных надписей: не больше maxK и такой, чтобы 1 пиксель шрифта = целое число физических точек
+function crispK(cssW,avail,maxK){
+  const d=window.devicePixelRatio||1, lo=Math.ceil(d); let n=Math.floor(maxK*d);
+  while(n>lo&&cssW*n/d>avail) n--;
+  return n/d;
+}
+// высота игры: в Telegram — стабильная высота его окна, в браузере — видимая часть (адресная строка iOS не обрезает низ)
+function fitViewport(){
+  const w=TGA.app, h=w&&w.viewportStableHeight?w.viewportStableHeight:window.innerHeight;
+  if(h>0) document.documentElement.style.setProperty('--app-h',Math.round(h)+'px');
+}
+window.addEventListener('resize',fitViewport);
+window.addEventListener('orientationchange',()=>setTimeout(fitViewport,250));
+if(window.visualViewport) window.visualViewport.addEventListener('resize',fitViewport);
+
 /* ---------- СТАРТ ---------- */
 const hasSave=loadSave();
 $('#btnContinue').style.display=hasSave?'':'none';
 $('#btnSound').textContent='Звук: '+(S.sound?'вкл':'выкл');
 tgInit(); // если SDK Telegram уже загрузился
+fitViewport();
 requestAnimationFrame(loop);
 </script>
 </body>
