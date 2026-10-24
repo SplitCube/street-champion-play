@@ -10,7 +10,10 @@
 <!-- Telegram Mini App SDK: внутри Telegram даёт облачные сохранения, вибрацию и кнопку «Назад»; вне Telegram или без интернета игра работает и без него -->
 <script async src="https://telegram.org/js/telegram-web-app.js?64" onload="window.tgInit&&tgInit()"></script>
 <style>
-:root{--bg:#0d0a1a;--panel:#1a1430;--panel2:#261d45;--line:#3d2f6b;--txt:#f1e9ff;--dim:#9a8cc0;--red:#ff3b4f;--yel:#ffd23f;--grn:#3ee07a;--cyan:#38e8ff;--mag:#ff4fd8;--org:#ff8a2b}
+:root{--bg:#0d0a1a;--panel:#1a1430;--panel2:#261d45;--line:#3d2f6b;--txt:#f1e9ff;--dim:#9a8cc0;--red:#ff3b4f;--yel:#ffd23f;--grn:#3ee07a;--cyan:#38e8ff;--mag:#ff4fd8;--org:#ff8a2b;
+  /* безопасные зоны: вырез/Dynamic Island/полоска «Домой» и панели Telegram в полноэкранном режиме */
+  --sat:max(env(safe-area-inset-top),calc(var(--tg-safe-area-inset-top,0px) + var(--tg-content-safe-area-inset-top,0px)));
+  --sab:max(env(safe-area-inset-bottom),calc(var(--tg-safe-area-inset-bottom,0px) + var(--tg-content-safe-area-inset-bottom,0px)))}
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 html,body{height:100%;background:#05040a;color:var(--txt);font-family:"Lucida Console","Courier New",monospace;overflow:hidden;user-select:none;-webkit-user-select:none;touch-action:manipulation;-webkit-touch-callout:none}
 #app{position:relative;width:100%;max-width:520px;height:100%;height:100dvh;height:var(--app-h,100dvh);margin:0 auto;background:var(--bg);display:flex;flex-direction:column;overflow:hidden;box-shadow:0 0 0 3px #000,0 0 40px #2a1450}
@@ -35,12 +38,12 @@ button{font-family:inherit;color:inherit;cursor:pointer;touch-action:manipulatio
 .note{background:#3a2a00;border:3px solid #000;box-shadow:inset 0 0 0 2px var(--yel);color:var(--yel);padding:8px 10px;font-size:12px;margin-bottom:10px;font-weight:bold;animation:blink 1s steps(2) infinite}
 @keyframes blink{50%{box-shadow:inset 0 0 0 2px #7a5a00}}
 /* top bar */
-.top{display:grid;grid-template-columns:auto 1fr auto auto;gap:6px 8px;align-items:center;padding:8px 10px;background:#120d24;border-bottom:3px solid #000;font-size:12px;padding-top:max(8px,env(safe-area-inset-top))}
+.top{display:grid;grid-template-columns:auto 1fr auto auto;gap:6px 8px;align-items:center;padding:8px 10px;background:#120d24;border-bottom:3px solid #000;font-size:12px;padding-top:max(8px,var(--sat))}
 .chip{background:#000;padding:3px 6px;border:2px solid var(--line);white-space:nowrap;font-weight:bold}
 .lv{color:var(--yel)}.money{color:var(--grn)}.day{color:var(--cyan)}
 .xpw{min-width:0}.xpw .bar{height:8px}
 .enw{grid-column:1/-1;display:flex;align-items:center;gap:8px}.enw .bar{flex:1}
-.nav{display:grid;grid-template-columns:repeat(4,1fr);border-top:3px solid #000;background:#120d24;padding-bottom:env(safe-area-inset-bottom)}
+.nav{display:grid;grid-template-columns:repeat(4,1fr);border-top:3px solid #000;background:#120d24;padding-bottom:var(--sab)}
 .nav button{background:none;border:none;border-right:2px solid #000;padding:9px 2px 8px;font-size:11px;font-weight:bold;text-transform:uppercase;color:var(--dim);display:flex;flex-direction:column;align-items:center;gap:3px;min-height:54px}
 .nav button:last-child{border-right:none}
 .nav button.on{color:var(--yel);background:#1f1640;box-shadow:inset 0 3px 0 var(--yel)}
@@ -87,7 +90,7 @@ button{font-family:inherit;color:inherit;cursor:pointer;touch-action:manipulatio
 .opp .btn{width:auto;min-height:40px;padding:6px 10px;font-size:12px}
 .ostat{font-size:11px;color:var(--dim);margin-top:3px}
 /* title */
-#scr-title{justify-content:flex-start;background:#07050f;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom)}
+#scr-title{justify-content:flex-start;background:#07050f;padding-top:var(--sat);padding-bottom:var(--sab)}
 #titleCv{width:100%;aspect-ratio:16/9;box-shadow:0 3px 0 #000} /* тень вместо рамки — не меняет размер холста */
 .logo{text-align:center;padding:14px 10px 6px}
 .logo .a{font-size:30px;font-weight:bold;color:var(--yel);letter-spacing:2px;line-height:1.05;text-shadow:3px 0 #000,-3px 0 #000,0 3px #000,0 -3px #000,4px 4px 0 var(--red),6px 6px 0 #000}
@@ -96,7 +99,7 @@ button{font-family:inherit;color:inherit;cursor:pointer;touch-action:manipulatio
 .foot{text-align:center;font-size:10px;color:#4b3f7a;padding:8px}
 /* fight */
 #scr-fight{background:#000}
-.hud{display:grid;grid-template-columns:1fr auto 1fr;gap:6px;align-items:start;padding:6px 8px;background:#0b0818;border-bottom:3px solid #000;padding-top:max(6px,env(safe-area-inset-top))}
+.hud{display:grid;grid-template-columns:1fr auto 1fr;gap:6px;align-items:start;padding:6px 8px;background:#0b0818;border-bottom:3px solid #000;padding-top:max(6px,var(--sat))}
 .side .nm{display:block;image-rendering:pixelated;image-rendering:crisp-edges}
 .side.r .nm{margin-left:auto}
 .side.r{text-align:right}
@@ -123,7 +126,7 @@ button{font-family:inherit;color:inherit;cursor:pointer;touch-action:manipulatio
 #banner.on{display:block;animation:popc .35s steps(4)}
 @keyframes popc{0%{transform:translate(-50%,-60%) scale(2.2);opacity:0}100%{transform:translate(-50%,-60%) scale(1);opacity:1}}
 @keyframes pop{0%{transform:scale(2.2);opacity:0}100%{transform:scale(1);opacity:1}}
-.fctl{flex:1;display:flex;flex-direction:column;gap:8px;padding:8px 10px;background:var(--bg);min-height:0;overflow-y:auto;padding-bottom:max(8px,env(safe-area-inset-bottom))}
+.fctl{flex:1;display:flex;flex-direction:column;gap:8px;padding:8px 10px;background:var(--bg);min-height:0;overflow-y:auto;padding-bottom:max(8px,var(--sab))}
 .chips{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
 .mchip{background:#0b0818;border:3px solid #000;box-shadow:inset 0 0 0 2px #2b2150;text-align:center;padding:6px 2px;font-size:11px;font-weight:bold;text-transform:uppercase;color:var(--dim)}
 .mchip.on{box-shadow:inset 0 0 0 2px var(--yel);color:var(--yel);background:#2a1f00}
@@ -133,7 +136,7 @@ button{font-family:inherit;color:inherit;cursor:pointer;touch-action:manipulatio
 .adr.full .fill{background:#fff;animation:fl .3s steps(2) infinite}
 @keyframes fl{50%{background:var(--yel)}}
 .tapbtn{background:#b3122a;font-size:26px;min-height:64px;letter-spacing:2px;touch-action:none;-webkit-user-select:none}
-.fctl .tapbtn{flex:1 1 auto;min-height:clamp(130px,30vh,340px)}
+.fctl .tapbtn{flex:1 1 auto;min-height:clamp(110px,26vh,340px)}
 @media (max-height:700px){.fctl .hint{display:none}.fctl{gap:6px}}
 #trTap{min-height:clamp(140px,30vh,260px);font-size:30px}
 .tapbtn.pressed{filter:brightness(1.35);transform:translateY(3px) scale(.985);box-shadow:inset 4px 4px 0 rgba(0,0,0,.45)}
@@ -144,7 +147,7 @@ button{font-family:inherit;color:inherit;cursor:pointer;touch-action:manipulatio
 .frow{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .hint{font-size:10px;color:#6c5ea0;text-align:center}
 /* modal */
-.modal{position:absolute;inset:0;background:rgba(5,3,12,.86);display:none;align-items:center;justify-content:center;padding:max(14px,env(safe-area-inset-top)) 14px max(14px,env(safe-area-inset-bottom));z-index:20}
+.modal{position:absolute;inset:0;background:rgba(5,3,12,.86);display:none;align-items:center;justify-content:center;padding:max(14px,var(--sat)) 14px max(14px,var(--sab));z-index:20}
 .modal.on{display:flex}
 .mbox{background:var(--panel);border:3px solid #000;box-shadow:inset 0 0 0 3px var(--line),8px 8px 0 #000;padding:16px;width:100%;max-width:400px;max-height:100%;overflow-y:auto;animation:pop .25s steps(3)}
 .mbox .title{font-size:24px;font-weight:bold;text-align:center;margin-bottom:10px;letter-spacing:2px;text-shadow:3px 3px 0 #000}
@@ -162,7 +165,7 @@ button{font-family:inherit;color:inherit;cursor:pointer;touch-action:manipulatio
 .adstub b{display:block;font-size:20px;color:var(--org);margin-bottom:6px}
 #rotate{display:none;position:fixed;inset:0;z-index:100;background:#05040a;color:var(--yel);font-weight:bold;font-size:18px;line-height:1.6;text-align:center;align-items:center;justify-content:center;padding:20px}
 @media (orientation:landscape) and (max-height:500px){#rotate{display:flex}} /* телефон боком — игра рассчитана на вертикальный экран */
-#toast{position:absolute;left:50%;top:calc(70px + env(safe-area-inset-top));transform:translateX(-50%);background:#000;border:3px solid var(--yel);color:var(--yel);padding:8px 12px;font-size:13px;font-weight:bold;z-index:40;display:none;max-width:90%;text-align:center;box-shadow:4px 4px 0 #000}
+#toast{position:absolute;left:50%;top:calc(70px + var(--sat));transform:translateX(-50%);background:#000;border:3px solid var(--yel);color:var(--yel);padding:8px 12px;font-size:13px;font-weight:bold;z-index:40;display:none;max-width:90%;text-align:center;box-shadow:4px 4px 0 #000}
 #toast.on{display:block;animation:pop .2s steps(3)}
 .namein{display:block;width:100%;background:#000;color:var(--yel);border:3px solid #000;box-shadow:inset 0 0 0 2px var(--yel);padding:12px;font:bold 20px "Lucida Console","Courier New",monospace;text-align:center;text-transform:uppercase;letter-spacing:2px;user-select:text;-webkit-user-select:text;outline:none}
 .namein:focus{box-shadow:inset 0 0 0 2px #fff}
@@ -466,18 +469,20 @@ function prepPal(p){
   p.rs=ramp(p.skin); p.rt=ramp(p.topC); p.rp=ramp(p.pants); p.rg=ramp(p.glove); p.rh=ramp(p.hair); p.rsh=ramp(p.shoe);
   p.rb=p.boots?ramp(p.boots):null; p._ok=1; return p;
 }
-function R(g,x,y,w,h,c){ g.fillStyle=c; g.fillRect(Math.round(x),Math.round(y),w,h); }
+// SIL — цвет «силуэта»: пока задан, всё тело бойца рисуется одним цветом (обводка, отсвет, вспышка)
+let SIL=null;
+function R(g,x,y,w,h,c){ g.fillStyle=SIL||c; g.fillRect(Math.round(x),Math.round(y),w,h); }
 function limb(g,x1,y1,x2,y2,w,c){
-  g.fillStyle=c; const dx=x2-x1, dy=y2-y1, n=Math.max(Math.abs(dx),Math.abs(dy),1);
+  g.fillStyle=SIL||c; const dx=x2-x1, dy=y2-y1, n=Math.max(Math.abs(dx),Math.abs(dy),1);
   for(let i=0;i<=n;i++) g.fillRect(Math.round(x1+dx*i/n-w/2),Math.round(y1+dy*i/n-w/2),w,w);
 }
 // «трубка» конечности с объёмом: тень снизу/сзади, блик сверху
 function tube(g,x1,y1,x2,y2,w,r){
   const dx=x2-x1, dy=y2-y1, n=Math.max(Math.abs(dx),Math.abs(dy),1), pts=[];
   for(let i=0;i<=n;i++) pts.push([Math.round(x1+dx*i/n-w/2),Math.round(y1+dy*i/n-w/2)]);
-  g.fillStyle=r[2]; for(const q of pts) g.fillRect(q[0],q[1],w,w);
-  g.fillStyle=r[1]; for(const q of pts) g.fillRect(q[0],q[1],w-1,w-1);
-  g.fillStyle=r[0];
+  g.fillStyle=SIL||r[2]; for(const q of pts) g.fillRect(q[0],q[1],w,w);
+  g.fillStyle=SIL||r[1]; for(const q of pts) g.fillRect(q[0],q[1],w-1,w-1);
+  g.fillStyle=SIL||r[0];
   if(Math.abs(dx)>=Math.abs(dy)) for(const q of pts) g.fillRect(q[0]+1,q[1],Math.max(1,w-3),1);
   else for(const q of pts) g.fillRect(q[0]+1,q[1]+1,1,Math.max(1,w-3));
 }
@@ -610,30 +615,25 @@ function drawBody(g,pal,pose,t){
   head(g,pal,bx+sc(p.tilt||0)+1,by-55,pose);
   arm(g,[bx+6,by-48],FGp,pal,false,!!p.big);
 }
-// буферы спрайта и обводки
+// буфер спрайта
 const SW=170, SH=118, SOX=85, SOY=112;
-const SPR=document.createElement('canvas'); SPR.width=SW; SPR.height=SH; const sg=SPR.getContext('2d');
 const OUT=document.createElement('canvas'); OUT.width=SW; OUT.height=SH; const og=OUT.getContext('2d');
-const RIM=document.createElement('canvas'); RIM.width=SW; RIM.height=SH; const rimg=RIM.getContext('2d');
-// rim — цвет контурного отсвета (неон/прожектор) по верхне-заднему краю фигуры
+// Спрайт собирается БЕЗ режимов наложения (globalCompositeOperation): на iPhone (WebKit) они рисовали бойцов
+// тёмными прямоугольниками. Обводка, цветной отсвет и вспышка — это тот же боец, нарисованный одним цветом (SIL) со сдвигом.
+// rim — цвет отсвета (неон/прожектор) со стороны света: сверху-сзади
 function buildSprite(pal,pose,t,flash,rim){
   prepPal(pal);
-  sg.setTransform(1,0,0,1,0,0); sg.clearRect(0,0,SW,SH);
-  // в нокауте спрайт повёрнут на 90°: ноги к сопернику, голова назад
-  if(pose==='ko') sg.setTransform(0,-1,1,0,SOX+8,SOY-11); else sg.setTransform(1,0,0,1,SOX,SOY);
-  drawBody(sg,pal,pose==='ko'?'koBody':pose,t);
-  sg.setTransform(1,0,0,1,0,0);
-  og.globalCompositeOperation='source-over'; og.clearRect(0,0,SW,SH);
-  og.drawImage(SPR,1,0); og.drawImage(SPR,-1,0); og.drawImage(SPR,0,1); og.drawImage(SPR,0,-1);
-  og.globalCompositeOperation='source-in'; og.fillStyle='#0a0812'; og.fillRect(0,0,SW,SH);
-  og.globalCompositeOperation='source-over'; og.drawImage(SPR,0,0);
-  if(rim){
-    rimg.globalCompositeOperation='source-over'; rimg.clearRect(0,0,SW,SH); rimg.drawImage(SPR,0,0);
-    rimg.globalCompositeOperation='source-in'; rimg.fillStyle=rim; rimg.fillRect(0,0,SW,SH);
-    rimg.globalCompositeOperation='destination-out'; rimg.drawImage(SPR,2,1); // остаётся только край, обращённый к свету
-    og.globalAlpha=.75; og.drawImage(RIM,0,0); og.globalAlpha=1;
-  }
-  if(flash>0){ og.globalCompositeOperation='source-atop'; og.fillStyle='rgba(255,255,255,'+Math.min(1,flash)+')'; og.fillRect(0,0,SW,SH); og.globalCompositeOperation='source-over'; }
+  const body=pose==='ko'?'koBody':pose;
+  const pass=(dx,dy,col)=>{ SIL=col; // в нокауте спрайт повёрнут на 90°: ноги к сопернику, голова назад
+    if(pose==='ko') og.setTransform(0,-1,1,0,SOX+8+dx,SOY-11+dy); else og.setTransform(1,0,0,1,SOX+dx,SOY+dy);
+    drawBody(og,pal,body,t); };
+  og.setTransform(1,0,0,1,0,0); og.clearRect(0,0,SW,SH);
+  try{
+    for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1]]) pass(dx,dy,'#0a0812'); // чёрная обводка 1 px
+    if(rim) pass(-1,-1,rim);                                                   // отсвет по краю со стороны света
+    pass(0,0,null);                                                            // сам боец
+    if(flash>0) pass(0,0,'rgba(255,255,255,'+(Math.min(1,flash)*.6).toFixed(2)+')'); // белая вспышка при ударе
+  } finally { SIL=null; og.setTransform(1,0,0,1,0,0); }
   return OUT;
 }
 function renderFighter(ctx,pal,pose,x,y,face,t,flash,rim,xs){
@@ -906,7 +906,7 @@ function drawScene(ctx,ai,list,t,o){
   o=o||{}; const A=ARENAS[ai];
   if(!BG[ai]) BG[ai]=makeBG(ai);
   const B=BG[ai], sx=o.shake?rnd(-o.shake,o.shake):0, sy=o.shake?Math.round(rnd(-o.shake,o.shake)*.6):0;
-  const cam=Math.sin(t/2600)*4+sx, ch=o.cheer||0, rim=B.ring?'#fff3c0':A.neon; // камера плавно покачивается — видно глубину
+  const cam=sx, ch=o.cheer||0, rim=B.ring?'#fff3c0':A.neon; // камера стоит на месте; слои сдвигаются только при тряске от ударов
   const kNear=.5, kF=rowK(GROUND,B.floorTop);
   ctx.save();
   R(ctx,0,0,W,H,'#05030a');
