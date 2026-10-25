@@ -491,7 +491,7 @@ function sfx(n){
 }
 
 /* ---------- ПИКСЕЛЬНАЯ ГРАФИКА (16 бит: 320×180, тени в 3–4 тона, дизеринг, обводка) ---------- */
-const W=320, H=180, GROUND=122, PX=137, OX=183, K=1.5; // GROUND — линия ног бойцов посреди ринга (вид сверху под углом)
+const W=320, H=180, GROUND=122, PX=142, OX=178, K=1.5; // GROUND — линия ног бойцов посреди ринга (вид сверху под углом)
 const sc=v=>Math.round(v*K);
 function shade(hex,k){
   const n=parseInt(hex.slice(1),16); let r=n>>16,g=n>>8&255,b=n&255;
@@ -534,127 +534,131 @@ function ik(ax,ay,bx,by,L,pref){
   if(pref==='down'?(ny<0||(Math.abs(ny)<.2&&nx<0)):nx<0){ nx=-nx; ny=-ny; }
   return [(ax+bx)/2+nx*h,(ay+by)/2+ny*h];
 }
+/* Пропорции в духе Punch Club: рост ~58 px, голова ~1/6 роста, длинные ноги, широкие плечи, узкая талия.
+   Точки в позах — в пикселях от ступней бойца: fg/bg — передняя/задняя перчатка, fb/ff — задняя/передняя стопа. */
 const POSE={
-  idle:{bx:0,by:0,fg:[8,-40],bg:[4,-37]},
-  windup:{bx:-2,by:1,fg:[3,-39],bg:[3,-36]},
-  jab:{bx:2,by:0,fg:[20,-40],bg:[4,-37]},
-  hook:{bx:3,by:0,fg:[16,-39],bg:[3,-36],big:1},
-  uppercut:{bx:2,by:-1,fg:[12,-53],bg:[4,-36]},
-  heavy:{bx:5,by:1,fg:[22,-37],bg:[0,-34],big:1},
-  super:{bx:6,by:1,fg:[23,-38],bg:[1,-34],big:1},
-  block:{bx:-1,by:1,fg:[8,-44],bg:[8,-37]},
-  dodge:{bx:-6,by:4,fg:[2,-36],bg:[-1,-34]},
-  hit:{bx:-3,by:1,fg:[4,-35],bg:[0,-33],tilt:-1},
-  tired:{bx:0,by:3,fg:[7,-29],bg:[3,-28]},
-  win:{bx:0,by:0,fg:[7,-58],bg:[-6,-57]},
-  jump:{bx:0,by:0,fg:[9,-30],bg:[-5,-30],jy:-6,fb:[-3,-1],ff:[3,-1]},
-  stand:{bx:0,by:0,fg:[9,-30],bg:[-5,-30],fb:[-3,0],ff:[3,0]},
-  run1:{bx:2,by:0,fg:[10,-36],bg:[-4,-31],fb:[-8,0],ff:[8,-2]},
-  run2:{bx:2,by:-1,fg:[3,-31],bg:[2,-36],fb:[-2,-2],ff:[4,0]},
-  koBody:{bx:0,by:0,fg:[9,-31],bg:[-6,-31],fb:[-3,0],ff:[3,0],tilt:-1},
-  windupH:{bx:-4,by:2,fg:[0,-37],bg:[2,-34]},          // замах тяжёлого удара
-  windupU:{bx:0,by:4,fg:[7,-27],bg:[3,-35]},           // присед перед апперкотом
-  recover:{bx:1,by:1,fg:[12,-39],bg:[4,-37]},          // возврат руки после удара
-  fall:{bx:-9,by:9,fg:[-2,-30],bg:[-7,-28],tilt:-2,fb:[-9,0],ff:[3,0]}, // начало падения
-  hurt:{bx:0,by:1,fg:[8,-38],bg:[4,-35]}               // стойка с низким здоровьем
+  idle:{bx:0,by:0,fg:[10,-48],bg:[6,-46]},
+  windup:{bx:-1,by:1,fg:[5,-47],bg:[5,-45]},
+  jab:{bx:2,by:0,fg:[27,-49],bg:[6,-46]},
+  hook:{bx:3,by:0,fg:[23,-48],bg:[4,-45],big:1},
+  uppercut:{bx:2,by:-1,fg:[17,-60],bg:[6,-45]},
+  heavy:{bx:4,by:1,fg:[28,-46],bg:[1,-43],big:1},
+  super:{bx:5,by:1,fg:[29,-47],bg:[2,-43],big:1},
+  block:{bx:-1,by:1,fg:[10,-53],bg:[9,-48]},
+  dodge:{bx:-5,by:3,fg:[4,-44],bg:[1,-42]},
+  hit:{bx:-2,by:1,fg:[5,-42],bg:[1,-41],tilt:-1},
+  tired:{bx:0,by:2,fg:[9,-34],bg:[4,-33]},
+  win:{bx:0,by:0,fg:[8,-66],bg:[-6,-65]},
+  jump:{bx:0,by:0,fg:[10,-36],bg:[-6,-36],jy:-5,fb:[-3,-1],ff:[3,-1]},
+  stand:{bx:0,by:0,fg:[10,-36],bg:[-6,-36],fb:[-3,0],ff:[3,0]},
+  run1:{bx:2,by:0,fg:[12,-42],bg:[-5,-37],fb:[-7,0],ff:[7,-2]},
+  run2:{bx:2,by:-1,fg:[4,-37],bg:[3,-42],fb:[-2,-2],ff:[4,0]},
+  koBody:{bx:0,by:0,fg:[9,-36],bg:[-6,-36],fb:[-3,0],ff:[3,0],tilt:-1},
+  windupH:{bx:-3,by:2,fg:[0,-44],bg:[2,-42]},          // замах тяжёлого удара
+  windupU:{bx:0,by:3,fg:[8,-34],bg:[4,-42]},           // присед перед апперкотом
+  recover:{bx:1,by:1,fg:[14,-47],bg:[6,-45]},          // возврат руки после удара
+  fall:{bx:-7,by:7,fg:[-2,-36],bg:[-6,-34],tilt:-2,fb:[-7,0],ff:[3,0]}, // начало падения
+  hurt:{bx:0,by:1,fg:[10,-45],bg:[6,-43]}              // стойка с низким здоровьем
 };
 const IDLE_CYCLE=[[0,0],[1,1],[1,2],[0,1]]; // 4 кадра стойки: [сдвиг корпуса, сдвиг перчаток]
 function glove(g,x,y,r,big){
-  const s=big?11:9, h=big?10:8, gx=Math.round(x-s/2), gy=Math.round(y-h/2);
-  R(g,gx-3,gy+2,3,h-3,'#e6e2da'); R(g,gx-3,gy+h-2,3,1,'#a8a49c'); // бинт/манжета
-  R(g,gx,gy,s,h,r[3]); R(g,gx,gy,s-1,h-1,r[2]); R(g,gx+1,gy,s-2,h-2,r[1]);
-  R(g,gx+2,gy+1,s-5,2,r[0]); R(g,gx+1,gy+1,1,1,r[0]);
-  R(g,gx+2,gy+h-3,s-4,1,r[2]); // шов большого пальца
+  const s=big?7:6, h=big?6:5, gx=Math.round(x-s/2), gy=Math.round(y-h/2);
+  R(g,gx-2,gy+1,2,h-2,'#e6e2da'); R(g,gx-2,gy+h-2,2,1,'#a8a49c'); // бинт на запястье
+  R(g,gx,gy,s,h,r[2]); R(g,gx,gy,s-1,h-1,r[1]); R(g,gx+1,gy,s-3,1,r[0]); R(g,gx+1,gy+1,1,1,r[0]);
+  R(g,gx,gy+h-1,s,1,r[3]); R(g,gx+s-1,gy+1,1,h-2,r[3]);
 }
 function foot(g,x,y,r,boot){
-  if(boot){ R(g,x-4,y-13,9,11,boot[1]); R(g,x-4,y-13,2,11,boot[2]); R(g,x+2,y-12,1,9,boot[0]); R(g,x-4,y-13,9,1,boot[0]); }
-  R(g,x-4,y-4,12,4,r[1]); R(g,x-4,y-4,2,4,r[2]); R(g,x-2,y-4,6,1,r[0]); R(g,x-4,y-1,12,1,r[3]);
+  if(boot){ R(g,x-3,y-9,6,8,boot[1]); R(g,x-3,y-9,2,8,boot[2]); R(g,x+1,y-8,1,6,boot[0]); R(g,x-3,y-9,6,1,boot[0]); }
+  R(g,x-3,y-3,8,3,r[1]); R(g,x-3,y-3,2,3,r[2]); R(g,x-1,y-3,4,1,r[0]); R(g,x-3,y-1,8,1,r[3]);
 }
 function arm(g,sh,gl,pal,isBack,big){
-  const el=ik(sh[0],sh[1],gl[0],gl[1],15,'down');
+  const el=ik(sh[0],sh[1],gl[0],gl[1],13,'down');
   const base=pal.sleeve?pal.rt:pal.rs, r=isBack?back(base):base, rf=isBack?back(pal.rs):pal.rs;
-  tube(g,sh[0],sh[1],el[0],el[1],7,r);
-  tube(g,el[0],el[1],gl[0],gl[1],6,pal.sleeve?r:rf);
-  if(!isBack){ R(g,sh[0]-3,sh[1]-3,8,7,r[1]); R(g,sh[0]-2,sh[1]-3,5,1,r[0]); R(g,sh[0]-3,sh[1]+3,8,1,r[2]); }
+  tube(g,sh[0],sh[1],el[0],el[1],5,r);                  // плечо и бицепс
+  tube(g,el[0],el[1],gl[0],gl[1],4,pal.sleeve?r:rf);    // предплечье
+  if(!isBack){ R(g,sh[0]-3,sh[1]-2,6,5,r[1]); R(g,sh[0]-2,sh[1]-2,4,1,r[0]); R(g,sh[0]-3,sh[1]+2,6,1,r[2]); } // дельта
   glove(g,gl[0],gl[1],isBack?back(pal.rg):pal.rg,big&&!isBack);
 }
 function leg(g,hip,ft,pal,isBack,shorts){
-  const kn=ik(hip[0],hip[1],ft[0],ft[1]-4,16,'fwd');
+  const kn=ik(hip[0],hip[1],ft[0],ft[1]-3,15,'fwd');
   const rp=isBack?back(pal.rp):pal.rp, rs=isBack?back(pal.rs):pal.rs;
-  tube(g,kn[0],kn[1],ft[0],ft[1]-5,7,shorts?rs:rp);
-  tube(g,hip[0],hip[1],kn[0],kn[1],9,rp);
+  tube(g,kn[0],kn[1],ft[0],ft[1]-4,4,shorts?rs:rp);     // голень
+  if(shorts){ tube(g,hip[0],hip[1],kn[0],kn[1],6,rs);  // бедро, сверху — штанина шорт
+    tube(g,hip[0],hip[1],hip[0]+(kn[0]-hip[0])*.5,hip[1]+(kn[1]-hip[1])*.5,7,rp); }
+  else tube(g,hip[0],hip[1],kn[0],kn[1],6,rp);
   foot(g,ft[0],ft[1],isBack?back(pal.rsh):pal.rsh,pal.rb?(isBack?back(pal.rb):pal.rb):null);
 }
+// торс: широкие плечи → узкая талия (V-силуэт), объём как у цилиндра, рельеф груди и пресса
 function torso(g,pal,cx,top,bot,Wd){
   const r=pal.rt, s=pal.rs, bare=!pal.top;
   for(let y=top;y<bot;y++){
-    const k=(y-top)/(bot-top), hw=Math.round(10+Wd/2-3.5*k);
-    // торс как цилиндр: тень сзади, блик-полоса ближе к свету, лёгкий спад на переднем ребре
-    R(g,cx-hw,y,hw*2,1,r[1]); R(g,cx-hw,y,3,1,r[2]); R(g,cx-hw,y,1,1,r[3]); R(g,cx+Math.round(hw*.3),y,2,1,r[0]); R(g,cx+hw-1,y,1,1,r[2]);
+    const i=y-top, k=i/(bot-top), hw=Math.round(8+Wd/2-3*k)-(i===0?2:i===1?1:0);
+    R(g,cx-hw,y,hw*2,1,r[1]); R(g,cx-hw,y,2,1,r[2]); R(g,cx-hw,y,1,1,r[3]); R(g,cx+hw-1,y,1,1,r[2]);
+    if(k<.5) R(g,cx+Math.round(hw*.25),y,2,1,r[0]);
   }
   if(bare){
-    R(g,cx-7,top+2,6,1,s[0]); R(g,cx+1,top+2,7,1,s[0]);
-    R(g,cx-7,top+7,6,1,s[2]); R(g,cx+1,top+7,7,1,s[2]); R(g,cx,top+3,1,15,s[2]);
-    for(let i=0;i<3;i++){ R(g,cx-4,top+10+i*3,3,1,s[2]); R(g,cx+2,top+10+i*3,3,1,s[2]); R(g,cx-4,top+9+i*3,3,1,s[0]); R(g,cx+2,top+9+i*3,3,1,s[0]); }
+    R(g,cx-6,top+2,5,1,s[0]); R(g,cx+1,top+2,5,1,s[0]);           // верх грудных
+    R(g,cx-6,top+6,5,1,s[2]); R(g,cx+1,top+6,6,1,s[2]); R(g,cx,top+3,1,4,s[2]); // низ грудных, грудина
+    for(let i=0;i<3;i++){ R(g,cx-3,top+8+i*2,2,1,s[2]); R(g,cx+1,top+8+i*2,2,1,s[2]); R(g,cx+1,top+7+i*2,2,1,s[0]); } // пресс
+    R(g,cx-5,top+9,1,5,s[2]); R(g,cx,bot-3,1,1,s[3]);             // косые, пупок
   } else {
-    if(!pal.sleeve&&pal.top!=='#222'){ R(g,cx-3,top,6,2,s[1]); R(g,cx-2,top+2,4,1,s[1]); R(g,cx-1,top+3,2,1,s[1]); } // вырез майки
-    R(g,cx-6,top+8,12,1,r[2]); R(g,cx-4,top+14,8,1,r[2]); // складки
-    if(pal.top==='#222'){ R(g,cx-2,top,5,bot-top,s[1]); R(g,cx-2,top,1,bot-top,s[2]); R(g,cx-6,top+3,2,2,'#c8c8c8'); } // жилетка
-    if(pal.stripe){ R(g,cx+5,top,2,bot-top,pal.stripe); R(g,cx-8,top,1,bot-top,pal.stripe); }
+    if(!pal.sleeve&&pal.top!=='#222'){ R(g,cx-2,top,4,2,s[1]); R(g,cx-1,top+2,2,1,s[1]); } // вырез майки
+    R(g,cx-5,top+7,10,1,r[2]); R(g,cx-3,top+12,6,1,r[2]); // складки
+    if(pal.top==='#222'){ R(g,cx-1,top,4,bot-top,s[1]); R(g,cx-1,top,1,bot-top,s[2]); R(g,cx-5,top+3,2,2,'#c8c8c8'); } // жилетка
+    if(pal.stripe){ R(g,cx+4,top,2,bot-top,pal.stripe); R(g,cx-6,top+1,1,bot-top-1,pal.stripe); }
   }
 }
+// голова в профиль 3/4, лицом вправо; hy — линия подбородка
 function drawHead(g,pal,hx,hy,pose){ // не «head»: это имя на iPhone в Telegram занимает элемент <head>
-  const s=pal.rs, h=pal.rh, top=hy-15, hs=pal.hs||'short';
-  R(g,hx-2,hy-2,7,5,s[2]); R(g,hx-2,hy-2,2,5,s[3]); // шея
-  R(g,hx-5,top+1,12,12,s[1]); R(g,hx-4,top,10,1,s[1]); R(g,hx-4,top+13,10,1,s[1]); R(g,hx-2,top+14,8,1,s[2]);
-  R(g,hx-5,top+2,2,10,s[2]); R(g,hx+3,top+1,3,2,s[0]); R(g,hx+6,top+3,1,5,s[0]);
-  R(g,hx-2,top+6,2,4,s[2]); R(g,hx-1,top+7,1,2,s[3]); // ухо
-  R(g,hx-3,top+12,9,1,s[2]); // челюсть
+  const s=pal.rs, h=pal.rh, top=hy-10, hs=pal.hs||'short';
+  R(g,hx-2,hy-2,4,4,s[2]); R(g,hx-2,hy-2,1,4,s[3]); // шея
+  [[-3,2],[-4,3],[-4,4],[-4,4],[-4,4],[-4,4],[-4,4],[-4,4],[-3,4],[-1,3]].forEach(([a,b],i)=>{ R(g,hx+a,top+i,b-a+1,1,s[1]); R(g,hx+a,top+i,1,1,s[2]); }); // череп
+  R(g,hx-4,top+2,1,6,s[3]); R(g,hx-3,top+3,1,4,s[2]);   // затылок в тени
+  R(g,hx+1,top+1,2,2,s[0]); R(g,hx+4,top+3,1,2,s[0]);   // блик на лбу и скуле
+  R(g,hx-1,top+4,2,2,s[2]); R(g,hx-1,top+5,1,1,s[3]);   // ухо
+  R(g,hx-2,top+8,4,1,s[2]);                            // линия челюсти
   const shut=pose==='hit'||pose==='tired'||pose==='koBody'||pose==='fall', hurt=pose==='hurt';
-  if(shut){ R(g,hx+2,top+7,4,1,'#141018'); }
-  else if(hurt){ R(g,hx+2,top+7,4,1,'#fff'); R(g,hx+4,top+7,2,1,'#141018'); R(g,hx+2,top+6,4,1,'#6a2a5a'); } // подбитый глаз
-  else { R(g,hx+2,top+6,4,2,'#fff'); R(g,hx+4,top+6,2,2,'#141018'); R(g,hx+4,top+6,1,1,'#3a3a5a'); }
-  R(g,hx+1,top+4,5,1,h[2]); if(pose!=='win') R(g,hx+4,top+5,2,1,h[2]); // бровь (сердитая)
-  R(g,hx+7,top+7,1,3,s[1]); R(g,hx+7,top+9,1,1,s[2]); R(g,hx+5,top+9,2,1,s[2]); // нос
-  R(g,hx+3,top+11,4,1,pose==='hit'||hurt?'#a01828':pose==='win'?'#fff':s[3]); // рот
-  if(pose==='hit'||hurt) R(g,hx+6,top+12,1,2,'#c01830'); // кровь из губы
-  if(hurt){ R(g,hx+5,top+8,2,1,'#c01830'); R(g,hx-2,top+3,3,1,'#8a3a5a'); } // кровь из носа, ссадина
-  // причёски
-  if(hs!=='bald'){
-    R(g,hx-5,top-1,12,4,h[1]); R(g,hx-6,top+1,3,8,h[1]); R(g,hx-4,top-2,9,1,h[1]); R(g,hx-2,top-1,6,1,h[0]); R(g,hx-6,top+5,1,4,h[2]);
-    R(g,hx+5,top+2,1,2,h[1]); R(g,hx-1,top+3,2,3,h[1]); // бакенбард
-  } else { R(g,hx-1,top,5,1,s[0]); R(g,hx+1,top+1,2,1,s[0]); }
-  if(hs==='spiky') for(let i=0;i<5;i++){ R(g,hx-5+i*3,top-4,2,3,h[1]); R(g,hx-5+i*3,top-5,1,1,h[1]); }
-  if(hs==='long'){ R(g,hx-8,top,4,18,h[1]); R(g,hx-8,top,1,18,h[2]); R(g,hx-6,top+1,1,14,h[0]); }
-  if(hs==='mohawk'){ R(g,hx-6,top-1,12,3,s[1]); R(g,hx-1,top-6,4,7,h[1]); R(g,hx,top-6,1,6,h[0]); }
-  if(pal.cap){ R(g,hx-6,top-3,13,5,pal.cap); R(g,hx-5,top-3,11,1,shade(pal.cap,.3)); R(g,hx+5,top+1,6,2,pal.cap); R(g,hx+5,top+2,6,1,shade(pal.cap,-.4)); }
-  if(pal.band){ R(g,hx-5,top+2,12,2,pal.band); R(g,hx-10,top+3,5,1,pal.band); R(g,hx-9,top+4,2,3,pal.band); }
-  if(pal.shades){ R(g,hx+1,top+5,7,3,'#0a0a12'); R(g,hx+2,top+5,2,1,'#6a6aff'); }
-  if(pal.mask){ R(g,hx-3,top+8,11,7,pal.mask); R(g,hx-3,top+8,11,1,shade(pal.mask,.25)); }
-  if(pal.beard){ R(g,hx-1,top+9,9,6,h[1]); R(g,hx,top+14,6,2,h[2]); R(g,hx+3,top+11,4,1,s[3]); R(g,hx+2,top+9,5,1,h[0]); }
-  if(pal.stache){ R(g,hx+1,top+10,7,1,h[1]); R(g,hx+1,top+11,1,3,h[1]); R(g,hx+7,top+11,1,3,h[1]); }
+  if(shut) R(g,hx+2,top+4,2,1,'#141018');
+  else if(hurt){ R(g,hx+2,top+4,2,1,'#6a2a5a'); R(g,hx+3,top+4,1,1,'#141018'); } // подбитый глаз
+  else { R(g,hx+2,top+4,2,1,'#f4f0ea'); R(g,hx+3,top+4,1,1,'#141018'); }
+  R(g,hx+1,top+3,3,1,h[2]);                            // бровь
+  R(g,hx+5,top+5,1,2,s[1]); R(g,hx+4,top+6,1,1,s[2]);   // нос
+  R(g,hx+2,top+8,2,1,pose==='hit'||hurt?'#a01828':pose==='win'?'#f4f0ea':s[3]); // рот
+  if(pose==='hit'||hurt) R(g,hx+4,top+9,1,1,'#c01830');  // кровь из губы
+  if(hurt) R(g,hx+4,top+7,1,1,'#c01830');
+  if(hs!=='bald'){ R(g,hx-4,top-1,8,2,h[1]); R(g,hx-3,top-2,6,1,h[1]); R(g,hx-5,top,2,5,h[1]); R(g,hx-1,top-2,3,1,h[0]); R(g,hx+3,top,1,1,h[1]); R(g,hx-5,top+3,1,2,h[2]); }
+  else R(g,hx-1,top,3,1,s[0]);
+  if(hs==='spiky') for(let i=0;i<4;i++) R(g,hx-4+i*2,top-3-(i%2),1,2,h[1]);
+  if(hs==='long'){ R(g,hx-6,top,3,12,h[1]); R(g,hx-6,top,1,12,h[2]); R(g,hx-4,top+1,1,9,h[0]); }
+  if(hs==='mohawk'){ R(g,hx-4,top-1,8,2,s[1]); R(g,hx-5,top,2,5,s[2]); R(g,hx-1,top-4,3,4,h[1]); R(g,hx,top-4,1,3,h[0]); }
+  if(pal.cap){ R(g,hx-5,top-2,9,3,pal.cap); R(g,hx-4,top-2,7,1,shade(pal.cap,.3)); R(g,hx+3,top+1,4,1,pal.cap); R(g,hx+3,top+2,4,1,shade(pal.cap,-.4)); }
+  if(pal.band){ R(g,hx-4,top+1,9,1,pal.band); R(g,hx-7,top+1,3,1,pal.band); R(g,hx-7,top+2,1,3,pal.band); }
+  if(pal.shades){ R(g,hx+1,top+4,4,2,'#0a0a12'); R(g,hx+2,top+4,1,1,'#6a6aff'); }
+  if(pal.mask){ R(g,hx-1,top+6,6,4,pal.mask); R(g,hx-1,top+6,6,1,shade(pal.mask,.25)); }
+  if(pal.beard){ R(g,hx-1,top+6,6,4,h[1]); R(g,hx,top+9,4,2,h[2]); R(g,hx+2,top+8,2,1,s[3]); }
+  if(pal.stache) R(g,hx+1,top+7,4,1,h[1]);
 }
 function drawBody(g,pal,pose,t){
   const p=POSE[pose]||POSE.idle;
   const cyc=(pose==='idle'||pose==='hurt')?IDLE_CYCLE[Math.floor(t/(pose==='hurt'?190:150))%4]:[0,0];
   const bob=(pose==='block'||pose==='tired')?(Math.sin(t/(pose==='tired'?120:220))>0?1:0):cyc[0];
-  const J=sc(p.jy||0), bx=sc(p.bx), by=sc(p.by)+bob+J, Wd=Math.round((pal.wide||0)*K);
-  const fb=p.fb||[-7,0], ff=p.ff||[6,0];
-  const FB=[sc(fb[0]),sc(fb[1])+J], FF=[sc(ff[0])+(cyc[0]?1:0),sc(ff[1])+J];
-  const BGp=[sc(p.bg[0]),sc(p.bg[1])+J+cyc[1]], FGp=[sc(p.fg[0]),sc(p.fg[1])+J+cyc[1]];
-  const shorts=!pal.top&&!pal.long, cx=bx+1;
-  arm(g,[bx-6,by-48],BGp,pal,true,false);
-  leg(g,[bx-4,by-29],FB,pal,true,shorts);
-  leg(g,[bx+4,by-29],FF,pal,false,shorts);
+  const J=p.jy||0, bx=p.bx, by=p.by+bob+J, Wd=pal.wide||0;
+  const fb=p.fb||[-6,0], ff=p.ff||[5,0];
+  const FB=[fb[0],fb[1]+J], FF=[ff[0]+(cyc[0]?1:0),ff[1]+J];
+  const BGp=[p.bg[0],p.bg[1]+J+cyc[1]], FGp=[p.fg[0],p.fg[1]+J+cyc[1]];
+  const shorts=!pal.top&&!pal.long, cx=bx;
+  arm(g,[bx-4,by-43],BGp,pal,true,false);
+  leg(g,[bx-3,by-27],FB,pal,true,shorts);
+  leg(g,[bx+3,by-27],FF,pal,false,shorts);
   // таз / трусы
-  const rp=pal.rp, hw=8+Wd/2;
-  R(g,cx-hw,by-33,hw*2,8,rp[1]); R(g,cx-hw,by-33,2,8,rp[2]); R(g,cx+hw-2,by-32,1,6,rp[0]);
-  if(shorts){ R(g,cx-hw,by-26,4,3,rp[1]); R(g,cx+hw-5,by-26,5,3,rp[1]); R(g,cx-1,by-30,2,4,rp[2]); }
-  torso(g,pal,cx,by-51,by-32,Wd);
-  R(g,cx-hw,by-33,hw*2,2,pal.belt||rp[3]);
-  if(pal.champ){ R(g,cx-6,by-35,13,7,'#c99a10'); R(g,cx-5,by-34,11,5,'#ffd23f'); R(g,cx-4,by-34,4,1,'#fff6c0'); R(g,cx-1,by-33,3,3,'#d01818'); R(g,cx,by-33,1,1,'#ff9090'); }
-  drawHead(g,pal,bx+sc(p.tilt||0)+1,by-55,pose);
-  arm(g,[bx+6,by-48],FGp,pal,false,!!p.big);
+  const rp=pal.rp, hw=6+Math.round(Wd/2);
+  R(g,cx-hw,by-31,hw*2,6,rp[1]); R(g,cx-hw,by-31,2,6,rp[2]); R(g,cx+hw-2,by-30,1,4,rp[0]);
+  if(shorts){ R(g,cx-hw,by-25,4,2,rp[1]); R(g,cx+hw-4,by-25,4,2,rp[1]); R(g,cx,by-28,1,3,rp[2]); }
+  torso(g,pal,cx,by-46,by-30,Wd);
+  R(g,cx-hw,by-31,hw*2,2,pal.belt||rp[3]); R(g,cx-hw,by-31,hw*2,1,pal.belt?shade(pal.belt,.3):rp[0]); // пояс
+  if(pal.champ){ R(g,cx-5,by-33,10,5,'#c99a10'); R(g,cx-4,by-32,8,3,'#ffd23f'); R(g,cx-3,by-32,3,1,'#fff6c0'); R(g,cx-1,by-31,2,2,'#d01818'); }
+  drawHead(g,pal,bx+(p.tilt||0)+1,by-47,pose);
+  arm(g,[bx+5,by-43],FGp,pal,false,!!p.big);
 }
 // буфер спрайта
 const SW=170, SH=118, SOX=85, SOY=112;
@@ -666,7 +670,7 @@ function buildSprite(pal,pose,t,flash,rim){
   prepPal(pal);
   const body=pose==='ko'?'koBody':pose;
   const pass=(dx,dy,col)=>{ SIL=col; // в нокауте спрайт повёрнут на 90°: ноги к сопернику, голова назад
-    if(pose==='ko') og.setTransform(0,-1,1,0,SOX+8+dx,SOY-11+dy); else og.setTransform(1,0,0,1,SOX+dx,SOY+dy);
+    if(pose==='ko') og.setTransform(0,-1,1,0,SOX+8+dx,SOY-8+dy); else og.setTransform(1,0,0,1,SOX+dx,SOY+dy);
     drawBody(og,pal,body,t); };
   og.setTransform(1,0,0,1,0,0); og.clearRect(0,0,SW,SH);
   try{
@@ -687,7 +691,7 @@ function drawFace(cv,pal,face,flash,hurt){
   const o=buildSprite(pal,hurt?'hurt':'idle',0,flash);
   ditherGrad(g,0,0,cv.width,cv.height,hurt?['#3a0a14','#2a0a12','#1a0610']:['#24183e','#1a1230','#120c22']);
   g.save(); if(face<0){ g.translate(cv.width,0); g.scale(-1,1); }
-  g.drawImage(o,SOX-14,SOY-82,30,30,0,0,30,30); g.restore();
+  g.drawImage(o,SOX-6,SOY-61,15,15,0,0,30,30); g.restore(); // голова и плечи, увеличенные ровно в 2 раза
 }
 function shadowAt(ctx,x,y,w){
   ctx.fillStyle='rgba(0,0,0,.55)';
@@ -955,7 +959,7 @@ function drawSpark(ctx,s){
 function drawSmear(ctx,f){
   const p=POSE[f.pose], w=POSE[f.smearFrom]||POSE.windup; if(!p) return;
   const s=f.pal.scale||1, a=f.smear/90;
-  for(let i=1;i<=4;i++){ const k=i/5, gx=sc(w.fg[0]+(p.fg[0]-w.fg[0])*k), gy=sc(w.fg[1]+(p.fg[1]-w.fg[1])*k);
+  for(let i=1;i<=4;i++){ const k=i/5, gx=Math.round(w.fg[0]+(p.fg[0]-w.fg[0])*k), gy=Math.round(w.fg[1]+(p.fg[1]-w.fg[1])*k);
     ctx.globalAlpha=a*(.12+k*.25); R(ctx,f.x+f.face*gx*s-4,GROUND+gy*s-3,9,7,i>2?'#fff':f.pal.glove); }
   ctx.globalAlpha=1;
 }
@@ -978,12 +982,12 @@ function drawScene(ctx,ai,list,t,o){
   const vis=f=>{ if(f.pose==='ko'&&f.koT!=null&&f.koT<220) return 'fall';
     if(f.pose==='idle'&&f.maxHp&&f.hp/f.maxHp<.3) return 'hurt'; return f.pose; };
   const bounce=f=>f.pose==='ko'&&f.koT>=220&&f.koT<420?Math.round(5*Math.sin((f.koT-220)/200*Math.PI)):0;
-  for(const f of list) shadowAt(ctx,f.x-(f.pose==='ko'?f.face*28:0),GROUND+1,(f.pose==='ko'?64:34)*(f.pal.scale||1));
+  for(const f of list) shadowAt(ctx,f.x-(f.pose==='ko'?f.face*22:0),GROUND+1,(f.pose==='ko'?56:26)*(f.pal.scale||1));
   for(const f of list) renderFighter(ctx,f.pal,vis(f),f.x,GROUND-bounce(f),f.face,t,f.flash||0,null);
   for(const f of list) if(f.smear>0) drawSmear(ctx,f);
   if(o.parts) for(const p of o.parts){ ctx.globalAlpha=Math.min(1,p.life/150); R(ctx,p.x,p.y,p.s,p.s,p.c); } ctx.globalAlpha=1;
   if(o.fx) for(const s of o.fx) drawSpark(ctx,s);
-  for(const f of list) if(f.pose==='ko'&&!(f.koT<220)){ for(let i=0;i<4;i++){ const a=t/250+i*1.6; R(ctx,f.x-f.face*54+Math.cos(a)*9,GROUND-24+Math.sin(a)*3,2,2,i%2?'#ffd23f':'#fff'); } }
+  for(const f of list) if(f.pose==='ko'&&!(f.koT<220)){ for(let i=0;i<4;i++){ const a=t/250+i*1.6; R(ctx,f.x-f.face*46+Math.cos(a)*7,GROUND-18+Math.sin(a)*3,2,2,i%2?'#ffd23f':'#fff'); } }
   ctx.drawImage(B.front,0,0);
   drawCrowd(ctx,B.fore,t,ch);
   if(ai>=3){ // лучи прожекторов сверху
@@ -1150,7 +1154,7 @@ function addLog(m){ if(F.sim) return; F.log.unshift(m); F.log.length=Math.min(F.
 function floatTxt(f,text,color,big){
   if(F.sim) return;
   const d=document.createElement('div'); d.className='ft'+(big?' big':''); d.textContent=text; d.style.color=color;
-  d.style.left=((f.x+rnd(-6,6))/W*100)+'%'; d.style.top=((GROUND-95+rnd(-6,6))/H*100)+'%';
+  d.style.left=((f.x+rnd(-6,6))/W*100)+'%'; d.style.top=((GROUND-80+rnd(-6,6))/H*100)+'%';
   $('#fx').appendChild(d); setTimeout(()=>d.remove(),950);
 }
 function sparks(x,y,n,colors){ if(F.sim) return; for(let i=0;i<n;i++) F.parts.push({x,y,vx:rnd(-1.6,1.6),vy:rnd(-2,.4),life:rnd(200,450),s:Math.random()<.3?2:1,c:colors[i%colors.length]}); }
@@ -1196,7 +1200,7 @@ function startSuper(f){
 function resolveAttack(a,d,id){
   const isSup=id==='super', m=isSup?SUPER:MOVES[id];
   a.smearFrom=a.pose; a.pose=isSup?'super':id; a.poseT=isSup?450:280; a.smear=90; // смаз руки на первых кадрах удара
-  const hx=d.x-d.face*3, hy=GROUND-(id==='uppercut'?69:60);
+  const hx=d.x-d.face*3, hy=GROUND-(id==='uppercut'?54:50);
   if(d.stance==='dodge'&&!isSup){
     if(Math.random()<clamp(dodgeOf(d.st)-a.st.spd*.008,.2,.85)){
       d.stance=null; d.stanceT=0; d.pose='dodge'; d.poseT=320; if(!d.pending) d.timer=Math.min(d.timer,220);
@@ -1476,7 +1480,7 @@ function drawTrain(t){
   const g=trCtx; g.imageSmoothingEnabled=false;
   if(!GYMBG) GYMBG=makeGymBG();
   g.drawImage(GYMBG,0,0);
-  const pose=TR?TR.pose:'idle', k=TR?TR.k:'str', px=k==='str'?104:112;
+  const pose=TR?TR.pose:'idle', k=TR?TR.k:'str', px=k==='str'?116:112;
   if(k==='end'){ // беговая дорожка: лента движется, поручни, пульт с зелёным экраном
     obox(g,74,TG-8,80,8,6,'#2a2a32'); R(g,76,TG-13,76,4,'#18181e'); const off=Math.floor((TR.anim*5)%10);
     for(let x=78-off;x<150;x+=10) if(x>=78) R(g,x,TG-12,4,2,'#3a3a46');
@@ -1491,8 +1495,8 @@ function drawTrain(t){
   const fy=k==='end'?TG-10:TG;
   shadowAt(g,px,fy+1,32);
   renderFighter(g,PLAYER_PAL,pose,px,fy,1,t,0);
-  if(k==='spd'){ const up=pose==='jump', y0=fy-45-(up?9:0); g.strokeStyle='#d8c8a0'; g.lineWidth=1; g.beginPath(); g.moveTo(px-8,y0);
-    if(up) g.quadraticCurveTo(px+3,fy+10,px+14,y0); else g.quadraticCurveTo(px+3,fy-110,px+14,y0); g.stroke(); }
+  if(k==='spd'){ const up=pose==='jump', y0=fy-36-(up?5:0); g.strokeStyle='#d8c8a0'; g.lineWidth=1; g.beginPath(); g.moveTo(px-6,y0);
+    if(up) g.quadraticCurveTo(px+2,fy+8,px+10,y0); else g.quadraticCurveTo(px+2,fy-90,px+10,y0); g.stroke(); }
 }
 
 /* ---------- РЕКЛАМА ЗА НАГРАДУ ---------- */
@@ -1829,7 +1833,7 @@ function tgBack(){
 
 /* ---------- ДИАГНОСТИКА: ошибки на телефоне видны прямо в игре ----------
    Нажатие на номер сборки на заставке показывает сведения об устройстве; нажатие на панель — скрывает её. */
-const BUILD='39 · 2026-10-25'; // номер сборки — видно на заставке, свежая версия или старая из кэша Telegram
+const BUILD='40 · 2026-10-25'; // номер сборки — видно на заставке, свежая версия или старая из кэша Telegram
 let FRAMES=0, PRESENT_MODE='чёткий';
 const DIAG_SEEN={};
 function diag(where,e){
