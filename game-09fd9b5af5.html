@@ -277,7 +277,7 @@ div.power:not(.ostat){font-size:13px;margin-top:4px}
       <div class="adr" id="adrRow">АДРЕНАЛИН<div class="bar"><i class="fill" id="pAdr"></i></div><b class="cmb" id="comboMul"></b></div>
       <button class="btn rage" id="rageBtn" data-act="rage">🔥 ЯРОСТЬ</button>
       <div class="chips" id="fChips"></div>
-      <div class="hint" id="fHint">Боец дерётся сам. Жми подсвеченный приём — комбо: урон до ×2 и адреналин быстрее. Не тот приём — оглушение.</div>
+      <div class="hint" id="fHint">Боец дерётся сам. Жми подсвеченный приём — комбо: урон до ×1,6 и адреналин быстрее. Не тот приём — оглушение.</div>
       <div class="frow f3"><button class="btn sm" id="speedBtn" data-act="speed">⏩ x1</button><button class="btn sm" id="autoBtn" data-act="auto">Авто: выкл</button><button class="btn sm" data-act="surrender">Отступить</button></div>
     </div>
   </div>
@@ -329,7 +329,7 @@ const fmt=n=>Math.round(n).toLocaleString('ru-RU');
 /* ---------- ДАННЫЕ ---------- */
 const MAX_LVL=30, MAX_STAT=30, FIGHT_COST=20, TRAIN_COST=20, TRAIN_TIME=3000;
 // автобатлер: этап = 10 волн (по одному врагу) + босс из лиги; здоровье бойца переходит из волны в волну
-const WAVES=10, WAVE_K0=.25, WAVE_K1=.04, WAVE_HP0=.6, WAVE_HP1=.045, WAVE_TIME=40000, BOSS_TIME=120000, BOSS_TIME_DUO=150000, BOSS_HP=2.15, BOSS_HP_DUO=1.7, WAVE_HEAL=.3, BOSS_HEAL=1;
+const WAVES=10, WAVE_K0=.25, WAVE_K1=.04, WAVE_HP0=.6, WAVE_HP1=.045, WAVE_TIME=40000, BOSS_TIME=120000, BOSS_TIME_DUO=150000, BOSS_HP=2.45, BOSS_HP_DUO=1.95, WAVE_HEAL=.3, BOSS_HEAL=1;
 const STATS={
   str:{n:'Сила',ic:'💪',d:'Урон всех ударов',tr:'Тяжёлый мешок'},
   spd:{n:'Скорость',ic:'⚡',d:'Частота атак и точность',tr:'Скакалка'},
@@ -437,7 +437,7 @@ const critOf=st=>clamp(.04+st.agi*.008,0,.4);
 const SAVE_KEY='streetChampion_career_v1';
 const DEF_SAVE=()=>({v:1,lvl:1,xp:0,pts:0,money:30,day:1,energy:100,maxEnergy:100,
   st:{str:3,spd:3,end:3,agi:3},prog:{str:0,spd:0,end:0,agi:0},gym:1,
-  owned:['jab','block'],load:['jab','block'],beaten:0,best:0,kills:0,hero:1,auto:false,enAt:0,sleptAt:0,cp:true,gear:{g:null,w:null,s:null,m:null},bag:[],season:0,trMode:'normal',tired:false,wins:0,losses:0,sound:true,started:false,champ:false,sleeps:0,name:'Ты',ts:0});
+  owned:['jab','block'],load:['jab','block'],beaten:0,best:0,kills:0,hero:1,auto:false,enAt:0,sleptAt:0,cp:true,gear:{g:null,w:null,s:null,m:null},bag:[],season:0,trMode:'normal',tired:false,wins:0,losses:0,sound:true,started:false,champ:false,sleeps:0,cmbW:0,cmbH:0,name:'Ты',ts:0});
 // имя бойца: до 14 символов, только буквы/цифры/пробел/точка/дефис, которые есть в пиксельном шрифте
 const NAME_MAX=14;
 function cleanName(v){
@@ -467,7 +467,7 @@ function sanitize(d){
   for(const k in s.st){ if(d.st) s.st[k]=num(d.st[k],3,1,MAX_STAT); if(d.prog) s.prog[k]=num(d.prog[k],0,0,1e6); }
   s.gym=num(d.gym,1,1,GYM.length); s.beaten=num(d.beaten,0,0,OPP.length);
   s.best=num(d.best,0,0,WAVES+1); s.kills=num(d.kills,0,0,1e9); s.auto=d.auto===true; s.enAt=num(d.enAt,0,0,9e15); s.sleptAt=num(d.sleptAt,0,0,9e15); s.cp=d.cp!==false; s.hero=num(d.hero,1,1,HEROES.length); s.season=num(d.season,0,0,999); s.trMode=d.trMode==='hard'?'hard':'normal'; s.tired=d.tired===true; if(d.gear&&typeof d.gear==='object') for(const k of SLOT_IDS){ const it=cleanItem(d.gear[k]); if(it&&it.s===k) s.gear[k]=it; } if(Array.isArray(d.bag)) s.bag=d.bag.map(cleanItem).filter(Boolean).slice(0,BAG_MAX); // enAt — отсчёт восстановления энергии, sleptAt — последний сон // best — рекорд волны на текущем этапе, kills — всего врагов побеждено
-  s.wins=num(d.wins,0,0,1e6); s.losses=num(d.losses,0,0,1e6); s.sleeps=num(d.sleeps,0,0,1e9);
+  s.wins=num(d.wins,0,0,1e6); s.losses=num(d.losses,0,0,1e6); s.sleeps=num(d.sleeps,0,0,1e9); s.cmbW=num(d.cmbW,0,0,1e9); s.cmbH=Math.min(num(d.cmbH,0,0,1e9),s.cmbW); // окна комбо: показано / поймано — для шанса победы
   const own=new Set(['jab','block']); if(Array.isArray(d.owned)) d.owned.forEach(m=>{ if(MOVES[m]) own.add(m); });
   s.owned=MOVE_ORDER.filter(m=>own.has(m));
   s.load=Array.isArray(d.load)?[...new Set(d.load.filter(m=>s.owned.includes(m)))].slice(0,3):[];
@@ -1480,22 +1480,26 @@ function useRage(){
    Успел нажать — комбо +1: урон бойца ×1,2…×2, адреналин +10. Пропустил — комбо сбрасывается без наказания.
    Нажал не тот приём — оглушение на 1 с: боец не бьёт и получает +25% урона.
    Окон нет в «Авто», на скорости x4, в симуляции шанса и награде за отсутствие — баланс считается без комбо. */
-const COMBO_WIN=1100, COMBO_MUL=[1,1.2,1.4,1.6,2], COMBO_ADR=10, STUN_T=1000, STUN_DMG=1.25;
+const COMBO_WIN=1100, COMBO_MUL=[1,1.15,1.3,1.45,1.6], COMBO_ADR=7, STUN_T=1000, STUN_DMG=1.25;
 const comboGap=()=>rnd(1500,2000);
 const comboOn=()=>F&&!F.sim&&!S.auto&&F.speed>=1&&F.speed<=2&&S.load.length>0;
-const comboMul=()=>F&&!F.sim?COMBO_MUL[Math.min(F.combo||0,COMBO_MUL.length-1)]:1;
+const comboMul=()=>F&&(!F.sim||F.simCmb)?COMBO_MUL[Math.min(F.combo||0,COMBO_MUL.length-1)]:1;
+// точность игрока в окнах комбо (по всем боям); пока окон мало — считаем 50%. В «Авто» окон нет — 0
+const comboRate=()=>S.auto?0:S.cmbW>=10?S.cmbH/S.cmbW:.5;
 function comboTick(dt){
-  if(F.sim) return;
+  if(F.sim){ // симуляция шанса: окна идут так же, игрок ловит их с вероятностью F.simCmb (его реальная точность)
+    if(!F.simCmb||F.state!=='fight') return; F.cwNext-=dt; if(F.cwNext>0) return; F.cwNext=COMBO_WIN+comboGap();
+    if(Math.random()<F.simCmb){ F.combo++; F.p.adr=Math.min(100,F.p.adr+COMBO_ADR); } else F.combo=0; return; }
   const rt=dt/(F.speed||1); // окна идут в реальном времени, на x2 не короче
   if(F.stunT>0){ F.stunT-=rt; F.p.flash=F.stunT>0&&Math.floor(F.stunT/120)%2?.7:0; }
   if(!comboOn()){ F.cw=null; F.combo=0; return; }
   if(F.state!=='fight'){ F.cw=null; return; } // между волнами окно снимается, счёт комбо сохраняется
   if(F.cw){ F.cw.t-=rt; if(F.cw.t<=0){ F.cw=null; F.cwNext=comboGap(); if(F.combo){ F.combo=0; floatTxt(F.p,'×1','#9a8cc0'); } } return; }
-  F.cwNext-=rt; if(F.cwNext<=0) F.cw={m:S.load[Math.floor(Math.random()*S.load.length)],t:COMBO_WIN};
+  F.cwNext-=rt; if(F.cwNext<=0){ F.cw={m:S.load[Math.floor(Math.random()*S.load.length)],t:COMBO_WIN}; S.cmbW++; } // счёт окон — для точности игрока
 }
 function comboTap(m){
   if(!F||!F.cw||F.stunT>0||F.state!=='fight'||!comboOn()) return; // нажатие без окна ничего не делает
-  if(m===F.cw.m){ F.cw=null; F.cwNext=comboGap(); F.combo++; F.comboMax=Math.max(F.comboMax,F.combo); F.comboHits++;
+  if(m===F.cw.m){ F.cw=null; F.cwNext=comboGap(); F.combo++; F.comboMax=Math.max(F.comboMax,F.combo); F.comboHits++; S.cmbH++;
     F.p.adr=Math.min(100,F.p.adr+COMBO_ADR); floatTxt(F.p,'КОМБО ×'+F.combo+'!','#38e8ff',F.combo>=3); sfx('combo'); }
   else { F.cw=null; F.cwNext=comboGap()+STUN_T; F.combo=0; F.stunT=STUN_T; F.comboMiss++; F.badChip=m; F.badT=performance.now()+300;
     if(!F.p.pending){ F.p.pose='hurt'; F.p.poseT=STUN_T; } floatTxt(F.p,'ПРОМАХ!','#ff3048',true); sfx('miss'); }
@@ -2151,16 +2155,18 @@ const buildMul=()=>gearMul()*styleMul(S.load)*Math.sqrt(seasonMe())*(S.tired?Mat
 const buildSig=()=>JSON.stringify(S.gear)+'|'+(S.season||0)+'|'+(S.tired?1:0);
 function bossPower(i){ const o=OPP[i], ps=(o.duo?o.members:[o]).map(m=>powerOf(scaleSt(m.st),o.dmg*seasonDm(),bossHp(i))); return Math.round(Math.sqrt(ps.reduce((a,b)=>a+b*b,0))); }
 const CHANCE={}; let CHANCE_Q=0;
-const chanceKey=i=>i+'|'+S.st.str+','+S.st.spd+','+S.st.end+','+S.st.agi+'|'+S.load.join(',')+'|'+buildSig()+'|'+startWaveOf(i);
+const chanceKey=i=>i+'|'+S.st.str+','+S.st.spd+','+S.st.end+','+S.st.agi+'|'+S.load.join(',')+'|'+buildSig()+'|'+startWaveOf(i)+'|'+Math.round(comboRate()*10);
 function chanceOf(i){
   const k=chanceKey(i); if(k in CHANCE) return CHANCE[k];
-  if(!CHANCE_Q) CHANCE_Q=setTimeout(()=>{ CHANCE_Q=0; CHANCE[chanceKey(i)]=simBattle(S.st,i,S.load,40,startWaveOf(i)); if(screen==='hub') renderHub(); },80); // считаем после отрисовки, чтобы не тормозить
+  if(!CHANCE_Q) CHANCE_Q=setTimeout(()=>{ CHANCE_Q=0; CHANCE[chanceKey(i)]=simBattle(S.st,i,S.load,80,startWaveOf(i),comboRate()); if(screen==='hub') renderHub(); },80); // считаем после отрисовки, чтобы не тормозить
   return null;
 }
 function chanceHTML(i){
   const r=chanceOf(i); if(!r) return '<span class="dim">шанс считается…</span>';
   const w=Math.round(r.winRate*100), c=w>=70?'var(--grn)':w>=35?'var(--yel)':'var(--red)';
-  return 'шанс пройти <b style="color:'+c+'">~'+w+'%</b> · дойти до босса ~'+Math.round(r.bossRate*100)+'%';
+  const cr=comboRate(), g=gearBonus(), hasGear=SLOT_IDS.some(k=>S.gear[k]);
+  return 'шанс пройти <b style="color:'+c+'">~'+w+'%</b> · дойти до босса ~'+Math.round(r.bossRate*100)+'%'+
+    '<br><span class="dim">учтено: '+(hasGear?'снаряжение (урон +'+Math.round(g.dm*100)+'%, здоровье +'+Math.round(g.hp*100)+'%…), ':'')+'стили, '+(cr?'комбо — твоя точность '+Math.round(cr*100)+'%':'без комбо (авто)')+'</span>';
 }
 function tabFighter(){
   const s=S.st, next=S.beaten<OPP.length?OPP[S.beaten]:null;
@@ -2260,7 +2266,7 @@ function helpHTML(){
   '<h4>🥋 Стили боя</h4><ul><li>Пары приёмов в комбо дают постоянный бонус: Боксёр (джеб + хук), Нокаутёр (апперкот + тяжёлый), Уличный (хук + тяжёлый), Технарь (джеб + уклон), Стена (блок + апперкот), Контрпанчер (блок + уклон). Список — на вкладке «Приёмы».</li></ul>'+
   '<h4>🏆 Сезоны</h4><ul><li>Победил Короля — можно начать новый сезон: этапы заново, соперники сильнее на 15%, награды +25%, вещи сильнее, а твой урон навсегда +5% за каждый сезон. Сезонов сколько угодно.</li></ul>'+
   '<h4>⭐ Усиления</h4><ul><li>После 3-й, 6-й и 9-й волны выбери одно усиление из трёх: урон, вампиризм, крит, броня, здоровье, деньги и другие.</li><li>Они действуют до конца забега, одинаковые складываются.</li></ul>'+
-  '<h4>💪 Сила и шанс</h4><ul><li>«Сила» — одно число по характеристикам. Сравни её с силой босса на вкладке «Этапы».</li><li>Шанс пройти этап считается по 40 пробным забегам с твоими характеристиками и комбинацией.</li></ul>'+
+  '<h4>💪 Сила и шанс</h4><ul><li>«Сила» — одно число по характеристикам. Сравни её с силой босса на вкладке «Этапы».</li><li>Шанс пройти этап считается по 80 пробным забегам с твоими характеристиками, комбинацией, снаряжением и стилями, а в ручном бою — ещё и с твоей точностью в окнах комбо.</li></ul>'+
   '<h4>▶ Авто</h4><ul><li>Кнопка «Авто» в бою: после победы сам начнётся следующий этап, после поражения — повтор предыдущего (фарм). Усиления выберутся сами через 5 секунд.</li><li>Если на новый этап не хватает энергии, авто фармит последний пройденный — бесплатно. Остановить — кнопкой «Стоп».</li></ul>'+
   (ADS_ON?'<h4>📺 Реклама за награду</h4><ul><li><b>Второе дыхание</b>: упал — один раз за забег можно встать с 50% здоровья и полным адреналином и продолжить с той же волны.</li><li><b>×2 награда</b> — в итогах забега и за время отсутствия.</li></ul>':'')+
   '<h4>⚡ Автофарм</h4><ul><li>У пройденных боссов на вкладке «Этапы» — кнопка «Автофарм»: без боя сразу вся награда за этап — 10 волн и босс (деньги, опыт, вещи). Стоит '+AUTOFARM_COST+'⚡.</li></ul>'+
@@ -2395,10 +2401,10 @@ function loop(now){
 
 /* ---------- QA: безголовая симуляция баланса (консоль: simBattle(статы, этап, комбо, n)) ----------
    winRate — доля забегов, где побеждён босс; bossRate — дошёл до босса; avgWave — средняя волна, где закончился забег; avgSec — длительность забега */
-function simBattle(st,oi,load,n,from){
+function simBattle(st,oi,load,n,from,cmb){ // cmb — доля пойманных окон комбо (0 — без комбо)
   n=n||200; const keep=F; let wins=0,boss=0,waves=0,time=0;
   for(let k=0;k<n;k++){
-    F=newFight(oi,true,st,load,from);
+    F=newFight(oi,true,st,load,from); F.simCmb=cmb||0;
     let guard=0; while((F.state==='fight'||F.state==='swap'||F.state==='end')&&guard++<40000){ updateFight(50); time+=50; }
     if(F.winner==='p') wins++; if(isBoss()) boss++; waves+=Math.min(F.wave,WAVES+1);
   }
@@ -2475,7 +2481,7 @@ function tgBack(){
 
 /* ---------- ДИАГНОСТИКА: ошибки на телефоне видны прямо в игре ----------
    Нажатие на номер сборки на заставке показывает сведения об устройстве; нажатие на панель — скрывает её. */
-const BUILD='64 · 2026-10-26'; // номер сборки — видно на заставке, свежая версия или старая из кэша Telegram
+const BUILD='65 · 2026-10-26'; // номер сборки — видно на заставке, свежая версия или старая из кэша Telegram
 let FRAMES=0, PRESENT_MODE='чёткий';
 /* Сторож: раз в секунду, независимо от кадров. Если игра открыта, а кадры не идут — или бой стоит без открытых окон, —
    показываем панель ошибок с подробностями (по ней видно причину, например на ПК). */
