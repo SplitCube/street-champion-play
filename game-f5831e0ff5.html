@@ -347,10 +347,10 @@ const SUPER={n:'СУПЕРУДАР',type:'atk',dmg:20,acc:1,sta:0,spd:1,pierce:1
 const MOVE_ORDER=['jab','hook','uppercut','heavy','block','dodge'];
 const MOVE_IC={jab:'👊',hook:'🤜',uppercut:'☝️',heavy:'💥',block:'🛡️',dodge:'💨'}; // значки на кнопках приёмов в бою
 const ARENAS=[
-  {n:'Подворотня',neon:'#ff4fd8',sky:['#0b0820','#1a1040','#2e1550'],type:0,rain:true},
-  {n:'Гаражи',neon:'#ff8a2b',sky:['#0a0a14','#1d1428','#3a1e2a'],type:1},
-  {n:'Пустырь у завода',neon:'#ff3b4f',sky:['#08060e','#1a0c18','#36121e'],type:2},
-  {n:'Крыша небоскрёба',neon:'#38e8ff',sky:['#04081a','#0b1838','#1b2f5e'],type:3,rain:true},
+  {n:'Подворотня',ring:false,neon:'#b89058',sky:['#0b0820','#1a1040','#2e1550'],type:0,rain:true},
+  {n:'Гаражи',ring:false,neon:'#ff8a2b',sky:['#0a0a14','#1d1428','#3a1e2a'],type:1},
+  {n:'Завод «Красный молот»',ring:false,neon:'#ff3b4f',sky:['#08060e','#1a0c18','#36121e'],type:2},
+  {n:'Крыша башни «Меридиан»',neon:'#38e8ff',sky:['#04081a','#0b1838','#1b2f5e'],type:3,rain:true},
   {n:'Подпольный ринг',neon:'#ffd23f',sky:['#05030a','#0a0614','#1a0e2a'],type:4}
 ];
 const P=(skin,hair,top,pants,glove,extra)=>Object.assign({skin,hair,top,pants,glove,shoe:'#e8e8e8'},extra||{});
@@ -381,10 +381,11 @@ const OPP=[
   {name:'Король Асфальта',title:'Чемпион улиц',dmg:1.4,st:{str:27,spd:24,end:27,agi:23},moves:['hook','uppercut','heavy'],money:1500,xp:1200,pal:P('#c88a60','#f5d040',null,'#d4a017','#ffd23f',{belt:'#ffd23f',champ:1,wide:2,hs:'long',stache:1,boots:'#d01818',scale:1.12})}
 ];
 const oppMember=(o,k)=>o.duo?o.members[k]:o;
-// соперники этапов 1 и 2 — готовые спрайты «уличного бойца» (ENEMY_DATA): Вася в синем костюме, Толик в зелёном с рыжей кепкой
+// соперники этапов 1 и 2 — готовые спрайты «уличного бойца» (ENEMY_DATA): Вася в исходном костюме, Толик с рыжей кепкой; враги волн этапа 1 — e0 (Вася в синем, ENEMY_TINT)
 OPP[0].pal.sprite='e1'; OPP[1].pal.sprite='e2';
 /* Враги волн: генерируются из босса этапа (seed = этап и волна — на каждом прохождении одни и те же).
    Характеристики растут от ~30% босса на 1-й волне до ~65% на 10-й, здоровье — от ~50% до ~80% обычного. */
+const GOP_NAMES=['Петя','Колян','Димон','Санёк','Лёха','Серый','Жека','Тоха','Миха','Стасик']; // враги волн 1–10 этапа 1 — дворовые имена, как у Васи
 const WAVE_NAMES=['Хулиган','Задира','Громила','Карманник','Вышибала','Качок','Байкер','Докер','Панк','Барыга',
   'Охранник','Грузчик','Рэпер','Таксист','Сторож','Боксёр','Борец','Каратист','Скейтер','Бармен',
   'Мотоциклист','Кочегар','Кузнец','Шахтёр','Моряк','Десантник','Самбист','Кикбоксер','Вор','Хозяин двора'];
@@ -403,7 +404,9 @@ function waveEnemy(stage,wave){
   if(!moves.some(m=>MOVES[m].type==='atk')) moves.unshift('jab');
   const ex={hs:pick(r,WAVE_HS)}; if(r()<.4) ex.sleeve=1; if(r()<.25) ex.cap='#111'; if(r()<.25) ex.beard=1; if(r()<.3) ex.wide=Math.ceil(r()*3);
   const pal=P(pick(r,WAVE_SKIN),pick(r,WAVE_HAIR),pick(r,WAVE_TOP),pick(r,WAVE_PANTS),pick(r,WAVE_GLOVE),ex);
-  return {name:pick(r,WAVE_NAMES),st,moves,pal,dmg:Math.max(1,o.dmg*.92)*seasonDm()};
+  if(stage===0) pal.sprite='e0'; // этап 1: все враги волн — как босс Вася, только в синем костюме
+  const name=stage===0?GOP_NAMES[(wave-1)%GOP_NAMES.length]:pick(r,WAVE_NAMES); // этап 1: такие же гопники, как Вася, у каждой волны своё имя
+  return {name,st,moves,pal,dmg:Math.max(1,o.dmg*.92)*seasonDm()};
 }
 const PLAYER_PAL=P('#f0bc90','#3a2414','#e8e8e8','#202a60','#ff3b4f',{band:'#ff3b4f'});
 const RANKS=['Новичок','Дворовый боец','Гроза двора','Уличный боец','Задира','Гроза района','Мастер подворотен','Тяжеловес улиц','Ночной кошмар','Легенда района','Ветеран подполья','Гроза рынка','Мастер стиля','Живое оружие','Звезда подполья','Претендент','ЧЕМПИОН УЛИЦ'];
@@ -769,6 +772,7 @@ function loadHeroFace(hk){
 function loadHeroes(){
   if(typeof HERO_DATA==='undefined') return;
   const ALL=Object.assign({},HERO_DATA,typeof ENEMY_DATA!=='undefined'?ENEMY_DATA:{}); // герои игрока и соперники со спрайтами — одним загрузчиком
+  for(const k in ENEMY_TINT) HERO_SPR[k]={fr:{},ok:false};
   for(const hk in ALL){ const D=ALL[hk], img=new Image(); HERO_SPR[hk]={fr:{},ok:false}; loadHeroFace(hk);
     img.onload=()=>{ try{ for(const [sx,w,h,ax,anim,f] of D.frames){
         const c=document.createElement('canvas'); c.width=w; c.height=h; const g=c.getContext('2d'); g.drawImage(img,sx,D.h-h,w,h,0,0,w,h);
@@ -776,8 +780,20 @@ function loadHeroes(){
         for(let i=0;i<im.data.length;i+=4){ if(im.data[i+3]){ im.data[i]=im.data[i+1]=im.data[i+2]=255; } } wg.putImageData(im,0,0);
         let hs=0,hn=0; for(let y=0;y<Math.min(10,h);y++) for(let x=0;x<w;x++) if(im.data[(y*w+x)*4+3]){ hs+=x; hn++; } // центр головы — по верхним строкам кадра
         HERO_SPR[hk].fr[anim+f]={c,w,h,ax,reach:w-1-ax,hx:hn?Math.round(hs/hn):ax,white:wc}; } // reach — как далеко вперёд от стоп достаёт кадр
-      HERO_SPR[hk].ok=true; if(typeof screen!=='undefined'&&screen==='hub') renderHub(); }catch(e){ diag('спрайты',e); } };
+      HERO_SPR[hk].ok=true; tintSprites(hk); if(typeof screen!=='undefined'&&screen==='hub') renderHub(); }catch(e){ diag('спрайты',e); } };
     img.src=D.strip; }
+}
+/* Перекрашенные копии спрайтов соперников: те же кадры и анимации, другой цвет костюма.
+   e0 — враги всех волн этапа 1: Вася (e1) в синем. Красится ткань (серо-синие тона по яркости), кожа, белые полосы, обувь и контур — как были. */
+const ENEMY_TINT={e0:{from:'e1',ramp:[[14,26,74],[22,40,122],[35,64,168],[58,90,208],[90,124,240]]}};
+function tintSprites(src){
+  for(const k in ENEMY_TINT){ const T=ENEMY_TINT[k]; if(T.from!==src) continue;
+    for(const n in HERO_SPR[src].fr){ const F=HERO_SPR[src].fr[n], c=document.createElement('canvas'); c.width=F.w; c.height=F.h; const g=c.getContext('2d'); g.drawImage(F.c,0,0);
+      const im=g.getImageData(0,0,F.w,F.h), d=im.data;
+      for(let i=0;i<d.length;i+=4){ if(!d[i+3]) continue; const l=.299*d[i]+.587*d[i+1]+.114*d[i+2]; if(l<20||l>=135||d[i]>d[i+2]+15) continue;
+        const t=T.ramp[Math.min(T.ramp.length-1,Math.floor((l-20)/(135-20)*T.ramp.length))]; d[i]=t[0]; d[i+1]=t[1]; d[i+2]=t[2]; }
+      g.putImageData(im,0,0); HERO_SPR[k].fr[n]=Object.assign({},F,{c}); }
+    HERO_SPR[k].ok=true; }
 }
 const heroOf=id=>HEROES.find(h=>h.id===id)||HEROES[0];
 Object.defineProperty(PLAYER_PAL,'sprite',{get:()=>heroOf(S.hero).key}); // спрайт игрока всегда по выбранному бойцу
@@ -972,6 +988,21 @@ function makeRingLayers(S,r,ai){
   ringPost(h,RG.fl,RG.ft,RG.pf,5,S.post,S.pads[1]); ringPost(h,RG.fr,RG.ft,RG.pf,5,S.post,S.pads[0]);
   return {ring,front};
 }
+/* Без ринга (подворотня, гаражи, пустырь): толпа стоит кругом, бой — прямо на земле.
+   Вместо ковра — вытоптанное пятно под светом фонаря и следы, подходящие к месту. Передний слой пустой. */
+function makeGroundLayers(r,ai){
+  const ring=layer(W,H), g=ring.getContext('2d'), front=layer(W,H), cx=160, cy=120;
+  const pool=['rgba(216,184,120,.22)','rgba(232,208,144,.2)','rgba(255,170,90,.18)'][ai], worn=['#2a2632','#45414c','#4a3a30'][ai];
+  glowEllipse(g,cx,cy,96,22,worn,.55); // вытоптанный круг, где дерутся
+  glowEllipse(g,cx,cy-2,74,16,pool,.9); // свет фонаря на месте драки
+  if(ai===0){ for(let i=0;i<5;i++){ const x=cx-60+r()*120|0, y=cy-10+r()*24|0; poly(g,[[x,y],[x+14,y],[x+17,y+2],[x-3,y+2]],'#1c1824'); ditherRect(g,x+2,y,10,1,'#6a6050',3); } // лужи
+    for(let i=0;i<3;i++){ const x=cx-50+i*44+(r()*10|0), y=cy+4+(r()*8|0); R(g,x,y,4,1,'#1a1620'); R(g,x+1,y-1,2,1,'#1a1620'); } } // окурки и мусор
+  else if(ai===1){ for(let i=0;i<4;i++){ const y=cy-12+i*7; line1(g,cx-80+i*6,y,cx+70-i*4,y+3,'#3a3640'); } // следы шин на бетоне
+    glowEllipse(g,cx+30,cy+6,14,4,'#24202a',.9); glowEllipse(g,cx-44,cy-4,10,3,'#24202a',.9); } // масляные пятна
+  else { for(let i=0;i<40;i++) R(g,cx-80+r()*160|0,cy-14+r()*30|0,2,1,i%2?'#2e221c':'#5a4636'); // утоптанная земля, камешки
+    for(let i=0;i<6;i++){ const x=cx-70+r()*140|0, y=cy-8+r()*20|0; R(g,x,y,2,3,'#32261e'); R(g,x+3,y+1,2,3,'#32261e'); } } // следы ботинок
+  return {ring,front};
+}
 /* Толпа-силуэты: тёмная фигура, светлый контур сверху и по бокам. Два варианта — руки опущены и подняты (болеют). */
 function makeSil(h,seed,body,edge,up){
   const r=mulberry(seed), ext=up?Math.round(h*.34):0, w=Math.round(h*.62)+4+(up?Math.round(h*.3):0), H2=h+ext+2, c=layer(w,H2), g=c.getContext('2d',{willReadFrequently:true});
@@ -1011,14 +1042,41 @@ function floorSeams(g,y0,step,col,colsX){
 function noise(g,r,x,y,w,h,n,cols){ for(let i=0;i<n;i++) R(g,x+r()*w,y+r()*h,1,1,cols[i%cols.length]); }
 function makeBG(ai){
   const A=ARENAS[ai], S=ASTYLE[ai], r=mulberry(ai*977+13), env=layer(W,H), g=env.getContext('2d'); let sign=null;
-  if(ai===0){ // подворотня: кирпичная стена, мокрый асфальт, фонари
-    bricks(g,0,0,W,HZ,'#4e2824'); ditherRect(g,0,0,W,14,'rgba(10,6,14,.6)',2);
-    R(g,0,HZ-5,W,5,'#2a2228'); R(g,0,HZ-5,W,1,'#4a3a40');
-    R(g,16,12,28,HZ-17,'#1e141a'); R(g,18,14,24,HZ-19,'#3a2a26'); R(g,18,14,24,1,'#5a4038'); R(g,36,34,2,3,'#c8a040'); // дверь
-    R(g,22,6,16,4,'#ffe9a0'); glowEllipse(g,30,HZ+8,22,6,'rgba(255,233,160,.45)',.9);
-    R(g,248,8,34,24,'#1a1214'); R(g,250,10,30,20,'#ffd27a'); for(let x=253;x<280;x+=5) R(g,x,10,1,20,'#3a2a20'); R(g,250,19,30,1,'#3a2a20'); // окно с решёткой
-    R(g,232,0,4,HZ-5,'#3a3a44'); R(g,232,0,1,HZ-5,'#6a6a78'); for(let y=8;y<HZ;y+=14) R(g,231,y,6,2,'#2a2a34'); // водосток
-    pixelText(g,'STREET',58,16,'#ff4fd8',9); pixelText(g,'KINGS',62,27,'#38e8ff',9);
+  if(ai===0){ // подворотня: два старых дома, арка во двор, подъезд, окна, провода — без вывесок
+    // левый дом: штукатурка с облупленными местами, под ними кирпич
+    R(g,0,0,124,HZ,'#5a4c48'); ditherRect(g,0,0,124,HZ,'#524440',3);
+    for(const [px,py,pw,ph] of [[6,30,14,9],[64,6,12,7],[96,38,16,8],[40,46,10,6]]){ bricks(g,px,py,pw,ph,'#5a2c26'); R(g,px-1,py-1,pw+2,1,'#6e605a'); }
+    R(g,0,HZ-14,124,1,'#3e3230'); // цоколь
+    R(g,0,HZ-13,124,13,'#3a3032'); ditherRect(g,0,HZ-13,124,13,'#30282a',2);
+    // правый дом: кирпич
+    bricks(g,196,0,124,HZ,'#4a2622'); R(g,196,HZ-13,124,13,'#2e2428'); R(g,196,HZ-14,124,1,'#1e181c');
+    ditherRect(g,0,0,W,10,'rgba(8,6,14,.55)',2); // верх домов в темноте
+    // арка подворотни: сквозь неё — тёмный двор с фонарём, деревом и машиной
+    R(g,124,0,72,HZ,'#3e3234'); for(let y=0;y<HZ;y+=6) R(g,124,y,72,1,'#342a2c');
+    const AL=134, AR=186, AT=16; poly(g,[[AL,HZ],[AL,AT+8],[AL+6,AT+2],[AL+14,AT-2],[AR-14,AT-2],[AR-6,AT+2],[AR,AT+8],[AR,HZ]],'#0e0c14');
+    ditherGrad(g,AL+2,AT+2,AR-AL-4,HZ-12,['#121322','#151829','#1a1d30']);
+    R(g,AL+4,HZ-14,AR-AL-8,10,'#1c1a24'); // асфальт двора
+    R(g,AL+10,AT+12,2,HZ-26-AT,'#2a2a34'); R(g,AL+7,AT+10,8,2,'#3a3a44'); R(g,AL+8,AT+12,6,1,'#e8c880'); glowEllipse(g,AL+11,AT+16,9,6,'rgba(232,200,128,.35)',.8); // фонарь во дворе
+    for(let i=0;i<14;i++) R(g,AR-20+(i*7%15),AT+8+(i*5%10),5,4,i%3?'#14201a':'#1a2a20'); R(g,AR-14,AT+18,2,HZ-34-AT,'#1e1612'); // дерево
+    R(g,AL+18,HZ-20,22,6,'#2a3040'); R(g,AL+21,HZ-24,15,4,'#222838'); R(g,AL+22,HZ-23,6,2,'#3a4458'); R(g,AL+19,HZ-14,4,2,'#0a0a0e'); R(g,AL+35,HZ-14,4,2,'#0a0a0e'); // машина
+    for(let a=0;a<=AR-AL;a++){ const x=AL+a, k=(a-(AR-AL)/2)/((AR-AL)/2), y=Math.round(AT+8-Math.sqrt(Math.max(0,1-k*k))*10); R(g,x,y-2,1,2,'#584846'); } // кромка арки
+    R(g,AL-2,AT+8,2,HZ-AT-8,'#4a3c3c'); R(g,AR,AT+8,2,HZ-AT-8,'#2a2224');
+    // окна: часть горит тёплым за шторами, часть тёмные с отблеском
+    const win=(x,y,lit)=>{ R(g,x-1,y-1,14,16,'#2a2024'); R(g,x,y,12,14,lit?'#b08848':'#141824');
+      if(lit){ R(g,x,y,4,14,'#7a4a3a'); R(g,x+8,y,4,14,'#7a4a3a'); R(g,x+4,y,4,3,'#d0a860'); } else { R(g,x+2,y+2,1,3,'#3a4258'); R(g,x+8,y+9,2,1,'#2a3044'); }
+      R(g,x+5,y,1,14,'#2a2024'); R(g,x,y+5,12,1,'#2a2024'); R(g,x-2,y+14,16,2,'#6a5e5a'); };
+    win(8,6,false); win(42,4,true); win(84,6,false); win(206,6,true); win(238,4,false); win(272,6,false); win(300,4,true);
+    // подъезд: козырёк, дверь, номер на табличке, лампочка
+    R(g,58,22,34,3,'#2e2a30'); R(g,58,25,34,1,'#1a161c'); R(g,62,26,26,HZ-26,'#24201e'); R(g,64,28,22,HZ-28,'#3e2e24'); for(let y=31;y<HZ-2;y+=5) R(g,64,y,22,1,'#32241c');
+    R(g,74,30,1,HZ-31,'#2a1e18'); R(g,80,40,3,2,'#8a8070'); R(g,70,14,10,7,'#22324a'); bitmapText(g,'3',73,14,'#b8c0c8',1); R(g,73,25,4,2,'#c8b070'); glowEllipse(g,75,30,10,5,'rgba(200,176,112,.3)',.7);
+    // водосток, электрощиток, кондиционер, тарелка, провода
+    R(g,118,0,4,HZ-2,'#3a3a44'); R(g,118,0,1,HZ-2,'#5a5a66'); for(let y=10;y<HZ;y+=13) R(g,117,y,6,2,'#2a2a34'); R(g,114,HZ-3,10,2,'#3a3a44');
+    R(g,24,26,14,12,'#4a4c52'); R(g,24,26,14,1,'#6a6c74'); R(g,26,30,10,1,'#3a3c42'); R(g,29,32,4,3,'#8a7a3a'); // щиток со стёртой наклейкой
+    obox(g,256,30,16,9,3,'#6a6e78'); for(let y=33;y<39;y+=2) R(g,258,y,12,1,'#4a4e58'); R(g,262,39,1,HZ-40,'#2a2a30'); // кондиционер и трубка
+    for(let i=0;i<6;i++) R(g,286+i,24-i,1,i*2+1,'#8a8c94'); R(g,292,24,2,2,'#5a5c64'); // спутниковая тарелка
+    for(const [x0,y0,x1,y1] of [[0,9,124,13],[196,11,320,7],[0,3,320,6]]){ for(let i=0;i<=40;i++){ const k=i/40, sag=Math.sin(k*Math.PI)*4; R(g,Math.round(x0+(x1-x0)*k),Math.round(y0+(y1-y0)*k+sag),Math.ceil((x1-x0)/40)+1,1,'#14121a'); } }
+    for(const [x,y,c] of [[100,44,'#5a3434'],[214,40,'#3e4a5a'],[2,40,'#4a4a3a']]){ line1(g,x,y,x+5,y-3,c); line1(g,x+5,y-3,x+9,y+1,c); line1(g,x+9,y+1,x+14,y-2,c); } // старые затёртые надписи-тэги
+    R(g,0,HZ-5,W,5,'#2a2228'); R(g,0,HZ-5,W,1,'#4a3a40'); // бордюр
     ditherGrad(g,0,HZ,W,H,['#2a2632','#2e2a37','#322d3c','#363041']);
     noise(g,r,0,HZ,W,H-HZ,900,['#1e1b26','#423c50','#26222e']);
     floorSeams(g,HZ+6,7,'#211d29',0);
@@ -1027,49 +1085,141 @@ function makeBG(ai){
       poly(g,[[px+4,py],[px+pw-4,py],[px+pw,py+3],[px,py+3]],'#17141e'); ditherRect(g,Math.round(px+4),Math.round(py+1),Math.round(pw-8),1,A.neon,3); } // лужи с отражением неона
     obox(g,4,82,24,22,6,'#2f5a3a'); R(g,6,84,20,2,'#3f7a4e'); // мусорный бак
     obox(g,292,92,22,14,6,'#6a4a2e'); obox(g,296,78,16,10,5,'#7a5634');   // ящики
-    sign=makeSign('БАР',A.neon,12); sign.x=132; sign.y=10;
-  } else if(ai===1){ // гаражи: ворота, бетонные плиты, масляные пятна
-    R(g,0,0,W,HZ,'#2a2430');
-    for(let i=0;i<6;i++){ const gx=i*56-12, col=['#5a4632','#46505a','#64392c','#424e36'][i%4];
-      R(g,gx,6,52,HZ-8,col); R(g,gx-2,2,56,5,'#1a1622'); R(g,gx-2,2,56,1,'#4a4454');
-      if(i===3){ R(g,gx+3,8,46,HZ-10,'#140e12'); ditherRect(g,gx+3,8,46,HZ-10,'rgba(255,200,90,.22)',2); R(g,gx+18,8,16,3,'#ffe9a0');
-        obox(g,gx+8,30,36,14,8,'#3a4a6a'); R(g,gx+10,24,32,1,'#9fc8e8'); R(g,gx+10,42,6,4,'#111'); R(g,gx+36,42,6,4,'#111'); } // машина внутри
-      else { for(let y=9;y<HZ-2;y+=3){ R(g,gx+3,y,46,2,col); R(g,gx+3,y+2,46,1,shade(col,-.4)); } R(g,gx+3,8,46,1,shade(col,.3)); R(g,gx+22,HZ-10,8,2,'#c8b060'); } }
+  } else if(ai===1){ // гаражи: ряд советских железных гаражей с двускатной крышей, два открыты — «Урал» с люлькой и чоппер
+    ditherGrad(g,0,0,W,20,['#1a1a26','#22222e','#2a2834','#322e38']); // вечернее небо
+    for(let i=0;i<46;i++){ const x=(i*29+((i*i)%17)*3)%W, y=2+((i*13)%9), s=5+(i%4)*2; R(g,x,y,s,s-1,['#18221a','#1c281e','#141c16'][i%3]); } // кроны деревьев за гаражами
+    const GW=50, GT=16, GB=HZ-2;
+    const rust=(x,y,w,h,col,n)=>{ for(let i=0;i<n;i++){ const rx=Math.round(x+1+r()*(w-3)), ry=Math.round(y+r()*h*.5), len=Math.round(6+r()*(h*.5)); R(g,rx,ry,1,Math.min(len,y+h-ry),i%2?shade(col,-.22):'#4e2c1e'); if(i%3===0) R(g,rx+1,ry+2,1,Math.min(len-4,y+h-ry-2),shade(col,-.12)); } }; // потёки ржавчины сверху вниз
+    const garage=(x,col,open,bike)=>{
+      poly(g,[[x-2,GT],[x+GW/2,GT-11],[x+GW+2,GT]],shade(col,.06)); line1(g,x-2,GT,x+GW/2,GT-11,shade(col,.35)); line1(g,x+GW/2,GT-11,x+GW+2,GT,shade(col,.2)); // фронтон
+      R(g,x+GW/2-1,GT-11,2,11,shade(col,-.15)); R(g,x-2,GT,GW+4,2,shade(col,-.45)); // конёк и свес крыши
+      R(g,x,GT+2,GW,GB-GT-2,col); R(g,x,GT+2,2,GB-GT-2,shade(col,.15)); R(g,x+GW-2,GT+2,2,GB-GT-2,shade(col,-.3)); // стена
+      const dx0=x+4, dx1=x+GW-4, dy0=GT+4, mid=x+GW/2;
+      if(open){ // распахнутые створки и тёмное нутро с лампочкой
+        R(g,dx0,dy0,dx1-dx0,GB-dy0,'#0e0b0c'); ditherGrad(g,dx0+1,dy0+1,dx1-dx0-2,GB,['#1a1416','#161214','#120e10']);
+        R(g,mid-1,dy0+1,2,2,'#e8d090'); glowEllipse(g,mid,dy0+8,16,9,'rgba(232,208,144,.32)',.8);
+        for(let y=dy0+6;y<GB-6;y+=8) R(g,dx0+2,y,6,1,'#2a2224'); // полки
+        R(g,dx0+2,GB-12,5,10,'#2a2a30'); R(g,dx0+3,GB-10,3,1,'#5a5a64'); // канистра
+        if(bike==='ural') ural(dx0+8,GB-2); else if(bike==='chopper') chopper(dx0+6,GB-2);
+        poly(g,[[dx0,dy0],[dx0-11,dy0-3],[dx0-11,GB+2],[dx0,GB]],shade(col,.08)); line1(g,dx0-11,dy0-3,dx0-11,GB+2,shade(col,-.45)); line1(g,dx0-11,dy0-3,dx0,dy0,shade(col,.35)); line1(g,dx0-6,dy0-1,dx0-6,GB+1,shade(col,-.15)); R(g,dx0-1,dy0+6,2,3,'#2a2626'); R(g,dx0-1,GB-9,2,3,'#2a2626'); // левая створка распахнута к зрителю
+        poly(g,[[dx1,dy0],[dx1+11,dy0-3],[dx1+11,GB+2],[dx1,GB]],shade(col,-.18)); line1(g,dx1+11,dy0-3,dx1+11,GB+2,shade(col,-.5)); line1(g,dx1,dy0,dx1+11,dy0-3,shade(col,.2)); line1(g,dx1+6,dy0-1,dx1+6,GB+1,shade(col,-.32)); R(g,dx1-1,dy0+6,2,3,'#2a2626'); R(g,dx1-1,GB-9,2,3,'#2a2626'); // правая створка
+      } else { // закрытые распашные ворота: шов посередине, петли, накладка замка, ржавчина
+        R(g,dx0,dy0,dx1-dx0,1,shade(col,-.4)); R(g,dx0,dy0,1,GB-dy0,shade(col,-.4)); R(g,dx1-1,dy0,1,GB-dy0,shade(col,-.4));
+        R(g,mid,dy0,1,GB-dy0,shade(col,-.5)); R(g,mid+1,dy0,1,GB-dy0,shade(col,.12));
+        rust(dx0+1,dy0+1,dx1-dx0-2,GB-dy0-1,col,5);
+        for(const hy of [dy0+5,GB-8]){ R(g,dx0-2,hy,3,3,'#3a3232'); R(g,dx1-1,hy,3,3,'#3a3232'); R(g,dx0-1,hy+1,1,1,'#6a625e'); }
+        R(g,mid+4,dy0+20,4,4,'#8a8c90'); R(g,mid+5,dy0+21,2,2,'#4a4c50'); R(g,mid-2,dy0+14,3,2,'#3a3232'); // накладка замка и проушина
+      }
+      R(g,x,GB,GW,2,'#2a2628'); // порог
+    };
+    // «Урал» с люлькой (вид сбоку, смотрит влево): два колеса, бак, сиденье, коляска сбоку
+    const wheel=(cx,cy,rr)=>{ for(let y=-rr;y<=rr;y++) for(let x=-rr;x<=rr;x++){ const d=x*x+y*y; if(d<=rr*rr) R(g,cx+x,cy+y,1,1,d>(rr-1.5)*(rr-1.5)?'#0c0c10':(x===0||y===0||x===y||x===-y)?'#8a8c94':'#1a1a20'); } };
+    function ural(x,y){ const c='#3a4a2e';
+      poly(g,[[x+20,y-14],[x+38,y-14],[x+40,y-9],[x+38,y-5],[x+20,y-5]],shade(c,-.1)); R(g,x+21,y-14,16,1,shade(c,.25)); wheel(x+36,y-4,3); // коляска
+      wheel(x+5,y-4,4); wheel(x+24,y-4,4);
+      R(g,x+7,y-10,16,2,'#1c1c20'); R(g,x+10,y-14,9,4,c); R(g,x+11,y-14,6,1,shade(c,.35)); R(g,x+19,y-15,6,2,'#18161a'); // рама, бак, сиденье
+      R(g,x+12,y-8,6,4,'#5a5c64'); R(g,x+12,y-8,6,1,'#8a8c94'); // двигатель
+      line1(g,x+5,y-4,x+9,y-15,'#5a5c64'); R(g,x+6,y-17,5,1,'#8a8c94'); R(g,x+4,y-15,3,2,'#c8c0a0'); // вилка, руль, фара
+      R(g,x+22,y-7,6,2,shade(c,-.2)); R(g,x+24,y-4,5,1,'#8a8c94'); }
+    // чоппер: длинная наклонная вилка, высокий руль, низкое сиденье
+    function chopper(x,y){
+      wheel(x+3,y-4,4); wheel(x+30,y-5,5);
+      line1(g,x+3,y-4,x+12,y-20,'#a8aab4'); line1(g,x+4,y-4,x+13,y-20,'#8a8c94'); R(g,x+10,y-24,1,5,'#a8aab4'); R(g,x+14,y-24,1,5,'#a8aab4'); R(g,x+10,y-24,5,1,'#a8aab4'); // вилка, высокий руль
+      R(g,x+13,y-14,8,4,'#18161c'); R(g,x+14,y-14,5,1,'#5a4a5a'); R(g,x+20,y-10,9,2,'#2a1e18'); R(g,x+27,y-13,3,4,'#18161a'); // бак, сиденье, спинка
+      R(g,x+14,y-9,7,4,'#6a6c74'); R(g,x+14,y-9,7,1,'#a8aab4'); line1(g,x+18,y-6,x+31,y-4,'#8a8c94'); R(g,x+11,y-17,2,2,'#c8c0a0'); } // мотор, глушитель, фара
+    const COLS=['#5e3a2e','#545a3a','#3e4a5a','#5a3430','#4a5240','#44505a','#62402e'];
+    const XS=[-14,40,94,148,202,256,310];
+    XS.forEach((x,i)=>{ if(i!==2&&i!==4) garage(x,COLS[i],false); });
+    garage(XS[2],COLS[2],true,'ural'); garage(XS[4],COLS[4],true,'chopper');
     R(g,0,HZ-3,W,3,'#3a3640');
     ditherGrad(g,0,HZ,W,H,['#4a4652','#4e4a56','#524e5a','#56525e']);
     noise(g,r,0,HZ,W,H-HZ,700,['#3a3642','#625e6a']);
     floorSeams(g,HZ+8,9,'#3a3644',34);
     for(let i=0;i<7;i++) glowEllipse(g,(r()*W)|0,HZ+12+(r()*(H-HZ-20)|0),6+(r()*10|0),2+(r()*3|0),'#24202a',.9); // масляные пятна
-    glowEllipse(g,186,HZ+6,30,8,'rgba(255,220,140,.55)',.8); // свет из открытого гаража
+    glowEllipse(g,123,HZ+5,26,6,'rgba(232,208,144,.35)',.8); glowEllipse(g,231,HZ+5,26,6,'rgba(232,208,144,.35)',.8); // свет из открытых гаражей
     for(const tx of [6,294]) for(let k=0;k<4;k++) barrel(g,tx,96-k*6,22,5,'#2a2630'); // стопки шин
-    sign=makeSign('ШИНЫ 24',A.neon,10); sign.x=40; sign.y=12;
-  } else if(ai===2){ // пустырь у завода: закат в дыму, цеха, земля с гравием, бочки с огнём
-    ditherGrad(g,0,0,W,26,['#1a0c18','#2e121e','#4a1a20','#6a2a22']);
-    skyline(g,r,26,8,20,'#160c12',true,.15);
-    R(g,0,22,W,HZ-22,'#2a1a1c'); for(let x=6;x<W;x+=14) for(let y=27;y<HZ-8;y+=9) R(g,x,y,7,5,r()<.35?'#ffb060':'#1a0e10');
-    R(g,0,22,W,2,'#4a2a28'); R(g,0,HZ-4,W,4,'#1a1012');
-    for(const cxh of [[44,4],[268,0]]){ R(g,cxh[0],cxh[1],12,24,'#2e1c1e'); R(g,cxh[0],cxh[1],2,24,'#4a2e2c'); R(g,cxh[0]-1,cxh[1],14,2,'#3a2426'); } // трубы
+  } else if(ai===2){ // пустырь у завода «Красный молот»: цеха с пилообразной крышей, трубы, бетонный забор, дорожный указатель
+    ditherGrad(g,0,0,W,30,['#16121c','#221822','#3a2226','#5a3228','#6e4030']); // закат в дыму
+    skyline(g,r,30,4,12,'#1c1418',false,0); // дальние корпуса
+    // главный цех: кирпичный корпус, пилообразная крыша (шеды), ряды окон
+    R(g,0,22,W,24,'#3a2622'); bricks(g,0,24,W,22,'#3a2420');
+    for(let x=-4;x<W;x+=16){ poly(g,[[x,22],[x+12,14],[x+12,22]],'#2a2024'); R(g,x+11,14,2,8,'#5a6470'); R(g,x+12,15,1,6,'#8a9aa8'); } // шеды со стеклом
+    for(let x=6;x<W;x+=12) for(const y of [27,35]){ const lit=r()<.25; R(g,x,y,8,5,lit?'#8a6a40':'#141016'); R(g,x+4,y,1,5,'#2a1e1e'); if(!lit) R(g,x+1,y+1,1,2,'#3a3440'); }
+    // трубы с выцветшими полосами
+    for(const [cx,top] of [[44,0],[98,6]]){ for(let y=top;y<24;y++){ const band=((y-top)>>2)%2; R(g,cx,y,10,1,band?'#6a4a44':'#5a3a34'); } R(g,cx,top,2,24-top,'#7a5a54'); R(g,cx-1,top,12,2,'#3a2a28'); R(g,cx+4,top+3,2,1,'#9a3a30'); }
+    // газгольдер и кран
+    for(let y=0;y<12;y++){ const w=Math.round(Math.sqrt(1-(y/12)**2)*14); R(g,150-w,26-y,w*2,1,y>8?'#3a3236':'#2e282c'); }
+    line1(g,170,22,170,4,'#3a3036'); line1(g,170,4,200,4,'#3a3036'); line1(g,170,8,180,4,'#3a3036'); R(g,198,4,1,8,'#2a2226');
+    // бетонный забор из плит с ромбами, колючая проволока, ворота открыты
+    const FY=40; for(let x=0;x<W;x+=20){ if(x>=140&&x<180) continue; R(g,x,FY,19,HZ-FY-3,'#6a6660'); R(g,x,FY,19,1,'#8a8680'); R(g,x+18,FY,1,HZ-FY-3,'#4a4642');
+      for(let k=0;k<3;k++) for(let j=0;j<2;j++){ const cx=x+4+k*6, cy=FY+4+j*6; R(g,cx,cy-1,1,1,'#55524c'); R(g,cx-1,cy,3,1,'#55524c'); R(g,cx,cy+1,1,1,'#55524c'); } }
+    for(let x=0;x<W;x+=3) if(x<140||x>=180) R(g,x,FY-2-(x%6?0:1),2,1,'#2a2a2e'); for(let x=0;x<W;x+=20) if(x<140||x>=180) R(g,x,FY-4,1,4,'#3a3a40');
+    R(g,140,FY,40,HZ-FY-3,'#1a1416'); poly(g,[[140,FY],[132,FY-2],[132,HZ-3],[140,HZ-3]],'#5a3a2a'); poly(g,[[180,FY],[188,FY-2],[188,HZ-3],[180,HZ-3]],'#4e3226'); // открытые ржавые ворота
+    R(g,146,FY+4,10,6,'#2a2228'); R(g,162,FY+8,8,5,'#2a2a2e'); // двор: ящики
+    // дорожный указатель на двух столбах: «ЗАВОД «КРАСНЫЙ МОЛОТ»
+    R(g,214,26,2,FY-26,'#6a6e74'); R(g,292,26,2,FY-26,'#6a6e74');
+    R(g,204,6,100,22,'#c8ccd0'); R(g,205,7,98,20,'#26467e'); R(g,206,8,96,18,'#2a4c86'); R(g,206,8,96,1,'#3a5c96');
+    bitmapText(g,'ЗАВОД',254-bitmapWidth('ЗАВОД',1)/2,9,'#dfe3e8',1); bitmapText(g,'«КРАСНЫЙ МОЛОТ»',254-bitmapWidth('«КРАСНЫЙ МОЛОТ»',1)/2,18,'#dfe3e8',1);
+    // фонарь с тусклым натриевым светом
+    R(g,120,8,2,HZ-8,'#3a3a42'); R(g,120,8,8,2,'#3a3a42'); R(g,125,10,4,2,'#d8a050'); glowEllipse(g,127,16,8,6,'rgba(216,160,80,.25)',.7);
+    R(g,0,HZ-4,W,4,'#1a1012');
     ditherGrad(g,0,HZ,W,H,['#3a2c26','#3e2f28','#42322a','#46352c']);
     noise(g,r,0,HZ,W,H-HZ,1300,['#2a201c','#5a4638','#6a5444','#30241e']);
     for(let i=0;i<5;i++){ const x=r()*W|0, y=HZ+8+(r()*(H-HZ-16)|0); poly(g,[[x,y],[x+20,y],[x+26,y+4],[x-4,y+4]],'#2e221e'); } // ямы
     for(const bx of [10,286]){ barrel(g,bx,92,24,22,'#7a4418'); glowEllipse(g,bx+12,104,28,9,'rgba(255,138,43,.5)',.9); }
-    sign=makeSign('ЗАВОД №7',A.neon,10); sign.x=118; sign.y=30;
-  } else if(ai===3){ // крыша на закате (как ринг на крыше у Punch Club): небо, силуэты города, перила, плитка
-    ditherGrad(g,0,0,W,HZ,['#2a1e4a','#4a2a5a','#7a3a5a','#b4504a','#e07a3a','#ffae4a']);
-    for(let y=-12;y<=12;y++) for(let x=-12;x<=12;x++) if(x*x+y*y<=144) R(g,236+x,40+y,1,1,x*x+y*y>100?'#ffd27a':'#fff0b0'); // солнце
-    skyline(g,r,HZ,10,34,'#3a2244',true,.18); skyline(g,r,HZ,6,22,'#24162e',true,.25);
-    barrel(g,22,8,30,22,'#5a3a2a'); R(g,18,4,38,4,'#3a2418'); R(g,26,30,3,HZ-30,'#2a1a14'); R(g,46,30,3,HZ-30,'#2a1a14'); // водонапорная бочка
-    R(g,0,HZ-8,W,2,'#8a92b0'); for(let x=2;x<W;x+=12) R(g,x,HZ-8,2,8,'#6a7290'); R(g,0,HZ-1,W,1,'#4a5270'); // перила
-    ditherGrad(g,0,HZ,W,H,['#3a3448','#3e384c','#423c50','#464054']);
-    floorSeams(g,HZ+4,8,'#2e2a3c',26); noise(g,r,0,HZ,W,H-HZ,500,['#2e2a3a','#56506a']);
-    glowEllipse(g,160,HZ+2,140,10,'rgba(255,160,90,.35)',.8); // отсвет заката на полу
-    obox(g,276,84,40,22,10,'#6a7080'); for(let y=86;y<104;y+=3) R(g,280,y,32,1,'#4a5060'); // кондиционер
-    obox(g,2,96,30,12,8,'#4a4a5a'); // вентиляция
-    sign=makeSign('ОТЕЛЬ',A.neon,12); sign.x=128; sign.y=6;
+  } else if(ai===3){ // крыша башни «Меридиан» в центре большого города, как Манхэттен ночью: стена небоскрёбов, подсветка, прожекторы, реклама
+    const SB=46; // линия, где здания уходят за парапет
+    ditherGrad(g,0,0,W,SB,['#05061a','#0a0b24','#141434','#221a44','#36204e','#4a2654']); // небо, к горизонту — зарево города
+    for(let i=0;i<24;i++) R(g,(i*67+i*i*5)%W,(i*7)%14,1,1,'#6a6c9a'); // редкие звёзды
+    // лучи прожекторов в небе (за зданиями)
+    g.fillStyle='#cfe0ff';
+    for(const [bx,tx,a] of [[96,40,.07],[118,170,.06],[214,262,.07],[236,318,.05]]){ g.globalAlpha=a; g.beginPath(); g.moveTo(bx-2,SB); g.lineTo(tx-7,0); g.lineTo(tx+7,0); g.lineTo(bx+2,SB); g.closePath(); g.fill(); }
+    g.globalAlpha=1;
+    const winGrid=(x,y,w,h,step,p,cols)=>{ for(let wy=y+2;wy<h+y-1;wy+=step) for(let wx=x+1;wx<x+w-1;wx+=2) if(r()<p) R(g,wx,wy,1,1,cols[r()*cols.length|0]); };
+    // дальний ряд небоскрёбов
+    let x=-4; while(x<W){ const w=10+(r()*14|0), h=16+(r()*22|0), c=r()<.5?'#12122a':'#161430'; R(g,x,SB-h,w,h,c); R(g,x,SB-h,1,h,shade(c,.15)); winGrid(x,SB-h,w,h,3,.22,['#8a7a5a','#6a7a9a']); x+=w+1; }
+    // «Эмпайр-стейт»: ступенчатая башня со шпилем и подсвеченной верхушкой
+    const ex=70; R(g,ex,18,26,SB-18,'#1a1830'); R(g,ex+4,10,18,8,'#1e1c36'); R(g,ex+8,5,10,5,'#24223e'); R(g,ex+11,1,4,4,'#3a3458'); R(g,ex+12,0,2,1,'#e8e0c0');
+    winGrid(ex,18,26,SB-18,2,.5,['#d8b878','#c8a868','#e8d098']); R(g,ex+4,10,18,1,'#c8a0d8'); R(g,ex+8,5,10,1,'#c8a0d8'); for(let y=5;y<10;y++) R(g,ex+9,y,8,1,y%2?'#7a5a9a':'#5a4a7a'); // фиолетовая подсветка верха
+    // «Крайслер»: корона из ступенчатых арок, серебристая, со шпилем
+    const cx0=232; R(g,cx0,16,16,SB-16,'#1c1a32'); winGrid(cx0,16,16,SB-16,2,.45,['#d8c890','#b8c8d8']);
+    for(let k=0;k<4;k++){ const w=14-k*3, y=16-k*3; for(let i=0;i<w;i++){ const dy=Math.round(Math.sin(i/(w-1)*Math.PI)*2); R(g,cx0+1+k*1.5+i,y-dy,1,1,'#d8dce8'); } for(let i=1;i<w-1;i+=2) R(g,cx0+1+k*1.5+i,y,1,1,'#f0e8b0'); }
+    R(g,cx0+7,0,2,6,'#c8ccd8'); R(g,cx0+7,0,1,6,'#f0f0f8');
+    // ближний ряд: высокие башни с плотными окнами и неоновой подсветкой граней
+    const towers=[[-6,26,0,'#38d8ff'],[22,18,8,null],[104,22,14,'#ff4fd8'],[150,16,20,null],[172,24,10,'#38d8ff'],[262,20,4,'#ffb040'],[286,40,0,null]];
+    for(const [tx,tw,top,led] of towers){ const c=shade('#1e1c34',r()*.1); R(g,tx,top,tw,SB-top,c); R(g,tx,top,2,SB-top,shade(c,.18)); R(g,tx+tw-1,top,1,SB-top,shade(c,-.3));
+      winGrid(tx+1,top,tw-2,SB-top,2,.55,['#e8d098','#d8b070','#a8c8e8','#c8a868']);
+      if(top>0){ R(g,tx,top,tw,1,shade(c,.3)); if(r()<.6){ R(g,tx+(tw>>1),top-5,1,5,'#5a5a70'); R(g,tx+(tw>>1),top-6,1,1,'#ff3040'); } }
+      if(led){ R(g,tx,top,1,SB-top,led); R(g,tx+tw-1,top+2,1,SB-top-2,shade(led,-.35)); for(let y=top+3;y<SB;y+=6) R(g,tx+1,y,tw-2,1,shade(led,-.55)); } }
+    // рекламные щиты на фасадах (светятся, но приглушённо): стейк-хаус, фото, круглосуточно, бутылка газировки
+    const ad=(x,y,w,h,bg,fg,txt)=>{ glowEllipse(g,x+(w>>1),y+(h>>1),w,h,'rgba('+bg+',.18)',.7); R(g,x-1,y-1,w+2,h+2,'#0a0a12'); R(g,x,y,w,h,'rgb('+bg+')'); R(g,x,y,w,1,'rgba(255,255,255,.35)');
+      if(txt) bitmapText(g,txt,x+((w-bitmapWidth(txt,1))>>1),y+((h-7)>>1),fg,1); };
+    ad(106,18,18,11,'176,40,52','#f4ece0','');  R(g,110,20,10,6,'#e8c070'); R(g,111,21,8,4,'#a0402a'); R(g,112,22,2,1,'#f0d8a0'); // стейк на тарелке
+    ad(24,22,14,9,'40,120,170','#e8f4ff','TV');
+    ad(172,14,27,10,'200,150,40','#1a1008','24/7');
+    ad(150,26,16,14,'30,140,110','#e8fff0',''); R(g,156,28,4,10,'#c8f0e0'); R(g,157,27,2,1,'#c8f0e0'); R(g,156,31,4,3,'#d83a3a'); // бутылка газировки
+    ad(260,10,27,10,'150,60,170','#fff0ff','CASH');
+    ditherRect(g,0,SB-6,W,6,'rgba(90,60,120,.35)',2); // дымка над улицами
+    // парапет крыши, перила, деревянная водонапорная башня (как на крышах Нью-Йорка), мачта с огнём
+    R(g,0,SB,W,HZ-SB,'#1a1a26');
+    R(g,0,HZ-8,W,8,'#2a2c3a'); R(g,0,HZ-8,W,1,'#4a4e62'); for(let x2=0;x2<W;x2+=16) R(g,x2,HZ-7,1,7,'#20222e');
+    R(g,0,HZ-14,W,1,'#5a6078'); for(let x2=2;x2<W;x2+=12) R(g,x2,HZ-14,1,6,'#4a5068');
+    for(let i=0;i<22;i++){ const k=i/21, c=k<.2?'#3a2618':k<.6?'#6a4a30':k<.8?'#7a5838':'#4a3220'; R(g,12+i,20,1,22,c); } // бочка из досок
+    for(const y of [24,31,38]) R(g,12,y,22,1,'#2a1a10'); for(let i=0;i<12;i++) R(g,23-i,8+i,i*2+1,1,i%2?'#3a3238':'#4a4048'); // обручи и коническая крыша
+    R(g,14,42,2,HZ-50,'#1a1418'); R(g,30,42,2,HZ-50,'#1a1418'); line1(g,15,44,31,HZ-10,'#1a1418'); line1(g,31,44,15,HZ-10,'#1a1418'); // опоры с раскосами
+    R(g,302,6,2,HZ-14,'#4a4c5a'); for(let y=10;y<HZ-10;y+=6) line1(g,300,y,306,y+5,'#3a3c48'); R(g,301,4,4,2,'#2a2a34'); // мачта (огонь мигает в drawScene)
+    ditherGrad(g,0,HZ,W,H,['#2e2c3a','#32303e','#363442','#3a3846']);
+    floorSeams(g,HZ+4,8,'#24222e',26); noise(g,r,0,HZ,W,H-HZ,500,['#26242e','#4a4858']);
+    glowEllipse(g,160,HZ+3,150,9,'rgba(140,90,170,.25)',.8); // отсвет города на полу крыши
+    obox(g,276,84,40,22,10,'#5a606e'); for(let y=86;y<104;y+=3) R(g,280,y,32,1,'#3e4452'); // кондиционер
+    obox(g,2,96,30,12,8,'#3e3e4a'); // вентиляция
   } else { // подпольный ринг: тёмный зал, трибуны, баннер, прожекторы
     ditherGrad(g,0,0,W,HZ,['#05030a','#0a0614','#120a20']);
-    R(g,0,2,W,3,'#2a2a34'); for(let x=8;x<W;x+=24){ R(g,x,5,6,4,'#1a1a22'); R(g,x+1,8,4,2,'#ffe9a0'); }
-    R(g,46,12,228,14,'#8a0e1e'); R(g,46,12,228,1,'#d02a3a'); R(g,46,25,228,1,'#4a0610'); pixelText(g,'УЛИЧНЫЙ ЧЕМПИОН',160,13,'#ffd23f',10,'center');
+    for(const px of [2,30,290,316]){ R(g,px,0,10,HZ,'#1c1a22'); R(g,px,0,1,HZ,'#2e2a36'); R(g,px+9,0,1,HZ,'#121018'); } // бетонные колонны подвала
+    for(const [py,pc] of [[1,'#2a2a30'],[5,'#3a2a24']]){ R(g,0,py,W,3,pc); R(g,0,py,W,1,shade(pc,.3)); for(let x=12;x<W;x+=40) R(g,x,py-1,3,5,'#18161c'); } // трубы под потолком с хомутами
+    for(let x=20;x<W;x+=40){ R(g,x,8,1,4,'#18161c'); R(g,x-1,12,3,2,'#d8c080'); glowEllipse(g,x,16,7,4,'rgba(216,192,128,.3)',.8); } // голые лампочки на проводах
+    R(g,60,14,200,12,'#3a1a1c'); R(g,60,14,200,1,'#5a2a2a'); R(g,60,25,200,1,'#200c0e'); for(let x=62;x<258;x+=9) R(g,x,25,4,1,'#2a1214'); // выцветший тканевый баннер
+    bitmapText(g,'УЛИЧНЫЙ ЧЕМПИОН',160-bitmapWidth('УЛИЧНЫЙ ЧЕМПИОН',1)/2,17,'#a8906a',1);
     for(let row=0;row<5;row++){ const y=30+row*5, dim=-.72+row*.06; // трибуны: мелкие головы зрителей
       for(let x=(row%2)*3;x<W;x+=6){ if(r()<.1) continue; const sk=['#e8b48a','#c88a60','#8a5a3a'][r()*3|0], sh=['#d01818','#1838d0','#ffd23f','#3ee07a','#f2f2f2'][r()*5|0];
         R(g,x,y+2,5,3,shade(sh,dim)); R(g,x+1,y,3,2,shade(sk,dim)); } }
@@ -1078,7 +1228,7 @@ function makeBG(ai){
     floorSeams(g,HZ+6,8,'#0c0912',30);
     for(const cx of [24,296]) for(let k=0;k<3;k++) obox(g,cx-8,92+k*18,16,4,6,'#2a2632'); // стулья у ринга
   }
-  const {ring,front}=makeRingLayers(S,r,ai);
+  const {ring,front}=A.ring===false?makeGroundLayers(r,ai):makeRingLayers(S,r,ai); // ринг — только там, где он уместен
   const eb=S.edge, cb=S.crowd;
   return {S,env,ring,front,sign,
     back:makeCrowd(r,ai===4?26:20,4,316,RG.bt+6,RG.bt+10,24,30,cb,eb),
@@ -1120,7 +1270,7 @@ function drawScene(ctx,ai,list,t,o){
   if(B.sign){ const s=B.sign, lit=(Math.sin(t/90)+Math.sin(t/37)>-1.6); if(lit) ctx.drawImage(s.glow,s.x-3,s.y-3); ctx.drawImage(lit?s.on:s.off,s.x,s.y); }
   if(ai===2){ // огонь в бочках и дым труб
     for(const bx of [22,298]){ for(let i=0;i<8;i++){ const h=4+Math.random()*12; R(ctx,bx-8+i*2,92-h,2,h,i%2?'#ff8a2b':'#ffd23f'); R(ctx,bx-7+i*2,92-h*.5,1,h*.5,'#fff3a0'); } }
-    for(const cx of [50,274]) for(let i=0;i<4;i++){ const k=((t/40+i*37+cx)%150)/150; ditherRect(ctx,Math.round(cx-4+k*18),Math.round(4-k*24),8+Math.round(k*12),6+Math.round(k*8),'rgba(120,100,110,'+(.5*(1-k)).toFixed(2)+')',2); }
+    for(const cx of [49,103]) for(let i=0;i<4;i++){ const k=((t/40+i*37+cx)%150)/150; ditherRect(ctx,Math.round(cx-4+k*18),Math.round(4-k*24),8+Math.round(k*12),6+Math.round(k*8),'rgba(120,100,110,'+(.5*(1-k)).toFixed(2)+')',2); }
   }
   drawCrowd(ctx,B.back,t,ch);
   ctx.drawImage(B.ring,0,0);
@@ -1141,6 +1291,7 @@ function drawScene(ctx,ai,list,t,o){
   if(ai>=3){ // лучи прожекторов сверху
     for(const lx of [70,250]){ const ang=Math.sin(t/1400+lx)*24; ctx.globalAlpha=.06; ctx.fillStyle='#fff6d0';
       ctx.beginPath(); ctx.moveTo(lx,0); ctx.lineTo(lx+ang-34,RG.ft); ctx.lineTo(lx+ang+34,RG.ft); ctx.closePath(); ctx.fill(); ctx.globalAlpha=1; } }
+  if(ai===3&&Math.floor(t/600)%2){ R(ctx,302,3,2,2,'#ff3040'); R(ctx,301,4,4,1,'rgba(255,48,64,.5)'); } // огонь на мачте мигает
   if(ai===4) for(let i=0;i<(1+ch*6);i++) if(Math.random()<.3){ const x=Math.random()*W, y=30+Math.random()*24; R(ctx,x,y,2,2,'#fff'); R(ctx,x-1,y+.5,4,1,'#fff'); } // вспышки камер
   if(A.rain){ ctx.fillStyle='rgba(170,190,255,.45)'; for(const d of RAIN){ d.y+=d.s*2; d.x-=d.s*.6; if(d.y>H){ d.y=-4; d.x=Math.random()*380; } ctx.fillRect(Math.round(d.x),Math.round(d.y),1,d.s>2.4?5:3); } }
   ctx.restore();
@@ -1211,17 +1362,19 @@ function setName(id,text){
 }
 // имя на экране VS шрифтом 5×7: крупно (2×), если помещается в половину экрана
 // длинное имя переносится на две строки, чтобы остаться крупным; возвращает нижнюю границу текста
-function vsName(ctx,text,cx,y){
+FONT5['«']=['.....','..#.#','.#.#.','#.#..','.#.#.','..#.#','.....']; FONT5['»']=['.....','#.#..','.#.#.','..#.#','.#.#.','#.#..','.....']; // кавычки для клички на экране VS
+function vsName(ctx,text,cx,y,color,oneLine){
   const room=Math.min(cx,W-cx)*2-8;
-  let lines=[text]; if(bitmapWidth(text,2)>room&&text.includes(' ')){ const i=text.indexOf(' '); lines=[text.slice(0,i),text.slice(i+1)]; }
-  const s=lines.every(l=>bitmapWidth(l,2)<=room)?2:1;
+  const wrap=s=>{ const out=[]; for(const w of text.split(' ')){ const l=out.length?out[out.length-1]+' '+w:w; if(out.length&&bitmapWidth(l,s)<=room) out[out.length-1]=l; else out.push(w); } return out; }; // перенос по словам
+  let s=2, lines=wrap(2); if(lines.length>(oneLine?1:2)||lines.some(l=>bitmapWidth(l,2)>room)){ s=1; lines=wrap(1); } // oneLine: лучше мельче, но в одну строку
   lines.forEach((l,n)=>{ const w=bitmapWidth(l,s), x=Math.round(cx-w/2), yy=y+n*(7*s+3);
     for(const [dx,dy] of [[-1,0],[1,0],[0,-1],[0,1],[-1,-1],[1,1],[1,-1],[-1,1]]) bitmapText(ctx,l,x+dx,yy+dy,'#000',s);
-    bitmapText(ctx,l,x,yy,'#ffd23f',s); });
+    bitmapText(ctx,l,x,yy,color||'#ffd23f',s); });
   return y+lines.length*(7*s+3);
 }
 // экран «VS» перед боем, как в аркадах
 const VSC=document.createElement('canvas'); pixelLabel(VSC,'VS','#ffd23f',16,'#d01818');
+const VSM=document.createElement('canvas').getContext('2d'); // черновой холст: замерить высоту надписи
 function drawVS(ctx,F,t){
   const el=INTRO_T-F.introT;
   R(ctx,0,0,W,H,'#0a0410');
@@ -1231,13 +1384,14 @@ function drawVS(ctx,F,t){
   ctx.fillStyle='#ffd23f'; ctx.beginPath(); ctx.moveTo(174,0); ctx.lineTo(178,0); ctx.lineTo(146,H); ctx.lineTo(142,H); ctx.fill();
   const slide=Math.max(0,1-el/350), px=Math.round(76-slide*140), ox=Math.round(244+slide*140);
   const opp=OPP[F.idx], mem=opp.duo?opp.members:[opp];
-  if(mem[1]) renderFighter(ctx,mem[1].pal,'idle',ox+34,172,-1,t,0,null,1.4);
-  renderFighter(ctx,F.p.pal,'idle',px,172,1,t,0,'#ff5a6a',1.6);
-  renderFighter(ctx,mem[0].pal,'idle',ox,172,-1,t,0,'#5a8aff',1.6);
+  // бойцы чуть выше и мельче, чтобы внизу поместилось название локации крупным шрифтом
+  if(mem[1]) renderFighter(ctx,mem[1].pal,'idle',ox+34,161,-1,t,0,null,1.3);
+  renderFighter(ctx,F.p.pal,'idle',px,161,1,t,0,'#ff5a6a',1.5);
+  renderFighter(ctx,mem[0].pal,'idle',ox,161,-1,t,0,'#5a8aff',1.5);
   vsName(ctx,S.name.toUpperCase(),px,6); const nameBottom=vsName(ctx,(opp.duo?opp.name:mem[0].name).toUpperCase(),ox,6);
-  for(const [dx,dy] of [[-1,0],[1,0],[0,-1],[0,1]]) pixelText(ctx,'«'+opp.title+'»',ox+dx,nameBottom+2+dy,'#000',8,'center');
-  pixelText(ctx,'«'+opp.title+'»',ox,nameBottom+2,'#c8d4ff',8,'center');
-  pixelText(ctx,ARENAS[F.arena].n.toUpperCase(),W/2,H-14,'#fff',8,'center');
+  vsName(ctx,'«'+opp.title.toUpperCase()+'»',ox,nameBottom+1,'#c8d4ff'); // кличка тем же чётким пиксельным шрифтом, что и имя
+  const loc=ARENAS[F.arena].n.toUpperCase(), lh=vsName(VSM,loc,W/2,0,'',true); // высота надписи (1–2 строки) — чтобы прижать её к низу
+  vsName(ctx,loc,W/2,H-2-lh,'#fff',true); // локация — тем же чётким шрифтом 5×7, крупно
   const k=Math.min(1,Math.max(0,(el-250)/180)); if(k>0){ const s=Math.round(3+3*(1-k)); ctx.imageSmoothingEnabled=false;
     ctx.drawImage(VSC,Math.round(W/2-VSC.width*s/2),Math.round(H/2-VSC.height*s/2)-6,VSC.width*s,VSC.height*s); }
   if(el<120){ ctx.globalAlpha=1-el/120; R(ctx,0,0,W,H,'#fff'); ctx.globalAlpha=1; }
@@ -2289,7 +2443,7 @@ function tgBack(){
 
 /* ---------- ДИАГНОСТИКА: ошибки на телефоне видны прямо в игре ----------
    Нажатие на номер сборки на заставке показывает сведения об устройстве; нажатие на панель — скрывает её. */
-const BUILD='54 · 2026-10-26'; // номер сборки — видно на заставке, свежая версия или старая из кэша Telegram
+const BUILD='61 · 2026-10-26'; // номер сборки — видно на заставке, свежая версия или старая из кэша Telegram
 let FRAMES=0, PRESENT_MODE='чёткий';
 /* Сторож: раз в секунду, независимо от кадров. Если игра открыта, а кадры не идут — или бой стоит без открытых окон, —
    показываем панель ошибок с подробностями (по ней видно причину, например на ПК). */
