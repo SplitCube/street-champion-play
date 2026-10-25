@@ -160,6 +160,18 @@ button{font-family:inherit;color:inherit;cursor:pointer;touch-action:manipulatio
 .flog div:first-child{color:var(--txt)}
 .frow{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .hint{font-size:10px;color:#6c5ea0;text-align:center}
+/* выбор усиления «1 из 3» */
+.perks{display:flex;flex-direction:column;gap:8px;margin-top:8px}
+.perk{display:grid;grid-template-columns:40px 1fr;grid-template-rows:auto auto;column-gap:10px;align-items:center;text-align:left;background:#1a1430;border:3px solid #000;box-shadow:inset 0 0 0 2px var(--yel);color:var(--txt);padding:9px 10px;font:inherit;cursor:pointer}
+.perk .ic{grid-row:1/3;font-size:26px;text-align:center}
+.perk b{font-size:14px;color:var(--yel)}
+.perk .dim{font-size:12px}
+.perk:active{filter:brightness(1.3)}
+.perkrow{font-size:12px;color:var(--yel);text-align:center;margin:4px 0}
+.frow.f3{grid-template-columns:1fr 1fr 1fr}
+.power{color:var(--txt)}.power b{color:var(--org)}
+div.power:not(.ostat){font-size:13px;margin-top:4px}
+#autoBtn.on{box-shadow:inset 0 0 0 2px var(--grn);color:var(--grn)}
 /* modal */
 .modal{position:absolute;inset:0;background:rgba(5,3,12,.86);display:none;align-items:center;justify-content:center;padding:max(14px,var(--sat)) 14px max(14px,var(--sab));z-index:20}
 .modal.on{display:flex}
@@ -231,7 +243,7 @@ button{font-family:inherit;color:inherit;cursor:pointer;touch-action:manipulatio
       <div class="adr" id="adrRow">АДРЕНАЛИН<div class="bar"><i class="fill" id="pAdr"></i></div></div>
       <div class="flog" id="flog"></div>
       <div class="hint" id="fHint">Боец дерётся сам. Адреналин полон — суперудар. Прокачивайся, чтобы дойти до босса и победить.</div>
-      <div class="frow"><button class="btn sm" id="speedBtn" data-act="speed">Скорость x1</button><button class="btn sm" data-act="surrender">Отступить</button></div>
+      <div class="frow f3"><button class="btn sm" id="speedBtn" data-act="speed">⏩ x1</button><button class="btn sm" id="autoBtn" data-act="auto">Авто: выкл</button><button class="btn sm" data-act="surrender">Отступить</button></div>
     </div>
   </div>
 
@@ -280,7 +292,7 @@ const fmt=n=>Math.round(n).toLocaleString('ru-RU');
 /* ---------- ДАННЫЕ ---------- */
 const MAX_LVL=30, MAX_STAT=30, FIGHT_COST=20, TRAIN_COST=20, TRAIN_TIME=3000;
 // автобатлер: этап = 10 волн (по одному врагу) + босс из лиги; здоровье бойца переходит из волны в волну
-const WAVES=10, WAVE_K0=.25, WAVE_K1=.04, WAVE_HP0=.45, WAVE_HP1=.035, WAVE_TIME=30000, BOSS_TIME=90000, BOSS_TIME_DUO=120000, BOSS_HP=1.25, BOSS_HP_DUO=1, WAVE_HEAL=.3, BOSS_HEAL=1;
+const WAVES=10, WAVE_K0=.25, WAVE_K1=.04, WAVE_HP0=.45, WAVE_HP1=.035, WAVE_TIME=30000, BOSS_TIME=90000, BOSS_TIME_DUO=120000, BOSS_HP=1.45, BOSS_HP_DUO=1.15, WAVE_HEAL=.3, BOSS_HEAL=1;
 const STATS={
   str:{n:'Сила',ic:'💪',d:'Урон всех ударов',tr:'Тяжёлый мешок'},
   spd:{n:'Скорость',ic:'⚡',d:'Частота атак и точность',tr:'Скакалка'},
@@ -375,7 +387,7 @@ const critOf=st=>clamp(.04+st.agi*.008,0,.4);
 const SAVE_KEY='streetChampion_career_v1';
 const DEF_SAVE=()=>({v:1,lvl:1,xp:0,pts:0,money:30,day:1,energy:100,maxEnergy:100,
   st:{str:3,spd:3,end:3,agi:3},prog:{str:0,spd:0,end:0,agi:0},gym:1,
-  owned:['jab','block'],load:['jab','block'],beaten:0,best:0,kills:0,wins:0,losses:0,sound:true,started:false,champ:false,sleeps:0,name:'Ты',ts:0});
+  owned:['jab','block'],load:['jab','block'],beaten:0,best:0,kills:0,auto:false,wins:0,losses:0,sound:true,started:false,champ:false,sleeps:0,name:'Ты',ts:0});
 // имя бойца: до 14 символов, только буквы/цифры/пробел/точка/дефис, которые есть в пиксельном шрифте
 const NAME_MAX=14;
 function cleanName(v){
@@ -404,7 +416,7 @@ function sanitize(d){
   s.maxEnergy=num(d.maxEnergy,100,100,1000); s.energy=num(d.energy,100,0,s.maxEnergy);
   for(const k in s.st){ if(d.st) s.st[k]=num(d.st[k],3,1,MAX_STAT); if(d.prog) s.prog[k]=num(d.prog[k],0,0,1e6); }
   s.gym=num(d.gym,1,1,GYM.length); s.beaten=num(d.beaten,0,0,OPP.length);
-  s.best=num(d.best,0,0,WAVES+1); s.kills=num(d.kills,0,0,1e9); // best — рекорд волны на текущем этапе, kills — всего врагов побеждено
+  s.best=num(d.best,0,0,WAVES+1); s.kills=num(d.kills,0,0,1e9); s.auto=d.auto===true; // best — рекорд волны на текущем этапе, kills — всего врагов побеждено
   s.wins=num(d.wins,0,0,1e6); s.losses=num(d.losses,0,0,1e6); s.sleeps=num(d.sleeps,0,0,1e9);
   const own=new Set(['jab','block']); if(Array.isArray(d.owned)) d.owned.forEach(m=>{ if(MOVES[m]) own.add(m); });
   s.owned=MOVE_ORDER.filter(m=>own.has(m));
@@ -1102,7 +1114,7 @@ function makeFighter(name,st,moves,pal,face,x,isPlayer,dm){
 // забег по этапу: боец идёт волна за волной без остановки, затем выходит босс
 function newFight(idx,sim,pst,pload){
   const p=makeFighter('Ты',pst||S.st,pload||S.load,PLAYER_PAL,1,PX,true);
-  const R={idx,arena:arenaOf(idx),p,o:null,wave:0,kills:0,earn:{money:0,xp:0,ups:0},queue:[],team:1,round:1,deadMax:0,swapT:0,
+  const R={idx,arena:arenaOf(idx),p,o:null,wave:0,kills:0,earn:{money:0,xp:0,ups:0},perks:[],perkAt:[],queue:[],team:1,round:1,deadMax:0,swapT:0,
     time:WAVE_TIME,state:sim?'fight':'intro',introT:VS_END,endT:0,hitstop:0,fx:[],speed:sim?1:fightSpeed,
     log:[],shake:0,parts:[],cheer:0,winner:null,sim:!!sim,flashAll:0,banner:''};
   spawnEnemy(R); return R;
@@ -1122,9 +1134,45 @@ const isBoss=()=>F.wave>WAVES;
 const xpPay=i=>i<S.beaten?Math.round(OPP[i].xp*.5):OPP[i].xp;
 // награда за каждого врага волны — сразу и навсегда, даже если забег сорвётся
 const waveMoney=i=>Math.max(1,Math.round(winPay(i)*.06)), waveXp=i=>Math.max(1,Math.round(xpPay(i)*.07));
+/* Усиления «1 из 3»: после волн 3, 6 и 9 игрок выбирает одно из трёх случайных. Действуют до конца забега,
+   одинаковые складываются. a — что меняется у бойца (f) и забега (R). */
+const PERK_WAVES=[3,6,9];
+const PERKS={
+  pow:{ic:'👊',n:'Тяжёлые руки',d:'+15% к урону',a:(f)=>{ f.dm*=1.15; }},
+  vamp:{ic:'🩸',n:'Вкус крови',d:'6% нанесённого урона лечит',a:(f)=>{ f.vamp=(f.vamp||0)+.06; }},
+  crit:{ic:'🎯',n:'Глаз снайпера',d:'+10% к шансу крита',a:(f)=>{ f.critB=(f.critB||0)+.1; }},
+  jaw:{ic:'🛡',n:'Железная челюсть',d:'−12% входящего урона',a:(f)=>{ f.armor=1-(1-(f.armor||0))*.88; }},
+  hp:{ic:'❤',n:'Закалка',d:'+15% к макс. здоровью',a:(f)=>{ const d=Math.round(f.maxHp*.15); f.maxHp+=d; f.hp+=d; }},
+  heal:{ic:'🩹',n:'Аптечка',d:'Сразу +35% здоровья',a:(f)=>{ f.hp=Math.min(f.maxHp,f.hp+Math.round(f.maxHp*.35)); }},
+  adr:{ic:'⚡',n:'Кураж',d:'Адреналин копится на 50% быстрее',a:(f)=>{ f.adrK=(f.adrK||1)*1.5; }},
+  fast:{ic:'💨',n:'Быстрые руки',d:'Атаки на 12% чаще',a:(f)=>{ f.haste=(f.haste||1)*.88; }},
+  slip:{ic:'🌀',n:'Скользкий',d:'8% шанс уйти от любого удара',a:(f)=>{ f.evade=(f.evade||0)+.08; }},
+  wind:{ic:'🫁',n:'Дыхалка',d:'Стамина восстанавливается на 40% быстрее',a:(f)=>{ f.staK=(f.staK||1)*1.4; }},
+  gold:{ic:'💰',n:'Жадность',d:'+40% денег за врагов в этом забеге',a:(f,R)=>{ R.goldK=(R.goldK||1)+.4; }}
+};
+const perkDue=R=>PERK_WAVES.includes(R.wave)&&!R.perkAt.includes(R.wave);
+function rollPerks(){ const ids=Object.keys(PERKS); for(let i=ids.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [ids[i],ids[j]]=[ids[j],ids[i]]; } return ids.slice(0,3); }
+function takePerk(id){
+  const P=PERKS[id]; F.perkAt.push(F.wave); F.perks.push(id); P.a(F.p,F); hudCache={};
+  if(!F.sim){ clearTimeout(PERK_T); closeModal(); floatTxt(F.p,P.ic+' '+P.n,'#ffd23f',true); addLog('<b style="color:#ffd23f">Усиление: '+P.n+'</b> — '+P.d.toLowerCase()); sfx('lvl'); }
+  nextWave();
+}
+let PERK_T=0, PERK_OPT=[];
+function offerPerks(){
+  F.state='perk';
+  if(F.sim){ takePerk(rollPerks()[0]); return; }
+  PERK_OPT=rollPerks();
+  let html='<div class="title" style="color:var(--yel)">УСИЛЕНИЕ</div><p style="text-align:center">Волна '+F.wave+' позади. Выбери одно — действует до конца забега.</p><div class="perks">';
+  PERK_OPT.forEach((id,k)=>{ const P=PERKS[id], n=F.perks.filter(x=>x===id).length;
+    html+='<button class="perk" data-act="perk" data-v="'+id+'"><span class="ic">'+P.ic+'</span><b>'+P.n+(n?' ×'+(n+1):'')+'</b><span class="dim">'+P.d+'</span></button>'; });
+  html+='</div>'+(S.auto?'<div class="dim" id="perkAuto" style="text-align:center;margin-top:8px">Автовыбор через 5 с</div>':'');
+  openModal(html); sfx('coin');
+  if(S.auto){ let left=5; const tick=()=>{ if(!F||F.state!=='perk') return; if(--left<=0) return takePerk(PERK_OPT[Math.floor(Math.random()*3)]);
+    const el=$('#perkAuto'); if(el) el.textContent='Автовыбор через '+left+' с'; PERK_T=setTimeout(tick,1000); }; PERK_T=setTimeout(tick,1000); }
+}
 function enemyDown(l){
   F.kills++; if(F.sim||l.boss) return;
-  const m=waveMoney(F.idx), x=waveXp(F.idx);
+  const m=Math.round(waveMoney(F.idx)*(F.goldK||1)), x=waveXp(F.idx);
   S.money+=m; S.kills++; const ups=addXp(x); save();
   F.earn.money+=m; F.earn.xp+=x; F.earn.ups+=ups;
   floatTxt(l,'+$'+m,'#3ee07a');
@@ -1188,7 +1236,7 @@ function act(f,o){
   if(!id){ f.pose='tired'; f.poseT=700; f.sta=Math.min(f.maxSta,f.sta+12+f.st.end); f.timer=900; f.cur=null; f.stance=null; f.stanceT=0;
     if(f.isPlayer||Math.random()<.5) addLog(f.name+(f.isPlayer?' переводишь дух…':' переводит дух…')); return; }
   const m=MOVES[id]; f.cur=id; f.sta-=m.sta;
-  const base=intervalOf(f.st)*m.spd;
+  const base=intervalOf(f.st)*m.spd*(f.haste||1);
   if(m.type==='def'){ f.stance=id; f.stanceT=m.dur; f.pose=id; f.poseT=0; f.timer=base; }
   else { f.stance=null; f.stanceT=0; f.pending={m:id,t:200}; f.pose=windPose(id); f.poseT=0; f.timer=base+200; }
 }
@@ -1209,17 +1257,20 @@ function resolveAttack(a,d,id){
   }
   const acc=isSup?1:clamp(m.acc+(a.st.spd-d.st.spd)*.012+a.st.agi*.004,.35,.97);
   if(Math.random()>acc){ floatTxt(d,'МИМО','#9a8cc0'); sfx('whiff'); return; }
+  if(!isSup&&d.evade&&Math.random()<d.evade){ d.pose='dodge'; d.poseT=260; floatTxt(d,'УКЛОН','#38e8ff'); sfx('whiff'); return; } // усиление «Скользкий»
   let dmg=m.dmg*(1+a.st.str*.13)*a.dm*rnd(.88,1.12);
-  const crit=!isSup&&Math.random()<critOf(a.st); if(crit) dmg*=1.6;
+  const crit=!isSup&&Math.random()<critOf(a.st)+(a.critB||0); if(crit) dmg*=1.6;
+  if(d.armor) dmg*=1-d.armor;
   let blocked=false;
   if(d.stance==='block'&&!isSup){ dmg*=m.pierce; blocked=true; d.sta=Math.max(0,d.sta-m.dmg*.6); }
   dmg=Math.max(1,Math.round(dmg/(1+d.st.end*.025)));
   dmg=devDamage(a,d,dmg);
   d.hp=Math.max(0,d.hp-dmg); a.hits++; a.dealt+=dmg;
+  if(a.vamp&&a.hp>0) a.hp=Math.min(a.maxHp,a.hp+dmg*a.vamp);
   d.flash=blocked?.35:.85; d.push=blocked?2:(crit||isSup||m.dmg>=11?8:4);
   if(!blocked){ d.pose='hit'; d.poseT=230; if(!d.pending) d.timer+=160; }
   F.shake=Math.max(F.shake,blocked?1:(crit||isSup?6:m.dmg>=11?4:2)); F.cheer=Math.min(1,F.cheer+(blocked?.1:.35));
-  a.adr=Math.min(100,a.adr+(blocked?3:7)); d.adr=Math.min(100,d.adr+(blocked?1:5));
+  a.adr=Math.min(100,a.adr+(blocked?3:7)*(a.adrK||1)); d.adr=Math.min(100,d.adr+(blocked?1:5)*(d.adrK||1));
   sparks(hx,hy,blocked?5:crit||isSup?16:9,blocked?['#9fe0ff','#fff']:['#fff','#ffd23f','#ff8a2b']);
   if(!F.sim){ F.fx.push({x:hx,y:hy,t:0,life:blocked?140:200,type:blocked?'block':'hit',big:crit||isSup||m.dmg>=11,dir:d.face});
     F.hitstop=Math.max(F.hitstop,blocked?45:crit||isSup?140:m.dmg>=11?100:70); } // стоп-кадр: удар «чувствуется»
@@ -1240,7 +1291,7 @@ function ko(w,l){
   sfx('ko'); showBanner('НОКАУТ!'); addLog('<b style="color:#ffd23f">'+l.name+' в нокауте!</b>');
 }
 function updateFighter(f,o,dt){
-  f.sta=Math.min(f.maxSta,f.sta+dt/1000*(3+f.st.end*.35)*(f.stance==='block'?.6:1));
+  f.sta=Math.min(f.maxSta,f.sta+dt/1000*(3+f.st.end*.35)*(f.stance==='block'?.6:1)*(f.staK||1));
   if(f.stanceT>0){ f.stanceT-=dt; if(f.stanceT<=0){ f.stance=null; f.stanceT=0; if(f.pose==='block'||f.pose==='dodge') f.pose='idle'; } }
   if(f.poseT>0){ f.poseT-=dt; if(f.poseT<=0){ f.poseT=0; const wasAtk=ATK_POSES.has(f.pose);
     f.pose=f.pending?windPose(f.pending.m):wasAtk?'recover':(f.stance||'idle'); if(wasAtk&&!f.pending) f.poseT=90; } }
@@ -1292,7 +1343,7 @@ function updateFight(dt){
       }
     }
   } else if(F.state==='swap'){
-    F.swapT-=dt; if(F.swapT<=0){ if(F.queue.length) nextMember(); else nextWave(); }
+    F.swapT-=dt; if(F.swapT<=0){ if(F.queue.length) nextMember(); else if(perkDue(F)) offerPerks(); else nextWave(); }
   } else if(F.state==='end'){
     F.endT-=dt; if(F.endT<=0){ F.state='done'; if(!F.sim) finishFight(); }
   }
@@ -1317,9 +1368,9 @@ function renderHUD(){
   const rd=isBoss()?'БОСС':'ВОЛНА '+F.wave+'/'+WAVES; if(hudCache.rd!==rd){ hudCache.rd=rd; $('#fRound').textContent=rd; }
   const full=p.adr>=100&&F.state==='fight';
   if(hudCache.full!==full){ hudCache.full=full; $('#adrRow').classList.toggle('full',full); }
-  const ri=F.wave+'|'+F.kills+'|'+F.earn.money+'|'+F.earn.xp;
+  const ri=F.wave+'|'+F.kills+'|'+F.earn.money+'|'+F.earn.xp+'|'+F.perks.length;
   if(hudCache.ri!==ri){ hudCache.ri=ri; const od=OPP[F.idx];
-    $('#runInfo').innerHTML='<span>'+(isBoss()?'БОСС: '+od.name:'Этап '+(F.idx+1)+' · волна '+F.wave+'/'+WAVES)+'</span><span><span class="money">+$'+F.earn.money+'</span> · <span class="xp">+'+F.earn.xp+' XP</span></span>'; }
+    $('#runInfo').innerHTML='<span>'+(isBoss()?'БОСС: '+od.name:'Этап '+(F.idx+1)+' · волна '+F.wave+'/'+WAVES)+(F.perks.length?' '+F.perks.map(id=>PERKS[id].ic).join(''):'')+'</span><span><span class="money">+$'+F.earn.money+'</span> · <span class="xp">+'+F.earn.xp+' XP</span></span>'; }
   const pf=Math.round(p.flash*4), of=Math.round(o.flash*4); // лица перерисовываем только при изменении
   const ph=p.hp/p.maxHp<.35, oh=o.hp/o.maxHp<.35; // побитые лица при низком здоровье
   if(hudCache.pf!==pf||hudCache.po!==p.pal||hudCache.ph!==ph){ hudCache.pf=pf; hudCache.po=p.pal; hudCache.ph=ph; drawFace($('#pFace'),p.pal,1,pf/4,ph); }
@@ -1337,14 +1388,16 @@ function startFight(idx){
   $('#fChips').innerHTML=S.load.map(m=>'<div class="mchip" data-m="'+m+'">'+MOVES[m].n+'</div>').concat(Array(3-S.load.length).fill('<div class="mchip">—</div>')).join('');
   const od=OPP[idx];
   $('#flog').innerHTML='<div>Волна 1: выходит <b>'+F.o.name+'</b></div><div>Этап '+(idx+1)+' · '+ARENAS[F.arena].n+'. '+WAVES+' волн, затем босс: '+od.name+(od.duo?' (дуэт)':'')+'</div>';
-  $('#fx').innerHTML=''; $('#speedBtn').textContent='Скорость x'+F.speed;
-  hideBanner(); renderWaves(); showScreen('fight'); sfx('bell');
+  $('#fx').innerHTML=''; $('#speedBtn').textContent='⏩ x'+F.speed;
+  hideBanner(); renderWaves(); updAutoBtn(); showScreen('fight'); sfx('bell');
   return true;
 }
 // утешительные деньги за поражение: с Бизона (4-й соперник) — 10% от того, что дала бы победа в этом бою
 const LOSS_PAY_FROM=3, LOSS_PAY_SHARE=.1;
 const winPay=i=>i<S.beaten?Math.round(OPP[i].money*.4):OPP[i].money;
 const lossPay=i=>i>=LOSS_PAY_FROM?Math.round(winPay(i)*LOSS_PAY_SHARE):0;
+let AUTO_T=0;
+function updAutoBtn(){ const b=$('#autoBtn'); if(b){ b.textContent='Авто: '+(S.auto?'вкл':'выкл'); b.classList.toggle('on',S.auto); } }
 // итог забега: босс побеждён — этап пройден; иначе остаётся всё, что заработано на волнах
 function finishFight(){
   const win=F.winner==='p', i=F.idx, o=OPP[i], first=win&&i===S.beaten&&!F.surrender, boss=isBoss();
@@ -1361,6 +1414,12 @@ function finishFight(){
     html='<div class="title" style="color:var(--red)">'+(F.surrender?'ОТСТУПЛЕНИЕ':'ПОРАЖЕНИЕ')+'</div><p style="text-align:center">Ты дошёл '+reach+'.'+(boss&&!F.surrender?' '+o.name+(o.duo?' оказались сильнее.':' оказался сильнее.'):'')+' Заработанное остаётся — прокачайся и попробуй снова!</p>';
   }
   html+='<div class="rew"><div class="money">+$'+(F.earn.money+money)+'</div><div class="lv">+'+(F.earn.xp+xp)+' XP</div><div>Врагов побеждено: '+F.kills+'</div><div>Урон: '+F.p.dealt+'</div></div>';
+  if(F.perks.length) html+='<div class="perkrow">Усиления: '+F.perks.map(id=>PERKS[id].ic+' '+PERKS[id].n).join(' · ')+'</div>';
+  // автопродолжение: победа — следующий этап, поражение — фарм предыдущего (пройденного) этапа
+  const autoTo=S.auto&&!F.surrender?(win?(i+1<OPP.length&&i+1<=S.beaten?i+1:i):(i>0?i-1:i)):-1;
+  if(autoTo>=0) html+=S.energy>=FIGHT_COST||dev('infEnergy')
+    ?'<div class="note" id="autoNote">▶ Авто: этап '+(autoTo+1)+' через <b id="autoSec">4</b> с <button class="btn sm" data-act="autostop" style="margin-left:6px;min-height:0;padding:4px 8px">Стоп</button></div>'
+    :'<div class="note" id="autoNote">Авто остановлено: мало энергии (нужно '+FIGHT_COST+'⚡). Поешь или выспись.</div>';
   if(ups) html+='<div class="note">НОВЫЙ УРОВЕНЬ '+S.lvl+'! +'+(ups*2)+' очка характеристик, +'+(ups*5)+' к макс. энергии</div>';
   if(champNow) html+='<div class="note" style="color:var(--yel)">🏆 ТЫ — ЧЕМПИОН УЛИЦ! Пояс твой. Этапы можно проходить снова ради денег и опыта.</div>';
   const next=win?(i+1<OPP.length&&i+1<=S.beaten?i+1:-1):i;
@@ -1368,6 +1427,10 @@ function finishFight(){
   html+='<button class="btn grn" data-act="closefight">В карьеру</button>';
   sfx(win?'coin':'lose'); if(ups) setTimeout(()=>sfx('lvl'),400);
   openModal(html);
+  if(autoTo>=0&&(S.energy>=FIGHT_COST||dev('infEnergy'))){ let left=4; const run=F;
+    const tick=()=>{ if(F!==run||!S.auto) return; if(--left<=0) return ACT.again({dataset:{v:autoTo}});
+      const el=$('#autoSec'); if(el) el.textContent=left; AUTO_T=setTimeout(tick,1000); };
+    AUTO_T=setTimeout(tick,1000); }
 }
 
 /* ---------- ТРЕНИРОВКА (кликер) ---------- */
@@ -1565,11 +1628,33 @@ function statRow(k){
     '<button class="plus" data-act="addpt" data-v="'+k+'" '+(S.pts>0&&!max?'':'disabled')+' aria-label="Повысить">+</button>'+
     '<div class="bar"><i style="background:var(--cyan);width:'+(max?100:S.prog[k]/need*100)+'%"></i></div></div>';
 }
+/* «Сила» — одно число по характеристикам: урон в секунду × живучесть, как в idle-RPG. Босс считается с его
+   множителями урона и здоровья (дуэт — сумма двух). Шанс — по симуляции 40 забегов (simBattle), с кэшем. */
+function powerOf(st,dm,hpMul){
+  const atk=(1+st.str*.13)*(dm||1)*(1+critOf(st)*.6)*1500/intervalOf(st), def=maxHpOf(st)*(hpMul||1)*(1+st.end*.025)*(1+st.agi*.01);
+  return Math.round(Math.sqrt(atk*def)*4);
+}
+const myPower=()=>powerOf(S.st,1,1);
+function bossPower(i){ const o=OPP[i], ps=(o.duo?o.members:[o]).map(m=>powerOf(m.st,o.dmg,bossHp(i))); return Math.round(Math.sqrt(ps.reduce((a,b)=>a+b*b,0))); }
+const CHANCE={}; let CHANCE_Q=0;
+const chanceKey=i=>i+'|'+S.st.str+','+S.st.spd+','+S.st.end+','+S.st.agi+'|'+S.load.join(',');
+function chanceOf(i){
+  const k=chanceKey(i); if(k in CHANCE) return CHANCE[k];
+  if(!CHANCE_Q) CHANCE_Q=setTimeout(()=>{ CHANCE_Q=0; CHANCE[chanceKey(i)]=simBattle(S.st,i,S.load,40); if(screen==='hub') renderHub(); },80); // считаем после отрисовки, чтобы не тормозить
+  return null;
+}
+function chanceHTML(i){
+  const r=chanceOf(i); if(!r) return '<span class="dim">шанс считается…</span>';
+  const w=Math.round(r.winRate*100), c=w>=70?'var(--grn)':w>=35?'var(--yel)':'var(--red)';
+  return 'шанс пройти <b style="color:'+c+'">~'+w+'%</b> · дойти до босса ~'+Math.round(r.bossRate*100)+'%';
+}
 function tabFighter(){
   const s=S.st, next=S.beaten<OPP.length?OPP[S.beaten]:null;
   return '<div class="card hero"><canvas id="portrait" width="96" height="96"></canvas><div><canvas id="heroName" class="heroname" width="10" height="10"></canvas><div class="h">'+RANKS[Math.min(S.beaten,RANKS.length-1)]+'</div>'+
     '<div class="dim">Победы: '+S.wins+' · Поражения: '+S.losses+'</div><div class="dim">Зал: '+GYM[S.gym-1].n+'</div>'+
-    '<div class="dim">'+(next?'Этап '+(S.beaten+1)+', босс: <b style="color:var(--red)">'+next.name+'</b>':'<b style="color:var(--yel)">🏆 Пояс чемпиона твой</b>')+'</div></div></div>'+
+    '<div class="dim">'+(next?'Этап '+(S.beaten+1)+', босс: <b style="color:var(--red)">'+next.name+'</b>':'<b style="color:var(--yel)">🏆 Пояс чемпиона твой</b>')+'</div>'+
+    '<div class="power">💪 Сила <b>'+myPower()+'</b>'+(next?' · босс <b>'+bossPower(S.beaten)+'</b>':'')+'</div>'+
+    (next?'<div class="dim" style="font-size:11px">'+chanceHTML(S.beaten)+'</div>':'')+'</div></div>'+
     (S.pts?'<div class="note">Свободные очки: '+S.pts+' — жми «+» у характеристики!</div>':'')+
     '<div class="card"><div class="h2">Характеристики</div>'+Object.keys(STATS).map(statRow).join('')+'<div class="dim" style="margin-top:6px">Полоска под характеристикой — прогресс тренировок.</div></div>'+
     '<div class="card"><div class="h2">В бою</div><div class="grid2">'+
@@ -1622,6 +1707,8 @@ function tabLeague(){
       '<div class="dim">'+(lock?'Пройди предыдущий этап':'Босс «'+o.title+'» · '+ARENAS[arenaOf(i)].n)+'</div>'+
       (lock?'':stl+'<div class="ostat" style="color:var(--red)">Урон x'+o.dmg.toFixed(2)+(o.duo?' · 2 бойца подряд':' · здоровье x'+BOSS_HP)+'</div>'+
         '<div class="ostat" style="color:var(--grn)">Волна: $'+waveMoney(i)+' · '+waveXp(i)+' XP · Босс: $'+winPay(i)+' · '+xpPay(i)+' XP</div>'+
+        '<div class="ostat power">💪 Сила босса <b>'+bossPower(i)+'</b> · твоя <b>'+myPower()+'</b></div>'+
+        (next?'<div class="ostat">'+chanceHTML(i)+'</div>':'')+
         (next&&S.best?'<div class="ostat" style="color:var(--yel)">Рекорд: '+(S.best>WAVES?'дошёл до босса':'волна '+S.best+'/'+WAVES)+'</div>':''))+
       '</div>'+(lock?'':'<button class="btn '+(next?'red':'')+'" data-act="fight" data-v="'+i+'">'+(next?'В бой':'Повтор')+'</button>')+'</div>';
   });
@@ -1649,6 +1736,9 @@ function helpHTML(){
   return '<div class="title" style="color:var(--cyan)">КАК ИГРАТЬ</div><div class="help">'+
   '<p>Ты — никто из спального района. Цель — пройти 16 этапов и забрать пояс «Короля Асфальта». Бой идёт сам — твоя задача прокачать бойца так, чтобы его хватило до конца.</p>'+
   '<h4>🗺 Этапы</h4><ul><li>Каждый этап — 10 волн, в каждой по одному врагу. Они выходят один за другим, без остановки.</li><li>После 10-й волны выходит <b>босс</b> — соперник из подпольной лиги. У него на 25% больше здоровья, и бой с ним дольше: 90 секунд (с дуэтом — 120).</li><li>Здоровье переходит из волны в волну: после каждого врага восстанавливается 30%. Перед боссом — передышка и полное восстановление: исход решает только сила бойца.</li><li>Каждый 5-й босс — дуэт: двое по очереди.</li><li>Упал — забег окончен, но деньги и опыт за побеждённых врагов остаются. Можно отступить в любой момент.</li></ul>'+
+  '<h4>⭐ Усиления</h4><ul><li>После 3-й, 6-й и 9-й волны выбери одно усиление из трёх: урон, вампиризм, крит, броня, здоровье, деньги и другие.</li><li>Они действуют до конца забега, одинаковые складываются.</li></ul>'+
+  '<h4>💪 Сила и шанс</h4><ul><li>«Сила» — одно число по характеристикам. Сравни её с силой босса на вкладке «Этапы».</li><li>Шанс пройти этап считается по 40 пробным забегам с твоими характеристиками и комбинацией.</li></ul>'+
+  '<h4>▶ Авто</h4><ul><li>Кнопка «Авто» в бою: после победы сам начнётся следующий этап, после поражения — повтор предыдущего (фарм). Усиления выберутся сами через 5 секунд.</li><li>Авто останавливается, когда кончается энергия, или кнопкой «Стоп».</li></ul>'+
   '<h4>🥊 Бой</h4><ul><li>Боец сам выбирает приёмы из твоей комбинации (до 3).</li><li>Шкала адреналина полна — боец сам проводит <b>СУПЕРУДАР</b>: неблокируемый удар.</li><li>Стамина тратится на удары. Кончилась — боец переводит дух.</li><li>На врага волны — 30 секунд. Не уложился — побеждает тот, у кого больше % здоровья.</li><li>Кнопка скорости ускоряет бой до x4.</li></ul>'+
   '<h4>🏋 Зал</h4><ul><li>Тренировка идёт сама 3 секунды и даёт прогресс характеристики.</li><li>Энергия тратится на этапы, тренировки и работу. Восстанавливается сном и едой.</li><li>Улучшай зал — тренировки станут эффективнее.</li></ul>'+
   '<h4>📈 Прогресс</h4><ul><li>Опыт → уровни → 2 свободных очка характеристик за уровень.</li><li>Проиграл боссу — 25% опыта, а начиная с Бизона ещё и 10% его призовых.</li><li>Новые приёмы открываются с уровнем и покупаются за деньги.</li><li>Прогресс сохраняется автоматически.</li></ul>'+
@@ -1705,12 +1795,16 @@ const ACT={
     else { if(S.load.length>=3) return toast('Максимум 3 приёма — сначала убери один'); S.load.push(id); }
     save(); renderHub(); },
   fight(el){ startFight(+el.dataset.v); },
-  again(el){ closeModal(); F=null; $('#fx').innerHTML=''; if(!startFight(+el.dataset.v)){ tab='league'; showScreen('hub'); } },
-  speed(){ if(!F) return; fightSpeed=F.speed=F.speed>=4?1:F.speed*2; $('#speedBtn').textContent='Скорость x'+F.speed; },
+  again(el){ clearTimeout(AUTO_T); closeModal(); F=null; $('#fx').innerHTML=''; if(!startFight(+el.dataset.v)){ tab='league'; showScreen('hub'); } },
+  perk(el){ if(F&&F.state==='perk'&&PERKS[el.dataset.v]) takePerk(el.dataset.v); },
+  auto(){ S.auto=!S.auto; save(); updAutoBtn(); toast(S.auto?'Автопродолжение включено: следующий забег начнётся сам':'Автопродолжение выключено');
+    if(!S.auto){ clearTimeout(AUTO_T); const n=$('#autoNote'); if(n) n.remove(); } },
+  autostop(){ clearTimeout(AUTO_T); S.auto=false; save(); updAutoBtn(); const n=$('#autoNote'); if(n) n.remove(); },
+  speed(){ if(!F) return; fightSpeed=F.speed=F.speed>=4?1:F.speed*2; $('#speedBtn').textContent='⏩ x'+F.speed; },
   menu(){ $('#btnContinue').style.display=S.started?'':'none'; showScreen('title'); },
-  surrender(){ if(!F||!['fight','intro','swap'].includes(F.state)) return; openModal('<div class="title" style="color:var(--red)">ОТСТУПИТЬ?</div><p style="text-align:center">Забег прервётся. Деньги и опыт за побеждённых врагов останутся.</p><div class="row"><button class="btn" data-act="closemodal">Драться</button><button class="btn red" data-act="dosurrender">Отступить</button></div>'); },
-  dosurrender(){ if(!F||!['fight','intro','swap'].includes(F.state)) return closeModal(); F.surrender=true; F.winner='o'; F.state='done'; closeModal(); finishFight(); },
-  closefight(){ closeModal(); F=null; $('#fx').innerHTML=''; tab=S.beaten>=OPP.length?'fighter':'league'; showScreen('hub'); }
+  surrender(){ if(!F||!['fight','intro','swap','perk'].includes(F.state)) return; clearTimeout(PERK_T); openModal('<div class="title" style="color:var(--red)">ОТСТУПИТЬ?</div><p style="text-align:center">Забег прервётся. Деньги и опыт за побеждённых врагов останутся.</p><div class="row"><button class="btn" data-act="closemodal">Драться</button><button class="btn red" data-act="dosurrender">Отступить</button></div>'); },
+  dosurrender(){ if(!F||!['fight','intro','swap','perk'].includes(F.state)) return closeModal(); F.surrender=true; F.winner='o'; F.state='done'; closeModal(); finishFight(); },
+  closefight(){ clearTimeout(AUTO_T); clearTimeout(PERK_T); closeModal(); F=null; $('#fx').innerHTML=''; tab=S.beaten>=OPP.length?'fighter':'league'; showScreen('hub'); }
 };
 document.addEventListener('click',e=>{
   const el=e.target.closest('[data-act]'); if(!el||el.disabled) return;
@@ -1833,7 +1927,7 @@ function tgBack(){
 
 /* ---------- ДИАГНОСТИКА: ошибки на телефоне видны прямо в игре ----------
    Нажатие на номер сборки на заставке показывает сведения об устройстве; нажатие на панель — скрывает её. */
-const BUILD='40 · 2026-10-25'; // номер сборки — видно на заставке, свежая версия или старая из кэша Telegram
+const BUILD='41 · 2026-10-25'; // номер сборки — видно на заставке, свежая версия или старая из кэша Telegram
 let FRAMES=0, PRESENT_MODE='чёткий';
 const DIAG_SEEN={};
 function diag(where,e){
