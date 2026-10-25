@@ -261,7 +261,7 @@ div.power:not(.ostat){font-size:13px;margin-top:4px}
 
   <div id="modal" class="modal"><div class="mbox" id="mbox"></div></div>
 
-  <!-- РЕКЛАМА: окно для рекламы за награду («Выспаться» после бесплатных раз) -->
+  <!-- РЕКЛАМА: окно для рекламы за награду («Второе дыхание», «×2 награда») -->
   <div id="ad" class="modal"><div class="mbox">
     <div class="title" style="color:var(--org);font-size:18px">📺 РЕКЛАМА</div>
     <!-- ▼▼▼ СЮДА ВСТАВЛЯЕТСЯ HTML-БАННЕР / ВИДЕО РЕКЛАМОДАТЕЛЯ ▼▼▼ -->
@@ -1345,7 +1345,7 @@ function updateFight(dt){
   } else if(F.state==='swap'){
     F.swapT-=dt; if(F.swapT<=0){ if(F.queue.length) nextMember(); else if(perkDue(F)) offerPerks(); else nextWave(); }
   } else if(F.state==='end'){
-    F.endT-=dt; if(F.endT<=0){ F.state='done'; if(!F.sim) finishFight(); }
+    F.endT-=dt; if(F.endT<=0){ F.state='done'; if(!F.sim){ if(F.winner==='o'&&!F.surrender&&!F.revived) offerRevive(); else finishFight(); } }
   }
   cosmetic(F.p,dt); cosmetic(F.o,dt);
   if(!F) return;
@@ -1379,10 +1379,14 @@ function renderHUD(){
 }
 function showBanner(t){ if(F&&F.sim) return; const b=$('#banner'); if(F.banner!==t){ F.banner=t; pixelLabel(b,t,'#ffd23f',14,'#d01818'); b.classList.remove('on'); void b.offsetWidth; b.classList.add('on'); } }
 function hideBanner(){ $('#banner').classList.remove('on'); if(F) F.banner=''; }
+// энергия нужна только на новый этап; повтор пройденного (фарм) — бесплатно
+const stageCost=i=>i<S.beaten?0:FIGHT_COST;
+const costTxt=i=>stageCost(i)?' ('+FIGHT_COST+'⚡)':' (бесплатно)';
 function startFight(idx){
   if(idx>S.beaten||idx>=OPP.length) return toast('Сначала пройди предыдущие этапы');
-  if(S.energy<FIGHT_COST) return toast('Мало энергии! Поешь или выспись (нужно '+FIGHT_COST+')');
-  spendEnergy(FIGHT_COST); save();
+  const cost=stageCost(idx);
+  if(cost&&S.energy<cost) return toast('Мало энергии на новый этап! Поешь, выспись или пофарми пройденные — это бесплатно');
+  if(cost) spendEnergy(cost); save();
   F=newFight(idx,false); hudCache={};
   setName('pName',S.name); setName('oName',F.o.name);
   $('#fChips').innerHTML=S.load.map(m=>'<div class="mchip" data-m="'+m+'">'+MOVES[m].n+'</div>').concat(Array(3-S.load.length).fill('<div class="mchip">—</div>')).join('');
@@ -1396,6 +1400,50 @@ function startFight(idx){
 const LOSS_PAY_FROM=3, LOSS_PAY_SHARE=.1;
 const winPay=i=>i<S.beaten?Math.round(OPP[i].money*.4):OPP[i].money;
 const lossPay=i=>i>=LOSS_PAY_FROM?Math.round(winPay(i)*LOSS_PAY_SHARE):0;
+/* «Второе дыхание»: упал — можно один раз за забег встать за рекламу и продолжить с той же волны
+   (50% здоровья, полный адреналин). В режиме авто без ответа через 5 с — итоги. */
+let REV_T=0;
+function offerRevive(){
+  F.state='revive';
+  openModal('<div class="title" style="color:var(--red)">ТЫ В НОКАУТЕ!</div><p style="text-align:center">'+(isBoss()?'Босс':'Волна '+F.wave+' из '+WAVES)+'. Встать и продолжить с этого места?</p>'+
+    '<button class="btn yel" data-act="revive">📺 Второе дыхание: встать с 50% здоровья</button><div class="gap"></div>'+
+    '<button class="btn" data-act="norevive">Нет, к итогам</button>'+(S.auto?'<div class="dim" id="revAuto" style="text-align:center;margin-top:8px">Итоги через 5 с</div>':''));
+  if(S.auto){ let left=5; const run=F; const tick=()=>{ if(F!==run||F.state!=='revive'||AD) return; if(--left<=0) return ACT.norevive();
+    const el=$('#revAuto'); if(el) el.textContent='Итоги через '+left+' с'; REV_T=setTimeout(tick,1000); }; REV_T=setTimeout(tick,1000); }
+}
+function revive(){
+  const p=F.p, o=F.o; clearTimeout(REV_T); closeModal();
+  F.revived=true; F.winner=null; F.state='fight'; F.endT=0;
+  p.hp=Math.max(p.hp,Math.round(p.maxHp*.5)); p.sta=p.maxSta; p.adr=100; p.pose='idle'; p.poseT=0; p.koT=0; p.pending=null; p.stance=null; p.stanceT=0; p.timer=500; p.flash=0;
+  if(o.pose==='win'||o.pose==='tired'){ o.pose='idle'; o.poseT=0; } o.pending=null; o.timer=Math.max(o.timer,900);
+  F.time=Math.max(F.time,isBoss()?30000:15000); hudCache={}; renderWaves();
+  showBanner('ВТОРОЕ ДЫХАНИЕ!'); setTimeout(()=>{ if(F&&F.banner==='ВТОРОЕ ДЫХАНИЕ!') hideBanner(); },1200);
+  addLog('<b style="color:#ffd23f">Второе дыхание! '+S.name+' снова на ногах.</b>'); sfx('super');
+}
+// реклама за награду; с читом DEV «Без рекламы» награда сразу
+function watchAd(onReward){ if(dev('noAds')) onReward(); else showRewardedAd(onReward); }
+/* Награда за время отсутствия: пока игрока нет, боец фармит лучший пройденный этап (или 1-й) — 40 врагов в час,
+   не больше 8 часов, по награде за врага волны. Показывается при входе в карьеру и при возврате в игру. */
+const OFF_MIN=5*60e3, OFF_CAP=8*3600e3, OFF_KPH=40;
+let OFF=null;
+const fmtDur=ms=>{ const m=Math.floor(ms/60e3), h=Math.floor(m/60); return (h?h+' ч ':'')+(m%60)+' мин'; };
+function checkOffline(){
+  if(!S.started||OFF||screen==='fight'||TR) return;
+  const away=Date.now()-(S.ts||Date.now()); if(away<OFF_MIN) return;
+  const ms=Math.min(away,OFF_CAP), i=Math.max(0,S.beaten-1), kills=Math.max(1,Math.floor(ms/3600e3*OFF_KPH));
+  OFF={money:kills*waveMoney(i),xp:kills*waveXp(i),kills,i}; save(); // время отсчитано — второй раз не начислится
+  openModal('<div class="title" style="color:var(--yel)">ПОКА ТЕБЯ НЕ БЫЛО</div><p style="text-align:center">'+fmtDur(away)+(away>OFF_CAP?' (засчитано 8 ч)':'')+
+    ' боец фармил этап '+(i+1)+'. Побеждено врагов: '+kills+'.</p><div class="rew"><div class="money">+$'+OFF.money+'</div><div class="lv">+'+OFF.xp+' XP</div></div>'+
+    '<button class="btn yel" data-act="offx2">📺 Забрать ×2</button><div class="gap"></div><button class="btn grn" data-act="offtake">Забрать</button>');
+}
+function claimOffline(k){
+  if(!OFF) return; const o=OFF; OFF=null; S.money+=o.money*k; const ups=addXp(o.xp*k); save(); closeModal(); sfx(ups?'lvl':'coin');
+  toast('+$'+o.money*k+' и +'+o.xp*k+' XP'+(ups?' · новый уровень '+S.lvl+'!':'')); if(screen==='hub') renderHub();
+}
+// свернул игру — запоминаем время; вернулся спустя 5+ минут — награда. Пока игра открыта, время отмечается раз в минуту.
+document.addEventListener('visibilitychange',()=>{ if(!S.started||screen==='title') return; // на заставке время отсутствия не сбрасываем — награда покажется по «Продолжить»
+  if(document.visibilityState==='hidden'){ if(!OFF) save(); } else if(screen==='hub') checkOffline(); });
+setInterval(()=>{ if(S.started&&screen!=='title'&&document.visibilityState==='visible'&&!OFF) save(); },60000);
 let AUTO_T=0;
 function updAutoBtn(){ const b=$('#autoBtn'); if(b){ b.textContent='Авто: '+(S.auto?'вкл':'выкл'); b.classList.toggle('on',S.auto); } }
 // итог забега: босс побеждён — этап пройден; иначе остаётся всё, что заработано на волнах
@@ -1413,21 +1461,25 @@ function finishFight(){
   } else {
     html='<div class="title" style="color:var(--red)">'+(F.surrender?'ОТСТУПЛЕНИЕ':'ПОРАЖЕНИЕ')+'</div><p style="text-align:center">Ты дошёл '+reach+'.'+(boss&&!F.surrender?' '+o.name+(o.duo?' оказались сильнее.':' оказался сильнее.'):'')+' Заработанное остаётся — прокачайся и попробуй снова!</p>';
   }
-  html+='<div class="rew"><div class="money">+$'+(F.earn.money+money)+'</div><div class="lv">+'+(F.earn.xp+xp)+' XP</div><div>Врагов побеждено: '+F.kills+'</div><div>Урон: '+F.p.dealt+'</div></div>';
+  F.tot={money:F.earn.money+money,xp:F.earn.xp+xp}; // всё, что принёс забег, — для «×2 за рекламу»
+  html+='<div class="rew"><div class="money" id="rewM">+$'+F.tot.money+'</div><div class="lv" id="rewX">+'+F.tot.xp+' XP</div><div>Врагов побеждено: '+F.kills+'</div><div>Урон: '+F.p.dealt+'</div></div>';
   if(F.perks.length) html+='<div class="perkrow">Усиления: '+F.perks.map(id=>PERKS[id].ic+' '+PERKS[id].n).join(' · ')+'</div>';
-  // автопродолжение: победа — следующий этап, поражение — фарм предыдущего (пройденного) этапа
-  const autoTo=S.auto&&!F.surrender?(win?(i+1<OPP.length&&i+1<=S.beaten?i+1:i):(i>0?i-1:i)):-1;
-  if(autoTo>=0) html+=S.energy>=FIGHT_COST||dev('infEnergy')
-    ?'<div class="note" id="autoNote">▶ Авто: этап '+(autoTo+1)+' через <b id="autoSec">4</b> с <button class="btn sm" data-act="autostop" style="margin-left:6px;min-height:0;padding:4px 8px">Стоп</button></div>'
-    :'<div class="note" id="autoNote">Авто остановлено: мало энергии (нужно '+FIGHT_COST+'⚡). Поешь или выспись.</div>';
+  if(F.tot.money+F.tot.xp>0) html+='<button class="btn yel" id="dblBtn" data-act="double">📺 ×2 награда: ещё +$'+F.tot.money+' и +'+F.tot.xp+' XP</button><div class="gap"></div>';
+  // автопродолжение: победа — следующий этап, поражение — фарм предыдущего (пройденного) этапа;
+  // если на новый этап не хватает энергии — авто фармит последний пройденный (это бесплатно)
+  let autoTo=S.auto&&!F.surrender?(win?(i+1<OPP.length&&i+1<=S.beaten?i+1:i):(i>0?i-1:i)):-1, autoWhy='';
+  if(autoTo>=0&&stageCost(autoTo)&&S.energy<stageCost(autoTo)&&!dev('infEnergy')){ autoTo=S.beaten>0?S.beaten-1:-1; autoWhy=' (на новый этап мало энергии — фарм)'; }
+  if(S.auto&&!F.surrender) html+=autoTo>=0
+    ?'<div class="note" id="autoNote">▶ Авто: этап '+(autoTo+1)+autoWhy+' через <b id="autoSec">4</b> с <button class="btn sm" data-act="autostop" style="margin-left:6px;min-height:0;padding:4px 8px">Стоп</button></div>'
+    :'<div class="note" id="autoNote">Авто остановлено: на новый этап нужно '+FIGHT_COST+'⚡. Поешь или выспись.</div>';
   if(ups) html+='<div class="note">НОВЫЙ УРОВЕНЬ '+S.lvl+'! +'+(ups*2)+' очка характеристик, +'+(ups*5)+' к макс. энергии</div>';
   if(champNow) html+='<div class="note" style="color:var(--yel)">🏆 ТЫ — ЧЕМПИОН УЛИЦ! Пояс твой. Этапы можно проходить снова ради денег и опыта.</div>';
   const next=win?(i+1<OPP.length&&i+1<=S.beaten?i+1:-1):i;
-  if(next>=0) html+='<button class="btn red" data-act="again" data-v="'+next+'">'+(win?'Этап '+(next+1)+' →':'Ещё раз')+' ('+FIGHT_COST+'⚡)</button><div class="gap"></div>';
+  if(next>=0) html+='<button class="btn red" data-act="again" data-v="'+next+'">'+(win?'Этап '+(next+1)+' →':'Ещё раз')+costTxt(next)+'</button><div class="gap"></div>';
   html+='<button class="btn grn" data-act="closefight">В карьеру</button>';
   sfx(win?'coin':'lose'); if(ups) setTimeout(()=>sfx('lvl'),400);
   openModal(html);
-  if(autoTo>=0&&(S.energy>=FIGHT_COST||dev('infEnergy'))){ let left=4; const run=F;
+  if(autoTo>=0){ let left=4; const run=F;
     const tick=()=>{ if(F!==run||!S.auto) return; if(--left<=0) return ACT.again({dataset:{v:autoTo}});
       const el=$('#autoSec'); if(el) el.textContent=left; AUTO_T=setTimeout(tick,1000); };
     AUTO_T=setTimeout(tick,1000); }
@@ -1563,8 +1615,8 @@ function drawTrain(t){
 }
 
 /* ---------- РЕКЛАМА ЗА НАГРАДУ ---------- */
+// Реклама за награду: «Второе дыхание» (встать после нокаута), «×2 награда» за забег и за время отсутствия.
 const AD_CONFIG={
-  freeSleeps:2,   // сколько раз «Выспаться» можно нажать бесплатно (за всю карьеру)
   stubSeconds:5   // длительность заглушки, пока реклама не подключена
 };
 let AD=null;
@@ -1669,8 +1721,7 @@ function tabGym(){
     h+='<button class="tcard" data-act="train" data-v="'+k+'" '+(max?'disabled':'')+'><div class="ico">'+STATS[k].ic+'</div><div class="tx"><div class="nm">'+STATS[k].tr+'</div><div class="dim">'+STATS[k].n+': '+v+(max?' (макс)':' · '+S.prog[k]+'/'+needProg(v))+'</div><div class="bar"><i style="background:var(--cyan);width:'+(max?100:S.prog[k]/needProg(v)*100)+'%"></i></div></div><div class="cost">-'+TRAIN_COST+'⚡</div></button>';
   }
   h+='<div class="h2" style="margin-top:14px">Отдых и еда</div>';
-  const freeLeft=dev('noAds')?'∞ (DEV)':Math.max(0,AD_CONFIG.freeSleeps-S.sleeps);
-  h+='<button class="tcard" data-act="sleep"><div class="ico">🛏</div><div class="tx"><div class="nm">Выспаться</div><div class="dim">Новый день, энергия на максимум<br>'+(freeLeft?'Бесплатно: осталось '+freeLeft:'<b style="color:var(--org)">📺 За просмотр рекламы</b>')+'</div></div><div class="cost">'+(freeLeft?'+⚡MAX':'📺 +⚡MAX')+'</div></button>';
+  h+='<button class="tcard" data-act="sleep"><div class="ico">🛏</div><div class="tx"><div class="nm">Выспаться</div><div class="dim">Новый день, энергия на максимум</div></div><div class="cost">+⚡MAX</div></button>';
   for(const f of FOOD) h+='<button class="tcard" data-act="eat" data-v="'+f.id+'"><div class="ico">'+f.ic+'</div><div class="tx"><div class="nm">'+f.n+'</div><div class="dim">+'+f.en+' энергии</div></div><div class="cost" style="color:var(--grn)">$'+f.cost+'</div></button>';
   const pay=workPay();
   h+='<button class="tcard" data-act="work"><div class="ico">📦</div><div class="tx"><div class="nm">Подработка грузчиком</div><div class="dim">Тратит 30 энергии, платит наличкой</div></div><div class="cost" style="color:var(--grn)">+$'+pay+'</div></button>';
@@ -1710,9 +1761,9 @@ function tabLeague(){
         '<div class="ostat power">💪 Сила босса <b>'+bossPower(i)+'</b> · твоя <b>'+myPower()+'</b></div>'+
         (next?'<div class="ostat">'+chanceHTML(i)+'</div>':'')+
         (next&&S.best?'<div class="ostat" style="color:var(--yel)">Рекорд: '+(S.best>WAVES?'дошёл до босса':'волна '+S.best+'/'+WAVES)+'</div>':''))+
-      '</div>'+(lock?'':'<button class="btn '+(next?'red':'')+'" data-act="fight" data-v="'+i+'">'+(next?'В бой':'Повтор')+'</button>')+'</div>';
+      '</div>'+(lock?'':'<button class="btn '+(next?'red':'')+'" data-act="fight" data-v="'+i+'">'+(next?'В бой '+FIGHT_COST+'⚡':'Фарм 0⚡')+'</button>')+'</div>';
   });
-  h+='<div class="dim" style="text-align:center">Этап стоит '+FIGHT_COST+' ⚡ энергии</div>';
+  h+='<div class="dim" style="text-align:center">Новый этап стоит '+FIGHT_COST+' ⚡ энергии, повтор пройденного (фарм) — бесплатно</div>';
   return h;
 }
 function renderHub(){
@@ -1738,15 +1789,19 @@ function helpHTML(){
   '<h4>🗺 Этапы</h4><ul><li>Каждый этап — 10 волн, в каждой по одному врагу. Они выходят один за другим, без остановки.</li><li>После 10-й волны выходит <b>босс</b> — соперник из подпольной лиги. У него на 25% больше здоровья, и бой с ним дольше: 90 секунд (с дуэтом — 120).</li><li>Здоровье переходит из волны в волну: после каждого врага восстанавливается 30%. Перед боссом — передышка и полное восстановление: исход решает только сила бойца.</li><li>Каждый 5-й босс — дуэт: двое по очереди.</li><li>Упал — забег окончен, но деньги и опыт за побеждённых врагов остаются. Можно отступить в любой момент.</li></ul>'+
   '<h4>⭐ Усиления</h4><ul><li>После 3-й, 6-й и 9-й волны выбери одно усиление из трёх: урон, вампиризм, крит, броня, здоровье, деньги и другие.</li><li>Они действуют до конца забега, одинаковые складываются.</li></ul>'+
   '<h4>💪 Сила и шанс</h4><ul><li>«Сила» — одно число по характеристикам. Сравни её с силой босса на вкладке «Этапы».</li><li>Шанс пройти этап считается по 40 пробным забегам с твоими характеристиками и комбинацией.</li></ul>'+
-  '<h4>▶ Авто</h4><ul><li>Кнопка «Авто» в бою: после победы сам начнётся следующий этап, после поражения — повтор предыдущего (фарм). Усиления выберутся сами через 5 секунд.</li><li>Авто останавливается, когда кончается энергия, или кнопкой «Стоп».</li></ul>'+
+  '<h4>▶ Авто</h4><ul><li>Кнопка «Авто» в бою: после победы сам начнётся следующий этап, после поражения — повтор предыдущего (фарм). Усиления выберутся сами через 5 секунд.</li><li>Если на новый этап не хватает энергии, авто фармит последний пройденный — бесплатно. Остановить — кнопкой «Стоп».</li></ul>'+
+  '<h4>📺 Реклама за награду</h4><ul><li><b>Второе дыхание</b>: упал — один раз за забег можно встать с 50% здоровья и полным адреналином и продолжить с той же волны.</li><li><b>×2 награда</b> — в итогах забега и за время отсутствия.</li></ul>'+
+  '<h4>💤 Пока тебя нет</h4><ul><li>Боец сам фармит лучший пройденный этап: 40 врагов в час, до 8 часов. Награду выдадут, когда вернёшься.</li></ul>'+
   '<h4>🥊 Бой</h4><ul><li>Боец сам выбирает приёмы из твоей комбинации (до 3).</li><li>Шкала адреналина полна — боец сам проводит <b>СУПЕРУДАР</b>: неблокируемый удар.</li><li>Стамина тратится на удары. Кончилась — боец переводит дух.</li><li>На врага волны — 30 секунд. Не уложился — побеждает тот, у кого больше % здоровья.</li><li>Кнопка скорости ускоряет бой до x4.</li></ul>'+
-  '<h4>🏋 Зал</h4><ul><li>Тренировка идёт сама 3 секунды и даёт прогресс характеристики.</li><li>Энергия тратится на этапы, тренировки и работу. Восстанавливается сном и едой.</li><li>Улучшай зал — тренировки станут эффективнее.</li></ul>'+
+  '<h4>🏋 Зал</h4><ul><li>Тренировка идёт сама 3 секунды и даёт прогресс характеристики.</li><li>Энергия тратится на новые этапы, тренировки и работу. Повтор пройденного этапа (фарм) — бесплатно. Энергию восстанавливают сон (бесплатно) и еда.</li><li>Улучшай зал — тренировки станут эффективнее.</li></ul>'+
   '<h4>📈 Прогресс</h4><ul><li>Опыт → уровни → 2 свободных очка характеристик за уровень.</li><li>Проиграл боссу — 25% опыта, а начиная с Бизона ещё и 10% его призовых.</li><li>Новые приёмы открываются с уровнем и покупаются за деньги.</li><li>Прогресс сохраняется автоматически.</li></ul>'+
   '<h4>Приёмы</h4><ul><li><b>Блок</b> гасит быстрые удары, но апперкот и тяжёлый его пробивают.</li><li><b>Уклон</b> — шанс полностью избежать удара и контратаковать.</li></ul></div>'+
   '<button class="btn grn" data-act="closemodal">Понятно</button>';
 }
 const ACT={
-  continue(){ showScreen('hub'); },
+  continue(){ showScreen('hub'); checkOffline(); },
+  offtake(){ claimOffline(1); },
+  offx2(){ if(OFF) watchAd(()=>claimOffline(2)); },
   newgame(){
     if(S.started) openModal('<div class="title" style="color:var(--red)">НОВАЯ КАРЬЕРА?</div><p style="text-align:center">Текущий прогресс будет удалён.</p><div class="row"><button class="btn" data-act="closemodal">Нет</button><button class="btn red" data-act="confirmnew">Да</button></div>');
     else ACT.confirmnew();
@@ -1774,9 +1829,7 @@ const ACT={
   trclose(){ closeTrain(); },
   sleep(){
     if(S.energy>=S.maxEnergy) return toast('Энергия и так полная');
-    const doSleep=()=>{ S.sleeps++; S.day++; S.energy=S.maxEnergy; save(); toast('День '+S.day+'. Ты отлично выспался!'); renderHub(); };
-    if(S.sleeps<AD_CONFIG.freeSleeps||dev('noAds')) doSleep(); // первые 2 раза — бесплатно
-    else showRewardedAd(doSleep);                // дальше — только за просмотр рекламы
+    S.sleeps++; S.day++; S.energy=S.maxEnergy; save(); toast('День '+S.day+'. Ты отлично выспался!'); renderHub(); // сон бесплатный: реклама теперь — за «Второе дыхание» и «×2 награда»
   },
   adclaim(){ if(AD&&AD.left<=0) AD.reward(); },
   adcancel(){ if(AD) AD.cancel(); },
@@ -1799,12 +1852,18 @@ const ACT={
   perk(el){ if(F&&F.state==='perk'&&PERKS[el.dataset.v]) takePerk(el.dataset.v); },
   auto(){ S.auto=!S.auto; save(); updAutoBtn(); toast(S.auto?'Автопродолжение включено: следующий забег начнётся сам':'Автопродолжение выключено');
     if(!S.auto){ clearTimeout(AUTO_T); const n=$('#autoNote'); if(n) n.remove(); } },
+  revive(){ if(F&&F.state==='revive'){ clearTimeout(REV_T); watchAd(revive); } },
+  norevive(){ clearTimeout(REV_T); if(!F||F.state!=='revive') return; closeModal(); F.state='done'; finishFight(); },
+  double(){ if(!F||!F.tot||F.doubled) return; clearTimeout(AUTO_T); const n=$('#autoNote'); if(n) n.remove();
+    watchAd(()=>{ if(!F||F.doubled) return; F.doubled=true; S.money+=F.tot.money; const ups=addXp(F.tot.xp); save();
+      const m=$('#rewM'), x=$('#rewX'), b=$('#dblBtn'); if(m) m.textContent='+$'+F.tot.money*2+' (×2)'; if(x) x.textContent='+'+F.tot.xp*2+' XP (×2)'; if(b) b.remove();
+      sfx('coin'); toast('Награда удвоена!'+(ups?' Новый уровень '+S.lvl+'!':'')); }); },
   autostop(){ clearTimeout(AUTO_T); S.auto=false; save(); updAutoBtn(); const n=$('#autoNote'); if(n) n.remove(); },
   speed(){ if(!F) return; fightSpeed=F.speed=F.speed>=4?1:F.speed*2; $('#speedBtn').textContent='⏩ x'+F.speed; },
   menu(){ $('#btnContinue').style.display=S.started?'':'none'; showScreen('title'); },
   surrender(){ if(!F||!['fight','intro','swap','perk'].includes(F.state)) return; clearTimeout(PERK_T); openModal('<div class="title" style="color:var(--red)">ОТСТУПИТЬ?</div><p style="text-align:center">Забег прервётся. Деньги и опыт за побеждённых врагов останутся.</p><div class="row"><button class="btn" data-act="closemodal">Драться</button><button class="btn red" data-act="dosurrender">Отступить</button></div>'); },
   dosurrender(){ if(!F||!['fight','intro','swap','perk'].includes(F.state)) return closeModal(); F.surrender=true; F.winner='o'; F.state='done'; closeModal(); finishFight(); },
-  closefight(){ clearTimeout(AUTO_T); clearTimeout(PERK_T); closeModal(); F=null; $('#fx').innerHTML=''; tab=S.beaten>=OPP.length?'fighter':'league'; showScreen('hub'); }
+  closefight(){ clearTimeout(AUTO_T); clearTimeout(PERK_T); clearTimeout(REV_T); closeModal(); F=null; $('#fx').innerHTML=''; tab=S.beaten>=OPP.length?'fighter':'league'; showScreen('hub'); }
 };
 document.addEventListener('click',e=>{
   const el=e.target.closest('[data-act]'); if(!el||el.disabled) return;
@@ -1927,7 +1986,7 @@ function tgBack(){
 
 /* ---------- ДИАГНОСТИКА: ошибки на телефоне видны прямо в игре ----------
    Нажатие на номер сборки на заставке показывает сведения об устройстве; нажатие на панель — скрывает её. */
-const BUILD='41 · 2026-10-25'; // номер сборки — видно на заставке, свежая версия или старая из кэша Telegram
+const BUILD='42 · 2026-10-25'; // номер сборки — видно на заставке, свежая версия или старая из кэша Telegram
 let FRAMES=0, PRESENT_MODE='чёткий';
 const DIAG_SEEN={};
 function diag(where,e){
