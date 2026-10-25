@@ -91,6 +91,7 @@ button{font-family:inherit;color:inherit;cursor:pointer;touch-action:manipulatio
 @keyframes pulse{50%{box-shadow:inset 0 0 0 2px #6a0e1c}}
 .opp.done .nm::after{content:" ✓";color:var(--grn)}
 .opp .btn{width:auto;min-height:40px;padding:6px 10px;font-size:12px}
+.opp .obtns{display:flex;flex-direction:column;gap:6px}.opp .obtns .btn{width:100%}
 .ostat{font-size:11px;color:var(--dim);margin-top:3px}
 /* title */
 #scr-title{justify-content:flex-start;background:#07050f;padding-top:var(--sat);padding-bottom:var(--sab)}
@@ -328,7 +329,7 @@ const fmt=n=>Math.round(n).toLocaleString('ru-RU');
 /* ---------- ДАННЫЕ ---------- */
 const MAX_LVL=30, MAX_STAT=30, FIGHT_COST=20, TRAIN_COST=20, TRAIN_TIME=3000;
 // автобатлер: этап = 10 волн (по одному врагу) + босс из лиги; здоровье бойца переходит из волны в волну
-const WAVES=10, WAVE_K0=.25, WAVE_K1=.04, WAVE_HP0=.45, WAVE_HP1=.035, WAVE_TIME=30000, BOSS_TIME=90000, BOSS_TIME_DUO=120000, BOSS_HP=1.7, BOSS_HP_DUO=1.35, WAVE_HEAL=.3, BOSS_HEAL=1;
+const WAVES=10, WAVE_K0=.25, WAVE_K1=.04, WAVE_HP0=.6, WAVE_HP1=.045, WAVE_TIME=40000, BOSS_TIME=120000, BOSS_TIME_DUO=150000, BOSS_HP=2.15, BOSS_HP_DUO=1.7, WAVE_HEAL=.3, BOSS_HEAL=1;
 const STATS={
   str:{n:'Сила',ic:'💪',d:'Урон всех ударов',tr:'Тяжёлый мешок'},
   spd:{n:'Скорость',ic:'⚡',d:'Частота атак и точность',tr:'Скакалка'},
@@ -419,7 +420,14 @@ const arenaOf=i=>i<12?Math.floor(i/3):4; // по 3 боя на уличную а
 const needXp=l=>Math.round(60+(l-1)*40+(l-1)*(l-1)*6);
 const needProg=v=>20+v*10;
 const gymMult=()=>1+(S.gym-1)*.35;
-const maxHpOf=st=>Math.round(60+st.end*10);
+/* HP_K — общий множитель здоровья (бойца и всех соперников): бои длиннее, «настоящие», а соотношение сил то же.
+   HITS_* — сколько средних ударов бойца минимум должен выдержать враг: даже прокачанный боец не убивает с одного удара. */
+const HP_K=1.8, HITS_WAVE=w=>4+w*.4, HITS_BOSS=18, HITS_DUO=13;
+const maxHpOf=st=>Math.round((60+st.end*10)*HP_K);
+function hpFloor(p,o,hits){ // здоровье врага не меньше hits средних ударов бойца (с учётом снаряжения, стилей и усилений)
+  const atk=p.moves.filter(m=>MOVES[m]&&MOVES[m].type==='atk'); if(!atk.length) return;
+  const avg=atk.reduce((a,m)=>a+MOVES[m].dmg,0)/atk.length, need=Math.round(avg*(1+p.st.str*.13)*p.dm/(1+o.st.end*.025)*hits);
+  if(o.maxHp<need) o.maxHp=o.hp=o.ghost=need; }
 const maxStaOf=st=>Math.round(40+st.end*4+st.spd*2);
 const intervalOf=st=>clamp(1500-st.spd*45,450,1500);
 const dodgeOf=st=>clamp(.42+st.agi*.022,.25,.85);
@@ -1540,8 +1548,8 @@ function bossFighter(m,dmg,idx){ const f=makeFighter(m.name,scaleSt(m.st),m.move
 function spawnEnemy(R){
   R.wave++; R.deadMax=0; R.round=1;
   if(R.wave<=WAVES){ const e=waveEnemy(R.idx,R.wave); R.o=makeFighter(e.name,e.st,e.moves,e.pal,-1,OX,false,e.dmg); R.queue=[]; R.team=1; R.time=WAVE_TIME;
-    R.o.maxHp=R.o.hp=R.o.ghost=Math.round(R.o.maxHp*(WAVE_HP0+WAVE_HP1*R.wave)); } // враги волн — «расходники»: здоровья меньше, чем у бойца того же уровня
-  else { const o=OPP[R.idx]; R.o=bossFighter(oppMember(o,0),o.dmg,R.idx); R.queue=o.duo?o.members.slice(1):[]; R.team=o.duo?o.members.length:1; R.time=o.duo?BOSS_TIME_DUO:BOSS_TIME; }
+    R.o.maxHp=R.o.hp=R.o.ghost=Math.round(R.o.maxHp*(WAVE_HP0+WAVE_HP1*R.wave)); hpFloor(R.p,R.o,HITS_WAVE(R.wave)); } // враги волн крепче с каждой волной и не падают с одного удара
+  else { const o=OPP[R.idx]; R.o=bossFighter(oppMember(o,0),o.dmg,R.idx); R.queue=o.duo?o.members.slice(1):[]; R.team=o.duo?o.members.length:1; R.time=o.duo?BOSS_TIME_DUO:BOSS_TIME; hpFloor(R.p,R.o,o.duo?HITS_DUO:HITS_BOSS); }
   if(!R.sim&&R.idx===S.beaten&&R.wave>S.best){ S.best=R.wave; save(); } // рекорд волны на текущем этапе
   return R.o;
 }
@@ -1719,7 +1727,7 @@ function updateFighter(f,o,dt){
 }
 function nextMember(){
   const m=F.queue.shift(); F.deadMax+=F.o.maxHp; F.round++;
-  F.o=bossFighter(m,F.o.dm,F.idx); F.o.enter=150; F.o.timer=1200;
+  F.o=bossFighter(m,F.o.dm,F.idx); hpFloor(F.p,F.o,HITS_DUO); F.o.enter=150; F.o.timer=1200;
   F.p.pose='idle'; F.p.poseT=0; F.p.timer=Math.max(F.p.timer,600); F.state='fight'; hudCache={};
   addLog('На ринг выходит <b>'+m.name+'</b>!');
   if(!F.sim){ setName('oName',m.name+' ('+F.round+'/'+F.team+')'); const txt=m.name.toUpperCase()+'!'; showBanner(txt); setTimeout(()=>{ if(F&&F.banner===txt) hideBanner(); },1300); }
@@ -1805,6 +1813,23 @@ function showBanner(t){ if(F&&F.sim) return; const b=$('#banner'); if(F.banner!=
 function hideBanner(){ $('#banner').classList.remove('on'); if(F) F.banner=''; }
 // энергия нужна только на новый этап; повтор пройденного (фарм) — бесплатно
 const stageCost=i=>i<S.beaten?0:FIGHT_COST;
+/* Автофарм: только пройденные этапы — без боя сразу награда за весь забег, как за победу: 10 волн (деньги, опыт,
+   шанс вещи с каждого врага) и босс (призовые, опыт, вещь). Стоит AUTOFARM_COST энергии — чтобы не нажимать бесконечно. */
+const AUTOFARM_COST=10;
+function autoFarm(i){
+  if(F) return; if(i>=S.beaten) return toast('Автофарм — только для пройденных боссов');
+  if(S.energy<AUTOFARM_COST&&!dev('infEnergy')) return toast('Мало энергии на автофарм: нужно '+AUTOFARM_COST+'⚡');
+  spendEnergy(AUTOFARM_COST);
+  let money=0,xp=0; const loot=[];
+  for(let w=1;w<=WAVES;w++){ money+=waveMoney(i); xp+=waveXp(i); if(Math.random()<GEAR_DROP) loot.push(giveGear(rollGear(i,false))); }
+  money+=winPay(i); xp+=xpPay(i); loot.push(giveGear(rollGear(i,true)));
+  S.money+=money; S.kills+=WAVES+(OPP[i].duo?OPP[i].members.length:1); S.wins++; const ups=addXp(xp); save();
+  openModal('<div class="title" style="color:var(--grn)">АВТОФАРМ</div><p style="text-align:center">Этап '+(i+1)+' · '+OPP[i].name+': '+WAVES+' волн и босс пройдены без боя.</p>'+
+    '<div class="rew"><div class="money">+$'+money+'</div><div class="lv">+'+xp+' XP</div>'+(ups?'<div style="color:var(--yel)">Новый уровень '+S.lvl+'!</div>':'')+'</div>'+
+    '<div class="loot">🎁 <b>Добыча:</b><br>'+loot.join('<br>')+'</div>'+
+    '<button class="btn grn" data-act="farmagain" data-v="'+i+'">⚡ Ещё раз ('+AUTOFARM_COST+'⚡)</button><div class="gap"></div><button class="btn" data-act="closemodal">Закрыть</button>');
+  sfx(ups?'lvl':'coin'); renderHub();
+}
 const costTxt=i=>stageCost(i)?' ('+FIGHT_COST+'⚡)':' (бесплатно)';
 function startFight(idx){
   if(idx>S.beaten||idx>=OPP.length) return toast('Сначала пройди предыдущие этапы');
@@ -2202,9 +2227,10 @@ function tabLeague(){
         '<div class="ostat power">💪 Сила босса <b>'+bossPower(i)+'</b> · твоя <b>'+myPower()+'</b></div>'+
         (next?'<div class="ostat">'+chanceHTML(i)+'</div>':'')+
         (next&&S.best?'<div class="ostat" style="color:var(--yel)">Рекорд: '+(S.best>WAVES?'дошёл до босса':'волна '+S.best+'/'+WAVES)+'</div>':''))+
-      '</div>'+(lock?'':'<button class="btn '+(next?'red':'')+'" data-act="fight" data-v="'+i+'">'+(next?'В бой '+FIGHT_COST+'⚡':'Фарм 0⚡')+'</button>')+'</div>';
+      '</div>'+(lock?'':'<div class="obtns"><button class="btn '+(next?'red':'')+'" data-act="fight" data-v="'+i+'">'+(next?'В бой '+FIGHT_COST+'⚡':'Фарм 0⚡')+'</button>'+
+        (done?'<button class="btn grn" data-act="autofarm" data-v="'+i+'">Автофарм '+AUTOFARM_COST+'⚡</button>':'')+'</div>')+'</div>'; // автофарм — только у пройденных боссов
   });
-  h+='<div class="dim" style="text-align:center">Новый этап стоит '+FIGHT_COST+' ⚡ энергии, повтор пройденного (фарм) — бесплатно</div>';
+  h+='<div class="dim" style="text-align:center">Новый этап стоит '+FIGHT_COST+' ⚡ энергии, повтор пройденного (фарм) — бесплатно. Автофарм — награда за весь этап сразу, без боя, за '+AUTOFARM_COST+' ⚡</div>';
   return h;
 }
 function renderHub(){
@@ -2227,7 +2253,7 @@ function drawPortrait(t){
 function helpHTML(){
   return '<div class="title" style="color:var(--cyan)">КАК ИГРАТЬ</div><div class="help">'+
   '<p>Ты — никто из спального района. Цель — пройти 16 этапов и забрать пояс «Короля Асфальта». Бой идёт сам — твоя задача прокачать бойца так, чтобы его хватило до конца.</p>'+
-  '<h4>🗺 Этапы</h4><ul><li>Каждый этап — 10 волн, в каждой по одному врагу. Они выходят один за другим, без остановки.</li><li>После 10-й волны выходит <b>босс</b> — соперник из подпольной лиги. У него на 25% больше здоровья, и бой с ним дольше: 90 секунд (с дуэтом — 120).</li><li>Здоровье переходит из волны в волну: после каждого врага восстанавливается 30%. Перед боссом — передышка и полное восстановление: исход решает только сила бойца.</li><li>Каждый 5-й босс — дуэт: двое по очереди.</li><li>Упал — забег окончен, но деньги и опыт за побеждённых врагов остаются. Можно отступить в любой момент.</li></ul>'+
+  '<h4>🗺 Этапы</h4><ul><li>Каждый этап — 10 волн, в каждой по одному врагу. Они выходят один за другим, без остановки.</li><li>После 10-й волны выходит <b>босс</b> — соперник из подпольной лиги. У него вдвое больше здоровья, и бой с ним дольше: 2 минуты (с дуэтом — 2,5).</li><li>Здоровье переходит из волны в волну: после каждого врага восстанавливается 30%. Перед боссом — передышка и полное восстановление: исход решает только сила бойца.</li><li>Каждый 5-й босс — дуэт: двое по очереди.</li><li>Упал — забег окончен, но деньги и опыт за побеждённых врагов остаются. Можно отступить в любой момент.</li></ul>'+
   '<h4>⏭ Контрольная точка</h4><ul><li>На этапе, где ты уже доходил до босса (и на пройденных), забег начинается с 5-й волны. Волны 1–4 и их награды пропускаются. Переключатель — на вкладке «Этапы».</li></ul>'+
   '<h4>🎁 Снаряжение</h4><ul><li>Перчатки (урон), бинты (крит), кроссовки (скорость атак), капа (защита и здоровье).</li><li>Падают с врагов волн (6%) и всегда с босса. Редкость: обычные, редкие, эпические, легендарные. Чем дальше этап, тем сильнее вещь.</li><li>Улучшай за деньги (до +9), лишнее продавай. Всё — на вкладке «Боец».</li></ul>'+
   '<h4>🔥 Ярость</h4><ul><li>Кнопка в бою: 5 секунд урон +35% и атаки чаще. Перезарядка 30 секунд. В «Авто» срабатывает сама.</li></ul>'+
@@ -2237,8 +2263,9 @@ function helpHTML(){
   '<h4>💪 Сила и шанс</h4><ul><li>«Сила» — одно число по характеристикам. Сравни её с силой босса на вкладке «Этапы».</li><li>Шанс пройти этап считается по 40 пробным забегам с твоими характеристиками и комбинацией.</li></ul>'+
   '<h4>▶ Авто</h4><ul><li>Кнопка «Авто» в бою: после победы сам начнётся следующий этап, после поражения — повтор предыдущего (фарм). Усиления выберутся сами через 5 секунд.</li><li>Если на новый этап не хватает энергии, авто фармит последний пройденный — бесплатно. Остановить — кнопкой «Стоп».</li></ul>'+
   (ADS_ON?'<h4>📺 Реклама за награду</h4><ul><li><b>Второе дыхание</b>: упал — один раз за забег можно встать с 50% здоровья и полным адреналином и продолжить с той же волны.</li><li><b>×2 награда</b> — в итогах забега и за время отсутствия.</li></ul>':'')+
+  '<h4>⚡ Автофарм</h4><ul><li>У пройденных боссов на вкладке «Этапы» — кнопка «Автофарм»: без боя сразу вся награда за этап — 10 волн и босс (деньги, опыт, вещи). Стоит '+AUTOFARM_COST+'⚡.</li></ul>'+
   '<h4>💤 Пока тебя нет</h4><ul><li>Боец сам фармит лучший пройденный этап: 40 врагов в час, до 8 часов. Награду выдадут, когда вернёшься.</li></ul>'+
-  '<h4>🥊 Бой</h4><ul><li>Боец сам выбирает приёмы из твоей комбинации (до 3).</li><li>Шкала адреналина полна — боец сам проводит <b>СУПЕРУДАР</b>: неблокируемый удар.</li><li>Стамина тратится на удары. Кончилась — боец переводит дух.</li><li>На врага волны — 30 секунд. Не уложился — побеждает тот, у кого больше % здоровья.</li><li>Кнопка скорости ускоряет бой до x4.</li></ul>'+
+  '<h4>🥊 Бой</h4><ul><li>Боец сам выбирает приёмы из твоей комбинации (до 3).</li><li>Шкала адреналина полна — боец сам проводит <b>СУПЕРУДАР</b>: неблокируемый удар.</li><li>Стамина тратится на удары. Кончилась — боец переводит дух.</li><li>На врага волны — 40 секунд, с каждой волной враги крепче. Не уложился — побеждает тот, у кого больше % здоровья.</li><li>Кнопка скорости ускоряет бой до x4.</li></ul>'+
   '<h4>🏋 Зал</h4><ul><li>Тренировка идёт сама 3 секунды и даёт прогресс характеристики. Обычная — 20⚡; интенсивная — 35⚡ и ×2,2 прогресса, но усталость: −15% здоровья в следующем забеге.</li><li>Энергия тратится на новые этапы, тренировки и работу. Повтор пройденного этапа (фарм) — бесплатно. Энергия восстанавливается сама: +1 каждые 3 минуты, даже когда ты не в игре. Ещё её дают еда и сон — «Выспаться» раз в 8 часов.</li><li>Улучшай зал — тренировки станут эффективнее.</li></ul>'+
   '<h4>📈 Прогресс</h4><ul><li>Опыт → уровни → 2 свободных очка характеристик за уровень.</li><li>Проиграл боссу — 25% опыта, а начиная с Бизона ещё и 10% его призовых.</li><li>Новые приёмы открываются с уровнем и покупаются за деньги.</li><li>Прогресс сохраняется автоматически.</li></ul>'+
   '<h4>Приёмы</h4><ul><li><b>Блок</b> гасит быстрые удары, но апперкот и тяжёлый его пробивают.</li><li><b>Уклон</b> — шанс полностью избежать удара и контратаковать.</li></ul></div>'+
@@ -2298,6 +2325,8 @@ const ACT={
     else { if(S.load.length>=3) return toast('Максимум 3 приёма — сначала убери один'); S.load.push(id); }
     save(); renderHub(); },
   fight(el){ startFight(+el.dataset.v); },
+  autofarm(el){ autoFarm(+el.dataset.v); },
+  farmagain(el){ closeModal(); autoFarm(+el.dataset.v); },
   rage(){ useRage(); },
   trmode(el){ S.trMode=el.dataset.v==='hard'?'hard':'normal'; save(); renderHub(); },
   season(){ if(!S.champ) return; const n=(S.season||0)+1;
@@ -2446,7 +2475,7 @@ function tgBack(){
 
 /* ---------- ДИАГНОСТИКА: ошибки на телефоне видны прямо в игре ----------
    Нажатие на номер сборки на заставке показывает сведения об устройстве; нажатие на панель — скрывает её. */
-const BUILD='62 · 2026-10-26'; // номер сборки — видно на заставке, свежая версия или старая из кэша Telegram
+const BUILD='64 · 2026-10-26'; // номер сборки — видно на заставке, свежая версия или старая из кэша Telegram
 let FRAMES=0, PRESENT_MODE='чёткий';
 /* Сторож: раз в секунду, независимо от кадров. Если игра открыта, а кадры не идут — или бой стоит без открытых окон, —
    показываем панель ошибок с подробностями (по ней видно причину, например на ПК). */
