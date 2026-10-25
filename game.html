@@ -1765,7 +1765,7 @@ function updateFight(dt){
   } else if(F.state==='swap'){
     F.swapT-=dt; if(F.swapT<=0){ if(F.queue.length) nextMember(); else if(perkDue(F)) offerPerks(); else nextWave(); }
   } else if(F.state==='end'){
-    F.endT-=dt; if(F.endT<=0){ F.state='done'; if(!F.sim){ if(F.winner==='o'&&!F.surrender&&!F.revived) offerRevive(); else finishFight(); } }
+    F.endT-=dt; if(F.endT<=0){ F.state='done'; if(!F.sim){ if(ADS_ON&&F.winner==='o'&&!F.surrender&&!F.revived) offerRevive(); else finishFight(); } }
   }
   cosmetic(F.p,dt); cosmetic(F.o,dt);
   if(!F) return;
@@ -1847,8 +1847,11 @@ function revive(){
   showBanner('ВТОРОЕ ДЫХАНИЕ!'); setTimeout(()=>{ if(F&&F.banner==='ВТОРОЕ ДЫХАНИЕ!') hideBanner(); },1200);
   addLog('<b style="color:#ffd23f">Второе дыхание! '+S.name+' снова на ногах.</b>'); sfx('super');
 }
+/* ADS_ON — реклама за награду включена. Временно выключена по просьбе пользователя (2026-10-26): нет окна «Второе дыхание»,
+   кнопок «×2 награда» в итогах и «Забрать ×2» за время отсутствия, раздела о рекламе в «Как играть». Вернуть — поставить true. */
+const ADS_ON=false;
 // реклама за награду; с читом DEV «Без рекламы» награда сразу
-function watchAd(onReward){ if(dev('noAds')) onReward(); else showRewardedAd(onReward); }
+function watchAd(onReward){ if(!ADS_ON) return; if(dev('noAds')) onReward(); else showRewardedAd(onReward); }
 /* Награда за время отсутствия: пока игрока нет, боец фармит лучший пройденный этап (или 1-й) — 40 врагов в час,
    не больше 8 часов, по награде за врага волны. Показывается при входе в карьеру и при возврате в игру. */
 const OFF_MIN=5*60e3, OFF_CAP=8*3600e3, OFF_KPH=40;
@@ -1862,7 +1865,7 @@ function checkOffline(){
   OFF={money:kills*waveMoney(i),xp:kills*waveXp(i),kills,i}; save(); // время отсчитано — второй раз не начислится
   openModal('<div class="title" style="color:var(--yel)">ПОКА ТЕБЯ НЕ БЫЛО</div><p style="text-align:center">'+fmtDur(away)+(away>OFF_CAP?' (засчитано 8 ч)':'')+
     ' боец фармил этап '+(i+1)+'. Побеждено врагов: '+kills+'.</p><div class="rew"><div class="money">+$'+OFF.money+'</div><div class="lv">+'+OFF.xp+' XP</div>'+(en?'<div style="color:var(--org)">+'+en+' ⚡</div>':'')+'</div>'+
-    '<button class="btn yel" data-act="offx2">📺 Забрать ×2</button><div class="gap"></div><button class="btn grn" data-act="offtake">Забрать</button>');
+    (ADS_ON?'<button class="btn yel" data-act="offx2">📺 Забрать ×2</button><div class="gap"></div>':'')+'<button class="btn grn" data-act="offtake">Забрать</button>');
 }
 function claimOffline(k){
   if(!OFF) return; const o=OFF; OFF=null; S.money+=o.money*k; const ups=addXp(o.xp*k); save(); closeModal(); sfx(ups?'lvl':'coin');
@@ -1893,7 +1896,7 @@ function finishFight(){
   html+='<div class="rew"><div class="money" id="rewM">+$'+F.tot.money+'</div><div class="lv" id="rewX">+'+F.tot.xp+' XP</div><div>Врагов побеждено: '+F.kills+'</div><div>Урон: '+F.p.dealt+'</div></div>';
   if(F.perks.length) html+='<div class="perkrow">Усиления: '+F.perks.map(id=>PERKS[id].ic+' '+PERKS[id].n).join(' · ')+'</div>';
   if(F.loot.length) html+='<div class="loot">🎁 <b>Добыча:</b><br>'+F.loot.join('<br>')+'</div>';
-  if(F.tot.money+F.tot.xp>0) html+='<button class="btn yel" id="dblBtn" data-act="double">📺 ×2 награда: ещё +$'+F.tot.money+' и +'+F.tot.xp+' XP</button><div class="gap"></div>';
+  if(ADS_ON&&F.tot.money+F.tot.xp>0) html+='<button class="btn yel" id="dblBtn" data-act="double">📺 ×2 награда: ещё +$'+F.tot.money+' и +'+F.tot.xp+' XP</button><div class="gap"></div>';
   // автопродолжение: победа — следующий этап, поражение — фарм предыдущего (пройденного) этапа;
   // если на новый этап не хватает энергии — авто фармит последний пройденный (это бесплатно)
   let autoTo=S.auto&&!F.surrender?(win?(i+1<OPP.length&&i+1<=S.beaten?i+1:i):(i>0?i-1:i)):-1, autoWhy='';
@@ -2233,7 +2236,7 @@ function helpHTML(){
   '<h4>⭐ Усиления</h4><ul><li>После 3-й, 6-й и 9-й волны выбери одно усиление из трёх: урон, вампиризм, крит, броня, здоровье, деньги и другие.</li><li>Они действуют до конца забега, одинаковые складываются.</li></ul>'+
   '<h4>💪 Сила и шанс</h4><ul><li>«Сила» — одно число по характеристикам. Сравни её с силой босса на вкладке «Этапы».</li><li>Шанс пройти этап считается по 40 пробным забегам с твоими характеристиками и комбинацией.</li></ul>'+
   '<h4>▶ Авто</h4><ul><li>Кнопка «Авто» в бою: после победы сам начнётся следующий этап, после поражения — повтор предыдущего (фарм). Усиления выберутся сами через 5 секунд.</li><li>Если на новый этап не хватает энергии, авто фармит последний пройденный — бесплатно. Остановить — кнопкой «Стоп».</li></ul>'+
-  '<h4>📺 Реклама за награду</h4><ul><li><b>Второе дыхание</b>: упал — один раз за забег можно встать с 50% здоровья и полным адреналином и продолжить с той же волны.</li><li><b>×2 награда</b> — в итогах забега и за время отсутствия.</li></ul>'+
+  (ADS_ON?'<h4>📺 Реклама за награду</h4><ul><li><b>Второе дыхание</b>: упал — один раз за забег можно встать с 50% здоровья и полным адреналином и продолжить с той же волны.</li><li><b>×2 награда</b> — в итогах забега и за время отсутствия.</li></ul>':'')+
   '<h4>💤 Пока тебя нет</h4><ul><li>Боец сам фармит лучший пройденный этап: 40 врагов в час, до 8 часов. Награду выдадут, когда вернёшься.</li></ul>'+
   '<h4>🥊 Бой</h4><ul><li>Боец сам выбирает приёмы из твоей комбинации (до 3).</li><li>Шкала адреналина полна — боец сам проводит <b>СУПЕРУДАР</b>: неблокируемый удар.</li><li>Стамина тратится на удары. Кончилась — боец переводит дух.</li><li>На врага волны — 30 секунд. Не уложился — побеждает тот, у кого больше % здоровья.</li><li>Кнопка скорости ускоряет бой до x4.</li></ul>'+
   '<h4>🏋 Зал</h4><ul><li>Тренировка идёт сама 3 секунды и даёт прогресс характеристики. Обычная — 20⚡; интенсивная — 35⚡ и ×2,2 прогресса, но усталость: −15% здоровья в следующем забеге.</li><li>Энергия тратится на новые этапы, тренировки и работу. Повтор пройденного этапа (фарм) — бесплатно. Энергия восстанавливается сама: +1 каждые 3 минуты, даже когда ты не в игре. Ещё её дают еда и сон — «Выспаться» раз в 8 часов.</li><li>Улучшай зал — тренировки станут эффективнее.</li></ul>'+
@@ -2443,7 +2446,7 @@ function tgBack(){
 
 /* ---------- ДИАГНОСТИКА: ошибки на телефоне видны прямо в игре ----------
    Нажатие на номер сборки на заставке показывает сведения об устройстве; нажатие на панель — скрывает её. */
-const BUILD='61 · 2026-10-26'; // номер сборки — видно на заставке, свежая версия или старая из кэша Telegram
+const BUILD='62 · 2026-10-26'; // номер сборки — видно на заставке, свежая версия или старая из кэша Telegram
 let FRAMES=0, PRESENT_MODE='чёткий';
 /* Сторож: раз в секунду, независимо от кадров. Если игра открыта, а кадры не идут — или бой стоит без открытых окон, —
    показываем панель ошибок с подробностями (по ней видно причину, например на ПК). */
