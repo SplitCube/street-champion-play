@@ -71,6 +71,8 @@ button{font-family:inherit;color:inherit;cursor:pointer;touch-action:manipulatio
 .tcard .bar{height:6px;margin-top:5px}
 .tcard .cost{font-size:12px;color:var(--cyan);font-weight:bold;white-space:nowrap}
 .tcard:active{transform:translateY(2px)}
+.tcard:disabled{opacity:.45;filter:grayscale(.6)}
+.tcard:disabled:active{transform:none}
 .slots{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:10px}
 .slot{background:#0b0818;border:3px solid #000;box-shadow:inset 0 0 0 2px var(--mag);min-height:48px;display:grid;place-items:center;text-align:center;font-size:12px;font-weight:bold;padding:4px;text-transform:uppercase}
 .slot.empty{box-shadow:inset 0 0 0 2px #2b2150;color:#4b3f7a}
@@ -145,13 +147,19 @@ button{font-family:inherit;color:inherit;cursor:pointer;touch-action:manipulatio
   touch-action:manipulation;user-select:none;-webkit-user-select:none;overflow:hidden}
 .mchip .ic{font-size:26px;line-height:1}
 .mchip.on{box-shadow:inset 0 0 0 3px var(--yel),inset -3px -3px 0 rgba(0,0,0,.45);color:var(--yel)}
-/* окно комбо: подсвеченный приём пульсирует, полоска снизу убывает */
+/* комбо-связка: приём, который надо нажать сейчас, пульсирует, полоска снизу — время на нажатие */
 .mchip.cw{background:#00b8d8;color:#04121a;box-shadow:inset 0 0 0 3px #fff;animation:cwp .3s steps(2) infinite}
 .mchip.cw::after{content:'';position:absolute;left:0;bottom:0;height:7px;width:var(--cw,100%);background:#fff;box-shadow:0 -2px 0 #04121a}
 .mchip.bad{background:#b3122a;color:#fff;box-shadow:inset 0 0 0 3px #ff5a6a}
 .mchip:active{transform:translateY(2px)}
 @keyframes cwp{50%{box-shadow:inset 0 0 0 3px #38e8ff;background:#38e8ff}}
 .adr .cmb{min-width:44px;text-align:right;color:#38e8ff}
+#cmbHint{display:flex;align-items:center;justify-content:center;gap:5px;height:32px;font-size:12px;color:var(--dim);white-space:nowrap;overflow:hidden}
+#cmbHint .st{display:inline-grid;place-items:center;width:32px;height:28px;border:2px solid #000;background:var(--panel2);font-size:16px;line-height:1}
+#cmbHint .st.ok{background:#1f7a3a;box-shadow:inset 0 0 0 2px #3ee07a}
+#cmbHint .st.now{background:#00b8d8;box-shadow:inset 0 0 0 2px #fff;animation:cwp .3s steps(2) infinite}
+#cmbHint .ar{color:var(--dim);font-size:11px}
+#cmbHint b{color:#38e8ff}
 .adr{display:flex;align-items:center;gap:8px;font-size:11px;font-weight:bold;color:var(--org)}
 .adr .bar{flex:1;height:12px}
 .adr .fill{background:linear-gradient(90deg,#ff8a2b,#ffd23f)}
@@ -181,6 +189,13 @@ button{font-family:inherit;color:inherit;cursor:pointer;touch-action:manipulatio
 .pick small{font-size:10px;color:var(--dim)}
 .pick.on{box-shadow:inset 0 0 0 3px var(--yel);background:#2a1f00}
 .btn.rage{background:#3a1a0a;color:#ff8a2b;min-height:44px;box-shadow:inset 0 0 0 2px #5a2a10}
+.rrow{display:flex;gap:6px;align-items:stretch}
+.rrow .rage{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cbtn{position:relative;flex:none;width:48px;min-height:44px;background:var(--panel2);border:3px solid #000;box-shadow:inset 0 0 0 2px #3ee07a;font-size:20px;line-height:1;padding:0;color:#fff}
+.cbtn b{position:absolute;right:3px;bottom:2px;font-size:10px;color:#3ee07a}
+.cbtn:disabled{opacity:.5;box-shadow:inset 0 0 0 2px var(--line)}
+.cbtn.none{opacity:.3}
+.cbtn:active{transform:translateY(2px)}
 .btn.rage.ready{background:#b3122a;color:#fff;box-shadow:inset 0 0 0 2px var(--org);animation:fl2 .8s steps(2) infinite}
 .btn.rage.active{background:#ff8a2b;color:#140c00}
 .btn.rage:disabled{opacity:1}
@@ -247,7 +262,7 @@ div.power:not(.ostat){font-size:13px;margin-top:4px}
       <button class="btn" data-act="help">Как играть</button>
       <button class="btn" data-act="sound" id="btnSound">Звук: вкл</button>
     </div>
-    <div class="foot">16 этапов · 160 волн · 16 боссов · 1 пояс<br><span id="build"></span></div>
+    <div class="foot">5 районов · 50 боссов · 500 волн · 1 пояс<br><span id="build"></span></div>
   </div>
 
   <!-- HUB -->
@@ -275,9 +290,10 @@ div.power:not(.ostat){font-size:13px;margin-top:4px}
       <div class="runinfo" id="runInfo"></div>
       <div class="flog" id="flog"></div>
       <div class="adr" id="adrRow">АДРЕНАЛИН<div class="bar"><i class="fill" id="pAdr"></i></div><b class="cmb" id="comboMul"></b></div>
-      <button class="btn rage" id="rageBtn" data-act="rage">🔥 ЯРОСТЬ</button>
+      <div class="rrow"><button class="btn rage" id="rageBtn" data-act="rage">🔥 ЯРОСТЬ</button><button class="cbtn" data-act="cons" data-v="med"></button><button class="cbtn" data-act="cons" data-v="band"></button><button class="cbtn" data-act="cons" data-v="nrg"></button></div>
+      <div id="cmbHint"></div>
       <div class="chips" id="fChips"></div>
-      <div class="hint" id="fHint">Боец дерётся сам. Жми подсвеченный приём — комбо: урон до ×1,6 и адреналин быстрее. Не тот приём — оглушение.</div>
+      <div class="hint" id="fHint">Боец дерётся сам. Раз в 12 с над кнопками — связка из 3 приёмов: нажми по порядку — мощный комбо-удар.</div>
       <div class="frow f3"><button class="btn sm" id="speedBtn" data-act="speed">⏩ x1</button><button class="btn sm" id="autoBtn" data-act="auto">Авто: выкл</button><button class="btn sm" data-act="surrender">Отступить</button></div>
     </div>
   </div>
@@ -327,7 +343,8 @@ const rnd=(a,b)=>a+Math.random()*(b-a);
 const fmt=n=>Math.round(n).toLocaleString('ru-RU');
 
 /* ---------- ДАННЫЕ ---------- */
-const MAX_LVL=30, MAX_STAT=30, FIGHT_COST=20, TRAIN_COST=20, TRAIN_TIME=3000;
+// MAX_LVL — до него уровень даёт +5 к макс. энергии; сам уровень без предела. MAST_MAX — предел мастерства характеристики
+const MAX_LVL=30, MAX_STAT=30, MAST_MAX=50, FIGHT_COST=20, TRAIN_COST=20, TRAIN_TIME=3000;
 // автобатлер: этап = 10 волн (по одному врагу) + босс из лиги; здоровье бойца переходит из волны в волну
 const WAVES=10, WAVE_K0=.25, WAVE_K1=.04, WAVE_HP0=.6, WAVE_HP1=.045, WAVE_TIME=40000, BOSS_TIME=120000, BOSS_TIME_DUO=150000, BOSS_HP=2.45, BOSS_HP_DUO=1.95, WAVE_HEAL=.3, BOSS_HEAL=1;
 const STATS={
@@ -346,7 +363,34 @@ const MOVES={
 };
 const SUPER={n:'СУПЕРУДАР',type:'atk',dmg:20,acc:1,sta:0,spd:1,pierce:1};
 const MOVE_ORDER=['jab','hook','uppercut','heavy','block','dodge'];
-const MOVE_IC={jab:'👊',hook:'🤜',uppercut:'☝️',heavy:'💥',block:'🛡️',dodge:'💨'}; // значки на кнопках приёмов в бою
+// приёмы школ: у каждого бойца свой набор (см. SCHOOLS); multi — серия ударов, counter — множитель против атакующего, staHit — снимает стамину
+Object.assign(MOVES,{
+  swing:{n:'Размашистый',type:'atk',dmg:14,acc:.62,sta:14,spd:1.3,pierce:1,lvl:8,cost:380,d:'Широкий удар с плеча. Полностью пробивает блок.'},
+  double:{n:'Двойка',type:'atk',dmg:4.5,acc:.92,sta:6,spd:.75,pierce:.15,multi:2,lvl:2,cost:50,d:'Джеб и сразу кросс — два быстрых удара подряд.'},
+  counter:{n:'Контрудар',type:'atk',dmg:11,acc:.9,sta:8,spd:.8,pierce:.3,counter:1.6,lvl:5,cost:180,d:'Встречный удар: в полтора раза сильнее, если соперник сам бьёт.'},
+  lowkick:{n:'Лоу-кик',type:'atk',dmg:6,acc:.88,sta:6,spd:.8,pierce:.4,staHit:10,lvl:2,cost:50,d:'Удар голенью по бедру: плохо держится блоком и отнимает у соперника стамину.'},
+  midkick:{n:'Мидл-кик',type:'atk',dmg:11,acc:.8,sta:10,spd:1,pierce:.35,lvl:4,cost:140,d:'Удар ногой в корпус — дальше и сильнее хука.'},
+  knee:{n:'Колено',type:'atk',dmg:13,acc:.78,sta:11,spd:.95,pierce:.5,lvl:6,cost:240,d:'Удар коленом вблизи — наполовину пробивает блок.'},
+  highkick:{n:'Хай-кик',type:'atk',dmg:18,acc:.6,sta:17,spd:1.4,pierce:.55,lvl:8,cost:380,d:'Удар ногой в голову. Медленный, но сокрушительный.'}
+});
+MOVE_ORDER.push('swing','double','counter','lowkick','midkick','knee','highkick');
+/* Школы боя: у каждого бойца свои приёмы ([приём, уровень, цена]) и постоянные особенности (mod — на бойца в бою, pm — вклад в «Силу»). */
+const SCHOOLS={
+  1:{n:'Уличный бокс',st:'слаггер',d:'Мало ударов, но каждый тяжёлый: +12% урона, +10% здоровья, атаки на 8% реже.',
+     moves:[['jab',1,0],['block',1,0],['hook',2,40],['uppercut',4,120],['heavy',6,260],['swing',8,380]],
+     mod:f=>{ f.dm*=1.12; f.maxHp=f.hp=f.ghost=Math.round(f.maxHp*1.1); f.haste=(f.haste||1)*1.08; },pm:1.06},
+  2:{n:'Классический бокс',st:'аутфайтер',d:'Частые и точные удары: атаки на 14% чаще, +5% к точности, +5% к уходу от удара.',
+     moves:[['jab',1,0],['dodge',1,0],['double',2,50],['hook',3,60],['counter',5,180],['uppercut',7,280]],
+     mod:f=>{ f.haste=(f.haste||1)*.86; f.accB=(f.accB||0)+.05; f.evade=(f.evade||0)+.05; },pm:1.06},
+  3:{n:'Кикбоксинг',st:'муай-тай',d:'Ноги длиннее рук: атаки на 5% чаще, +8% урона, +3% к уходу от удара.',
+     moves:[['jab',1,0],['block',1,0],['lowkick',2,50],['midkick',4,140],['knee',6,240],['highkick',8,380]],
+     mod:f=>{ f.haste=(f.haste||1)*.95; f.dm*=1.08; f.evade=(f.evade||0)+.03; },pm:1.06}
+};
+const schoolOf=h=>SCHOOLS[h]||SCHOOLS[1];
+const schoolMoves=h=>schoolOf(h).moves.map(m=>m[0]);
+const mvEntry=(id,h)=>schoolOf(h===undefined?S.hero:h).moves.find(m=>m[0]===id);
+const mvLvl=(id,h)=>{ const e=mvEntry(id,h); return e?e[1]:MOVES[id].lvl; }, mvCost=(id,h)=>{ const e=mvEntry(id,h); return e?e[2]:MOVES[id].cost; };
+const MOVE_IC={jab:'👊',hook:'🤜',uppercut:'☝️',heavy:'💥',block:'🛡️',dodge:'💨',swing:'🔨',double:'✌️',counter:'🔄',lowkick:'🦵',midkick:'🦶',knee:'🔺',highkick:'🌪️'}; // значки на кнопках приёмов в бою
 const ARENAS=[
   {n:'Подворотня',ring:false,neon:'#b89058',sky:['#0b0820','#1a1040','#2e1550'],type:0,rain:true},
   {n:'Гаражи',ring:false,neon:'#ff8a2b',sky:['#0a0a14','#1d1428','#3a1e2a'],type:1},
@@ -355,9 +399,9 @@ const ARENAS=[
   {n:'Подпольный ринг',neon:'#ffd23f',sky:['#05030a','#0a0614','#1a0e2a'],type:4}
 ];
 const P=(skin,hair,top,pants,glove,extra)=>Object.assign({skin,hair,top,pants,glove,shoe:'#e8e8e8'},extra||{});
-/* Лига: 16 соперников. dmg — множитель урона соперника (растёт к концу лиги).
-   Каждый 5-й (5, 10, 15) — ДУЭТ: duo:true и два бойца в members, второй выходит после нокаута первого. */
-const OPP=[
+/* Нынешние 16 боссов лиги (CORE) — опора лиги из 50 (сборка ниже). dmg — множитель урона соперника (растёт к концу лиги).
+   Дуэт: duo:true и два бойца в members, второй выходит после нокаута первого. */
+const CORE=[
   {name:'Гопник Вася',title:'Король подъезда',dmg:1,st:{str:2,spd:2,end:2,agi:1},moves:['jab','hook'],money:25,xp:40,pal:P('#e8b48a','#2a2018','#1f3fbf','#1f3fbf','#c22222',{sleeve:1,stripe:'#fff',cap:'#111'})},
   {name:'Толик Рыжий',title:'Гроза рынка',dmg:1,st:{str:4,spd:3,end:4,agi:2},moves:['jab','hook','block'],money:45,xp:60,pal:P('#f0c4a0','#d2541c',null,'#3a3a3a','#2a7d2a',{shoe:'#5a3a20',hs:'spiky'})},
   {name:'Мага Боксёр',title:'КМС по боксу',dmg:1,st:{str:5,spd:7,end:5,agi:5},moves:['jab','hook','dodge'],money:75,xp:90,pal:P('#d9a173','#111',null,'#b01020','#d01818',{band:'#fff'})},
@@ -381,9 +425,79 @@ const OPP=[
     {name:'Кобра',st:{str:21,spd:24,end:20,agi:25},moves:['jab','uppercut','dodge'],pal:P('#e8c098','#111','#1a5a2a','#1a5a2a','#ffd23f',{sleeve:1,mask:'#1a5a2a',shoe:'#111',hs:'long'})}]},
   {name:'Король Асфальта',title:'Чемпион улиц',dmg:1.4,st:{str:27,spd:24,end:27,agi:23},moves:['hook','uppercut','heavy'],money:1500,xp:1200,pal:P('#c88a60','#f5d040',null,'#d4a017','#ffd23f',{belt:'#ffd23f',champ:1,wide:2,hs:'long',stache:1,boots:'#d01818',scale:1.12})}
 ];
+/* Лига из 50 боссов: 5 районов по 10 этапов, район = арена (arenaOf). Нынешние боссы стоят на местах CORE_POS (последний
+   в районе — «главный», Король Асфальта — 50-й), между ними — новые (NEW_BOSSES). Сила, урон и награды новых — по кривой
+   нынешних: u — место на старой лестнице из 16 (0 — Вася, 15 — Король); между соседними нынешними боссами — линейно.
+   f — склад бойца (BOSS_PROF): та же сумма характеристик, по-разному распределённая. Награды всех этапов × REW_K(u):
+   этапов втрое больше, поэтому за этап — меньше (в начале лиги — почти как раньше). */
+const OLD_N=16, CORE_POS=[0,5,9,13,16,19,23,26,29,33,36,39,43,46,48,49];
+const BOSS_PROF={tank:{str:1.1,spd:.75,end:1.25,agi:.7},fast:{str:.85,spd:1.2,end:.8,agi:1.15},bal:{str:1,spd:1,end:1,agi:1},brute:{str:1.25,spd:.8,end:1.05,agi:.75},tech:{str:.9,spd:1.1,end:.9,agi:1.15}};
+const NEW_BOSSES=[
+  // Район 1 — Подворотня
+  {p:1,name:'Шнырь',title:'Глаза и уши двора',f:'fast',moves:['jab','dodge'],pal:P('#f0c4a0','#5a3a20','#6a6a6a','#2b3550','#888',{sleeve:1,cap:'#3a3a3a'})},
+  {p:2,name:'Бабай',title:'Дворник с тяжёлой рукой',f:'brute',moves:['hook','block'],pal:P('#d9a173','#888','#d86a1a','#3a3a3a','#5a3a20',{beard:1,wide:2,boots:'#2a2018'})},
+  {p:3,name:'Колян Шило',title:'Карманник с района',f:'fast',moves:['jab','hook','dodge'],pal:P('#e8b48a','#111','#2a2a2a','#1f3fbf','#c22222',{sleeve:1,stripe:'#fff',hs:'spiky'})},
+  {p:4,name:'Вахтёр Семёныч',title:'Не пройдёшь без пропуска',f:'tank',moves:['jab','hook','block'],pal:P('#e0a888','#c8c8c8','#3a4a6a','#2b3550','#333',{sleeve:1,stache:1,hs:'bald',wide:1})},
+  {p:6,name:'Студент',title:'Секция бокса в ДК',f:'bal',moves:['jab','hook','dodge'],pal:P('#f0c898','#5a3a20','#e8e8e8','#1f3fbf','#1838d0',{band:'#1838d0'})},
+  {p:7,name:'Цыган',title:'Барон подворотни',f:'brute',moves:['hook','jab','block'],pal:P('#c88a60','#111','#a01a2a','#111','#ffd23f',{hs:'long',stache:1,belt:'#ffd23f'})},
+  {p:8,name:'Рэпер Кислый',title:'Батлы за гаражами',f:'fast',moves:['jab','hook','dodge'],pal:P('#8a5a3a','#111','#ffd23f','#222','#e8e8e8',{sleeve:1,cap:'#d01818',shades:1})},
+  // Район 2 — Гаражи
+  {p:10,name:'Механик Палыч',title:'Золотые руки',f:'tank',moves:['hook','block','jab'],pal:P('#e0a888','#888','#2b4a7a','#2b4a7a','#333',{sleeve:1,stache:1,boots:'#2a2018'})},
+  {p:11,name:'Домкрат',title:'Хозяин шиномонтажа',f:'brute',moves:['hook','heavy','block'],pal:P('#d9a173','#2a2018',null,'#3a3a3a','#111',{wide:3,hs:'bald',beard:1,scale:1.08})},
+  {p:12,name:'Дрифтер',title:'Гоняет по ночам',f:'fast',moves:['jab','hook','dodge'],pal:P('#f0c4a0','#d2541c','#d01818','#111','#111',{sleeve:1,stripe:'#ffd23f',hs:'spiky'})},
+  {p:14,name:'Сварной',title:'Искры из глаз',f:'brute',moves:['hook','heavy','jab'],pal:P('#e0a080','#3a3a3a','#4a3a2a','#3a3a3a','#704010',{sleeve:1,mask:'#3a3a3a',boots:'#2a2018',wide:1})},
+  {p:15,name:'Перекуп',title:'Пригнал из Европы',f:'tech',moves:['jab','hook','dodge'],pal:P('#f0c898','#111','#e8e8e8','#2b3550','#c8a040',{belt:'#c8a040',shades:1})},
+  {p:17,name:'Рыся',title:'Королева трассы',f:'fast',moves:['jab','hook','dodge'],pal:P('#f0c4a0','#f5d040','#111','#111','#d01818',{sleeve:1,hs:'long',boots:'#111'})},
+  {p:18,name:'Дальнобой',title:'Сутки за рулём',f:'tank',moves:['hook','heavy','block'],pal:P('#d89070','#5a3a20','#2a5a2a','#2b3550','#5a3a20',{beard:1,wide:3,cap:'#2a5a2a',scale:1.1})},
+  // Район 3 — завод «Красный молот»
+  {p:20,name:'Кочегар',title:'Жар котельной',f:'brute',moves:['hook','heavy','block'],pal:P('#c88a60','#111',null,'#3a3a3a','#3a3a3a',{wide:2,hs:'bald',boots:'#111'})},
+  {p:21,name:'Сварщики',title:'Смена в две руки',duo:true,members:[
+    {name:'Искра',f:'fast',moves:['jab','hook','dodge'],pal:P('#f0c4a0','#d2541c','#4a5a2a','#4a5a2a','#ffd23f',{sleeve:1,hs:'spiky'})},
+    {name:'Окалина',f:'brute',moves:['hook','heavy','block'],pal:P('#e0a888','#2a2018','#4a5a2a','#4a5a2a','#704010',{sleeve:1,beard:1,wide:2})}]},
+  {p:22,name:'Мастер цеха',title:'Норма — сто двадцать',f:'tank',moves:['hook','uppercut','block'],pal:P('#e0a888','#888','#2b4a7a','#3a3a3a','#ffd23f',{sleeve:1,stache:1,cap:'#ffd23f',wide:1})},
+  {p:24,name:'Крановщица Зина',title:'Двадцать лет на кране',f:'tech',moves:['jab','uppercut','dodge'],pal:P('#f0c4a0','#d2541c','#d86a1a','#2b3550','#e8e8e8',{sleeve:1,hs:'long',band:'#ffd23f'})},
+  {p:25,name:'Штамповщик',title:'Пресс в кулаке',f:'brute',moves:['hook','heavy','block'],pal:P('#d89070','#111','#5a5a6a','#3a3a3a','#888',{wide:3,hs:'mohawk',scale:1.1})},
+  {p:27,name:'Охранник Гоша',title:'Проходная номер три',f:'tank',moves:['hook','heavy','block'],pal:P('#e0a888','#111','#222','#222','#222',{sleeve:1,hs:'bald',shades:1,wide:2})},
+  {p:28,name:'Сталевар',title:'Рождён в огне',f:'brute',moves:['hook','uppercut','heavy'],pal:P('#c88a60','#3a2a1a','#c84a1a','#3a3a3a','#ffd23f',{beard:1,wide:3,boots:'#2a2018',scale:1.12})},
+  // Район 4 — крыша башни «Меридиан»
+  {p:30,name:'Паркурщик',title:'Без страховки',f:'fast',moves:['jab','uppercut','dodge'],pal:P('#f0c898','#5a3a20','#38a8ff','#3a3a3a','#e8e8e8',{sleeve:1,band:'#38a8ff',shoe:'#38a8ff'})},
+  {p:31,name:'Промальп',title:'Висит на тросе',f:'tech',moves:['jab','hook','dodge'],pal:P('#e8b48a','#2a2018','#d86a1a','#2b3550','#ffd23f',{sleeve:1,cap:'#e8e8e8',belt:'#ffd23f'})},
+  {p:32,name:'Курьер',title:'Доставка за пятнадцать минут',f:'fast',moves:['jab','hook','dodge'],pal:P('#d9a173','#111','#3ee07a','#111','#3ee07a',{sleeve:1,cap:'#3ee07a'})},
+  {p:34,name:'Диджей Бас',title:'Вечеринка на крыше',f:'tech',moves:['jab','heavy','dodge'],pal:P('#8a5a3a','#111','#6a10c0','#111','#ff4fd8',{shades:1,hs:'mohawk',stripe:'#ff4fd8'})},
+  {p:35,name:'Телохранитель',title:'Тень олигарха',f:'tank',moves:['hook','uppercut','block'],pal:P('#e0a888','#111','#111','#111','#111',{sleeve:1,shades:1,hs:'bald',wide:2,scale:1.1})},
+  {p:37,name:'Бармен Мохито',title:'Смешивает и бьёт',f:'tech',moves:['jab','uppercut','dodge'],pal:P('#f0c4a0','#111','#e8e8e8','#111','#3ee07a',{stache:1,belt:'#111'})},
+  {p:38,name:'Снайпер',title:'Бьёт без промаха',f:'fast',moves:['jab','uppercut','dodge'],pal:P('#e8c098','#4a5a2a','#4a5a2a','#3a4a24','#222',{sleeve:1,mask:'#4a5a2a',boots:'#2a2a1a'})},
+  // Район 5 — подпольный ринг
+  {p:40,name:'Рефери',title:'Судья, который бьёт',f:'bal',moves:['jab','hook','block'],pal:P('#e0a888','#888','#e8e8e8','#111','#111',{sleeve:1,stripe:'#111',hs:'bald'})},
+  {p:41,name:'Охрана ринга',title:'Не пускают никого',duo:true,members:[
+    {name:'Шкаф',f:'tank',moves:['hook','heavy','block'],pal:P('#d89070','#111','#222','#222','#555',{sleeve:1,wide:4,hs:'bald',scale:1.15})},
+    {name:'Сейф',f:'brute',moves:['hook','uppercut','block'],pal:P('#c88a60','#111','#222','#222','#d4a017',{sleeve:1,wide:3,shades:1,scale:1.12})}]},
+  {p:42,name:'Чемпион Европы',title:'Бывший профи',f:'bal',moves:['jab','hook','uppercut'],pal:P('#f0c4a0','#c8a040',null,'#1838d0','#1838d0',{belt:'#ffd23f',band:'#1838d0'})},
+  {p:44,name:'Нокаутёр',title:'Ни одного боя на очки',f:'brute',moves:['hook','uppercut','heavy'],pal:P('#8a5a3a','#111',null,'#111','#d01818',{wide:2,hs:'bald',belt:'#d01818',scale:1.08})},
+  {p:45,name:'Призрак',title:'Никто не видел его лица',f:'fast',moves:['jab','uppercut','dodge'],pal:P('#e8d0c0','#e8e8e8','#e8e8e8','#e8e8e8','#e8e8e8',{sleeve:1,mask:'#e8e8e8',hs:'long'})},
+  {p:47,name:'Наследник',title:'Сын Короля',f:'bal',moves:['hook','uppercut','heavy'],pal:P('#c88a60','#f5d040',null,'#d4a017','#d4a017',{belt:'#d4a017',hs:'long',boots:'#d01818',scale:1.05})}];
+const coreSt=o=>{ const mem=o.duo?o.members:[o], r={}; for(const s of ['str','spd','end','agi']) r[s]=mem.reduce((a,m)=>a+m.st[s],0)/mem.length; return r; };
+const coreAt=(u,get)=>{ const k=Math.min(OLD_N-2,Math.floor(u)), t=u-k; return get(CORE[k])+(get(CORE[k+1])-get(CORE[k]))*t; };
+// сила по характеристикам — как powerOf (без снаряжения и множителей), чтобы новые боссы любого склада были не сильнее и не слабее соседей
+const stPow=st=>{ const atk=(1+st.str*.13)*(1+Math.min(.4,.04+st.agi*.008)*.6)*1500/Math.min(1500,Math.max(450,1500-st.spd*45)), def=(60+st.end*10)*(1+st.end*.025)*(1+st.agi*.01); return Math.sqrt(atk*def); };
+function profSt(u,f,dk){ const pf=BOSS_PROF[f]||BOSS_PROF.bal, base={};
+  for(const s of ['str','spd','end','agi']) base[s]=coreAt(u,o=>coreSt(o)[s]);
+  const goal=coreAt(u,o=>stPow(coreSt(o)))*(dk||1), at=k=>{ const r={}; for(const s in base) r[s]=Math.max(1,base[s]*pf[s]*k); return r; };
+  let lo=.3,hi=3; for(let n=0;n<30;n++){ const m=(lo+hi)/2; if(stPow(at(m))<goal) lo=m; else hi=m; } // подбор множителя: сила = сила соседей по лестнице
+  const r=at(lo); for(const s in r) r[s]=Math.max(1,Math.round(r[s])); return r; }
+const DUO_K=.82; // боец дуэта слабее одиночного босса (как у нынешних дуэтов)
+const REW_K=u=>.4+.4*Math.max(0,1-u/3);
+const OPP=(()=>{ const L=[], nb={}; NEW_BOSSES.forEach(b=>nb[b.p]=b); CORE.forEach((c,k)=>c.u=k);
+  for(let p=0;p<50;p++){ const k=CORE_POS.indexOf(p); if(k>=0){ L.push(CORE[k]); continue; }
+    const b=nb[p], lo=CORE_POS.filter(x=>x<p).length-1, u=lo+(p-CORE_POS[lo])/(CORE_POS[lo+1]-CORE_POS[lo]);
+    const mk=m=>({name:m.name,st:profSt(u,m.f,b.duo?DUO_K:1),moves:m.moves,pal:m.pal});
+    const o=b.duo?{name:b.name,duo:true,members:b.members.map(mk)}:mk(b);
+    Object.assign(o,{title:b.title,u,isNew:1,dmg:+coreAt(u,c=>c.dmg).toFixed(2),money:coreAt(u,c=>c.money),xp:coreAt(u,c=>c.xp)}); L.push(o); }
+  L.forEach(o=>{ const k=REW_K(o.u); o.money=Math.max(5,Math.round(o.money*k)); o.xp=Math.max(5,Math.round(o.xp*k)); });
+  return L; })();
 const oppMember=(o,k)=>o.duo?o.members[k]:o;
-// соперники этапов 1 и 2 — готовые спрайты «уличного бойца» (ENEMY_DATA): Вася в исходном костюме, Толик с рыжей кепкой; враги волн этапа 1 — e0 (Вася в синем, ENEMY_TINT)
-OPP[0].pal.sprite='e1'; OPP[1].pal.sprite='e2';
+// соперники Вася и Толик — готовые спрайты «уличного бойца» (ENEMY_DATA): Вася в исходном костюме, Толик с рыжей кепкой; враги волн этапа 1 — e0 (Вася в синем, ENEMY_TINT)
+CORE[0].pal.sprite='e1'; CORE[1].pal.sprite='e2';
 /* Враги волн: генерируются из босса этапа (seed = этап и волна — на каждом прохождении одни и те же).
    Характеристики растут от ~30% босса на 1-й волне до ~65% на 10-й, здоровье — от ~50% до ~80% обычного. */
 const GOP_NAMES=['Петя','Колян','Димон','Санёк','Лёха','Серый','Жека','Тоха','Миха','Стасик']; // враги волн 1–10 этапа 1 — дворовые имена, как у Васи
@@ -400,7 +514,7 @@ const pick=(r,a)=>a[Math.floor(r()*a.length)];
 function waveEnemy(stage,wave){
   const r=mulberry(stage*131+wave*17+7), o=OPP[stage], mem=o.duo?o.members:[o], k=WAVE_K0+WAVE_K1*wave, st={};
   for(const s of ['str','spd','end','agi']) st[s]=Math.max(1,Math.round(mem.reduce((a,m)=>a+m.st[s],0)/mem.length*k*(.85+r()*.3)*seasonSt()));
-  const atk=['jab','hook','uppercut','heavy'].filter(m=>MOVES[m].lvl<=1+stage), def=stage<2?['block']:['block','dodge'];
+  const atk=['jab','hook','uppercut','heavy'].filter(m=>MOVES[m].lvl<=1+Math.floor(o.u)), def=o.u<2?['block']:['block','dodge']; // приёмы — по месту на старой лестнице из 16
   const moves=[pick(r,atk),pick(r,atk),pick(r,def)].filter((m,i,a)=>a.indexOf(m)===i);
   if(!moves.some(m=>MOVES[m].type==='atk')) moves.unshift('jab');
   const ex={hs:pick(r,WAVE_HS)}; if(r()<.4) ex.sleeve=1; if(r()<.25) ex.cap='#111'; if(r()<.25) ex.beard=1; if(r()<.3) ex.wide=Math.ceil(r()*3);
@@ -412,12 +526,35 @@ function waveEnemy(stage,wave){
 const PLAYER_PAL=P('#f0bc90','#3a2414','#e8e8e8','#202a60','#ff3b4f',{band:'#ff3b4f'});
 const RANKS=['Новичок','Дворовый боец','Гроза двора','Уличный боец','Задира','Гроза района','Мастер подворотен','Тяжеловес улиц','Ночной кошмар','Легенда района','Ветеран подполья','Гроза рынка','Мастер стиля','Живое оружие','Звезда подполья','Претендент','ЧЕМПИОН УЛИЦ'];
 const GYM=[{n:'Подвальная качалка',cost:0},{n:'Районный зал',cost:150},{n:'Боксёрский клуб',cost:450},{n:'Профи-центр',cost:1100},{n:'Элитная академия',cost:2400}];
+/* Расходники: покупаются в «Зале», применяются кнопками в бою рядом с «Яростью» (одна вещь раз в CONS_CD).
+   Цена растёт с пройденным этапом (consPrice, по старой лестнице u). Нашатырь — встать после нокаута (раз за забег),
+   купить не больше NASH_DAY штук в сутки. В симуляции шанса расходники не учитываются. */
+const CONS={med:{ic:'⛑️',n:'Аптечка',d:'+35% здоровья сразу',cost:20,max:5},
+  band:{ic:'🤕',n:'Бинт с мазью',d:'+25% здоровья за 10 с',cost:12,max:5},
+  nrg:{ic:'🥫',n:'Энергетик',d:'стамина полностью, +30 адреналина',cost:15,max:5},
+  nash:{ic:'🧪',n:'Нашатырь',d:'встать после нокаута с 40% здоровья',cost:120,max:3}};
+const CONS_CD=6000, NASH_DAY=3, DAY_MS=24*3600e3, CONS_FIGHT=['med','band','nrg'];
+const consPrice=k=>Math.round(CONS[k].cost*(1+.5*(S.beaten>0?OPP[S.beaten-1].u:0)));
+function nashReset(){ if(S.nashN&&Date.now()-S.nashT>=DAY_MS){ S.nashN=0; S.nashT=0; } }
+function useCons(k){
+  if(!F||F.sim||F.state!=='fight'||!CONS_FIGHT.includes(k)) return; const p=F.p, c=CONS[k];
+  if(!(S.cons[k]>0)) return toast('Нет: '+c.n.toLowerCase()+' — купи в «Зале»'); if(F.consCd>0) return;
+  if(k==='med'){ if(p.hp>=p.maxHp) return toast('Здоровье и так полное'); const a=Math.min(p.maxHp-p.hp,Math.round(p.maxHp*.35)); p.hp+=a; floatTxt(p,'+'+a,'#3ee07a',true); }
+  else if(k==='band'){ if(p.hot) return toast('Бинт уже действует'); p.hot={t:10000,r:p.maxHp*.25/10000,acc:0}; floatTxt(p,'БИНТ','#3ee07a'); }
+  else { p.sta=p.maxSta; p.adr=Math.min(100,p.adr+30); floatTxt(p,'ЭНЕРГЕТИК','#ffd23f'); }
+  S.cons[k]--; F.consCd=CONS_CD; F.consUsed++; save(); sfx('combo'); hudCache.cons=null;
+  addLog('<b style="color:#3ee07a">'+c.ic+' '+c.n+': '+c.d+'</b>');
+}
+function consTick(dt){ if(F.consCd>0) F.consCd-=dt; const p=F.p, h=p.hot; // бинт лечит постепенно
+  if(h&&F.state==='fight'&&p.hp>0){ const k=Math.min(dt,h.t); h.acc+=h.r*k; const a=Math.floor(h.acc); h.acc-=a; p.hp=Math.min(p.maxHp,p.hp+a); h.t-=k; if(h.t<=0) p.hot=null; } }
+function consHUD(){ const key=CONS_FIGHT.map(k=>S.cons[k]).join()+'|'+(F.consCd>0)+'|'+F.state; if(hudCache.cons===key) return; hudCache.cons=key;
+  document.querySelectorAll('.cbtn').forEach(b=>{ const k=b.dataset.v, n=S.cons[k]||0; b.disabled=!n||F.consCd>0||F.state!=='fight'; b.classList.toggle('none',!n); b.innerHTML=CONS[k].ic+'<b>'+n+'</b>'; b.title=CONS[k].n+': '+CONS[k].d; }); }
 const FOOD=[
   {id:'shawa',n:'Шаверма',ic:'🌯',cost:15,en:35},
   {id:'prot',n:'Протеиновый коктейль',ic:'🥤',cost:45,en:80}
 ];
-const arenaOf=i=>i<12?Math.floor(i/3):4; // по 3 боя на уличную арену, последние 4 — на ринге
-const needXp=l=>Math.round(60+(l-1)*40+(l-1)*(l-1)*6);
+const arenaOf=i=>Math.min(ARENAS.length-1,Math.floor(i/10)); // район = арена: по 10 этапов
+const needXp=l=>Math.round(80+(l-1)*55+(l-1)*(l-1)*9); // уровень без предела: опыта до следующего нужно всё больше
 const needProg=v=>20+v*10;
 const gymMult=()=>1+(S.gym-1)*.35;
 /* HP_K — общий множитель здоровья (бойца и всех соперников): бои длиннее, «настоящие», а соотношение сил то же.
@@ -428,6 +565,33 @@ function hpFloor(p,o,hits){ // здоровье врага не меньше hit
   const atk=p.moves.filter(m=>MOVES[m]&&MOVES[m].type==='atk'); if(!atk.length) return;
   const avg=atk.reduce((a,m)=>a+MOVES[m].dmg,0)/atk.length, need=Math.round(avg*(1+p.st.str*.13)*p.dm/(1+o.st.end*.025)*hits);
   if(o.maxHp<need) o.maxHp=o.hp=o.ghost=need; }
+/* В новых кругах лиги урон врага растёт вместе с его здоровьем и с силой бойца: средний удар врага должен нокаутировать
+   бойца (по здоровью на старте забега) не дольше, чем за hits ударов; с каждым кругом — быстрее. В первом круге не действует. */
+const KO_BOSS=16, KO_WAVE=60;
+function dmgFloor(hp0,p,o,hits){ if(!(S.season>0)) return;
+  const atk=o.moves.filter(m=>MOVES[m]&&MOVES[m].type==='atk'); if(!atk.length) return;
+  const hit=atk.reduce((a,m)=>a+MOVES[m].dmg,0)/atk.length*(1+o.st.str*.13)*o.dm/(1+p.st.end*.025), need=hp0*seasonSt()/hits;
+  if(hit<need) o.dm*=need/hit; }
+/* Особенности боссов — только у боссов и только в новых кругах лиги (с 4-го круга — по две). У каждого этапа в круге свои,
+   постоянные: не меняются от попытки к попытке. pm — вклад в «Силу» босса. */
+const BOSS_MODS=[
+  {ic:'😡',n:'Бешеный',d:'+20% урона',pm:1.095,a:f=>{ f.dm*=1.2; }},
+  {ic:'💨',n:'Быстрый',d:'атакует на 15% чаще',pm:1.07,a:f=>{ f.haste=(f.haste||1)*.87; }},
+  {ic:'❤️',n:'Живучий',d:'+25% здоровья',pm:1.12,a:f=>{ f.maxHp=f.hp=f.ghost=Math.round(f.maxHp*1.25); }},
+  {ic:'🛡️',n:'Бронированный',d:'−15% урона по нему',pm:1.085,a:f=>{ f.armor=(f.armor||0)+.15; }},
+  {ic:'🩸',n:'Вампир',d:'8% нанесённого урона лечит его',pm:1.05,a:f=>{ f.vamp=(f.vamp||0)+.08; }},
+  {ic:'🌀',n:'Скользкий',d:'10% шанс уйти от удара',pm:1.05,a:f=>{ f.evade=(f.evade||0)+.1; }}];
+function bossMods(i){ const s=S.season||0; if(!s) return []; const n=s>=3?2:1, out=[];
+  for(let k=0;out.length<n;k++){ let h=Math.imul(s*374761393+i*668265263+k*2246822519,1)>>>0; // перемешивание (как в xxhash), одно и то же для этапа и круга
+    h=Math.imul(h^h>>>15,2246822519); h=Math.imul(h^h>>>13,3266489917); h=(h^h>>>16)>>>0;
+    const m=BOSS_MODS[h%BOSS_MODS.length]; if(!out.includes(m)) out.push(m); } return out; }
+const modsTxt=i=>bossMods(i).map(m=>m.ic+' '+m.n+' — '+m.d).join(' · ');
+/* Мастерство: когда характеристика на максимуме (MAX_STAT), очки идут в её мастерство (до MAST_MAX) — маленькие постоянные бонусы. */
+const MAST={str:{t:n=>'+'+n+'% урона',a:(f,n)=>{ f.dm*=1+.01*n; }},spd:{t:n=>'атаки на '+n+'% чаще',a:(f,n)=>{ f.haste=(f.haste||1)/(1+.01*n); }},
+  end:{t:n=>'+'+n+'% здоровья',a:(f,n)=>{ f.maxHp=f.hp=f.ghost=Math.round(f.maxHp*(1+.01*n)); }},agi:{t:n=>'+'+String(+(n*.4).toFixed(1)).replace('.',',')+'% к уходу от удара',a:(f,n)=>{ f.evade=(f.evade||0)+.004*n; }}};
+const mastOf=k=>(S.mast&&S.mast[k])||0;
+const mastMul=()=>Math.sqrt((1+.01*mastOf('str'))*(1+.01*mastOf('spd'))*(1+.01*mastOf('end'))*(1+.004*mastOf('agi')));
+function applyMast(f){ for(const k in MAST){ const n=mastOf(k); if(n) MAST[k].a(f,n); } }
 const maxStaOf=st=>Math.round(40+st.end*4+st.spd*2);
 const intervalOf=st=>clamp(1500-st.spd*45,450,1500);
 const dodgeOf=st=>clamp(.42+st.agi*.022,.25,.85);
@@ -437,7 +601,7 @@ const critOf=st=>clamp(.04+st.agi*.008,0,.4);
 const SAVE_KEY='streetChampion_career_v1';
 const DEF_SAVE=()=>({v:1,lvl:1,xp:0,pts:0,money:30,day:1,energy:100,maxEnergy:100,
   st:{str:3,spd:3,end:3,agi:3},prog:{str:0,spd:0,end:0,agi:0},gym:1,
-  owned:['jab','block'],load:['jab','block'],beaten:0,best:0,kills:0,hero:1,auto:false,enAt:0,sleptAt:0,cp:true,gear:{g:null,w:null,s:null,m:null},bag:[],season:0,trMode:'normal',tired:false,wins:0,losses:0,sound:true,started:false,champ:false,sleeps:0,cmbW:0,cmbH:0,name:'Ты',ts:0});
+  owned:['jab','block'],load:['jab','block'],beaten:0,best:0,kills:0,hero:1,auto:false,enAt:0,sleptAt:0,cp:true,gear:{g:null,w:null,s:null,m:null},bag:[],mast:{str:0,spd:0,end:0,agi:0},lg:2,cv:2,season:0,trMode:'normal',tired:false,wins:0,losses:0,sound:true,started:false,champ:false,sleeps:0,meals:0,mealT:0,cons:{med:0,band:0,nrg:0,nash:0},nashN:0,nashT:0,cmbW:0,cmbH:0,name:'Ты',ts:0});
 // имя бойца: до 14 символов, только буквы/цифры/пробел/точка/дефис, которые есть в пиксельном шрифте
 const NAME_MAX=14;
 function cleanName(v){
@@ -461,26 +625,43 @@ let S=DEF_SAVE();
 function sanitize(d){
   const s=DEF_SAVE(); if(!d||typeof d!=='object') return s;
   const num=(v,def,min,max)=>(v!=null&&v!==''&&Number.isFinite(+v))?clamp(Math.floor(+v),min,max):def;
-  s.lvl=num(d.lvl,1,1,MAX_LVL); s.xp=num(d.xp,0,0,1e9); s.pts=num(d.pts,0,0,999);
+  s.lvl=num(d.lvl,1,1,9999); s.mast={}; for(const k of ['str','spd','end','agi']) s.mast[k]=num((d.mast||{})[k],0,0,MAST_MAX); s.xp=num(d.xp,0,0,1e9); s.pts=num(d.pts,0,0,999);
   s.money=num(d.money,30,0,1e9); s.day=num(d.day,1,1,1e6);
   s.maxEnergy=num(d.maxEnergy,100,100,1000); s.energy=num(d.energy,100,0,s.maxEnergy);
   for(const k in s.st){ if(d.st) s.st[k]=num(d.st[k],3,1,MAX_STAT); if(d.prog) s.prog[k]=num(d.prog[k],0,0,1e6); }
   s.gym=num(d.gym,1,1,GYM.length); s.beaten=num(d.beaten,0,0,OPP.length);
   s.best=num(d.best,0,0,WAVES+1); s.kills=num(d.kills,0,0,1e9); s.auto=d.auto===true; s.enAt=num(d.enAt,0,0,9e15); s.sleptAt=num(d.sleptAt,0,0,9e15); s.cp=d.cp!==false; s.hero=num(d.hero,1,1,HEROES.length); s.season=num(d.season,0,0,999); s.trMode=d.trMode==='hard'?'hard':'normal'; s.tired=d.tired===true; if(d.gear&&typeof d.gear==='object') for(const k of SLOT_IDS){ const it=cleanItem(d.gear[k]); if(it&&it.s===k) s.gear[k]=it; } if(Array.isArray(d.bag)) s.bag=d.bag.map(cleanItem).filter(Boolean).slice(0,BAG_MAX); // enAt — отсчёт восстановления энергии, sleptAt — последний сон // best — рекорд волны на текущем этапе, kills — всего врагов побеждено
-  s.wins=num(d.wins,0,0,1e6); s.losses=num(d.losses,0,0,1e6); s.sleeps=num(d.sleeps,0,0,1e9); s.cmbW=num(d.cmbW,0,0,1e9); s.cmbH=Math.min(num(d.cmbH,0,0,1e9),s.cmbW); // окна комбо: показано / поймано — для шанса победы
-  const own=new Set(['jab','block']); if(Array.isArray(d.owned)) d.owned.forEach(m=>{ if(MOVES[m]) own.add(m); });
-  s.owned=MOVE_ORDER.filter(m=>own.has(m));
+  s.wins=num(d.wins,0,0,1e6); s.losses=num(d.losses,0,0,1e6); s.sleeps=num(d.sleeps,0,0,1e9); s.meals=num(d.meals,0,0,99); s.mealT=num(d.mealT,0,0,9e15); s.cons={}; for(const k in CONS) s.cons[k]=num((d.cons||{})[k],0,0,CONS[k].max); s.nashN=num(d.nashN,0,0,99); s.nashT=num(d.nashT,0,0,9e15); s.cmbW=d.cv===2?num(d.cmbW,0,0,1e9):0; s.cmbH=d.cv===2?Math.min(num(d.cmbH,0,0,1e9),s.cmbW):0; s.cv=2; // cv 2 — счёт по комбо-связкам (старые окна комбо не переносим) // еда: сколько раз поел и когда началось окно; окна комбо: показано / поймано — для шанса победы
+  const sm=schoolMoves(s.hero), own=new Set(schoolOf(s.hero).moves.filter(m=>!m[2]).map(m=>m[0])); // приёмы — только своей школы, бесплатные есть сразу
+  if(Array.isArray(d.owned)) d.owned.forEach(m=>{ if(sm.includes(m)) own.add(m); });
+  s.owned=sm.filter(m=>own.has(m));
   s.load=Array.isArray(d.load)?[...new Set(d.load.filter(m=>s.owned.includes(m)))].slice(0,3):[];
+  if(!s.load.length) s.load=s.owned.slice(0,3);
   if(!s.load.some(m=>MOVES[m].type==='atk')) s.load=['jab',...s.load.filter(m=>m!=='jab')].slice(0,3);
   s.name=cleanName(d.name)||'Ты'; s.ts=num(d.ts,0,0,9e15); // ts — время сохранения, для облака Telegram
-  s.sound=d.sound!==false; s.started=!!d.started; s.champ=s.beaten>=OPP.length; // лига расширена до 16 — старый флаг чемпиона не переносим
+  s.sound=d.sound!==false; s.started=!!d.started; if(d.lg!==2&&s.beaten>0){ s.beaten=CORE_POS[Math.min(s.beaten,OLD_N)-1]+1; s.best=0; } s.lg=2; // лига из 16 → из 50: пройденные остаются пройденными (вместе с новыми боссами до них)
+  s.champ=s.beaten>=OPP.length;
   return s;
 }
-function save(){ S.ts=Date.now(); const json=JSON.stringify(S); try{ localStorage.setItem(SAVE_KEY,json); }catch(e){} tgCloudSave(json); }
+/* Свой прогресс у каждого бойца: SAVE_KEY — текущий (активный) боец, heroKey(id) — прогресс каждого бойца
+   (уровень, характеристики, этапы, снаряжение, деньги, энергия). Смена бойца — загрузка его прогресса или старт с нуля. */
+const heroKey=id=>SAVE_KEY+'_h'+id;
+function save(){ S.ts=Date.now(); const json=JSON.stringify(S); try{ localStorage.setItem(SAVE_KEY,json); if(S.started) localStorage.setItem(heroKey(S.hero),json); }catch(e){} tgCloudSave(json); }
+// прогресс бойца id без загрузки; null — этим бойцом ещё не играли
+function heroProfile(id){ if(S.started&&S.hero===id) return S; try{ const raw=localStorage.getItem(heroKey(id)); if(!raw) return null; const d=sanitize(JSON.parse(raw)); return d.started?d:null; }catch(e){ return null; } }
+function switchHero(id){
+  if(id===S.hero||F) return; save();
+  const snd=S.sound, name=S.name, p=heroProfile(id);
+  if(p){ S=p; S.sound=snd; addXp(0); toast('Боец: '+heroOf(id).n+' — твой прогресс загружен'); }
+  else { S=DEF_SAVE(); S.sound=snd; S.started=true; S.name=name; S.hero=id; S=sanitize(Object.assign({},S,{owned:[],load:[]})); toast('Боец: '+heroOf(id).n+' — карьера с нуля'); } // приёмы — стартовые своей школы
+  save(); closeModal(); tab='fighter'; sfx('lvl'); renderHub();
+}
 function loadSave(){
   let raw=null; try{ raw=localStorage.getItem(SAVE_KEY); }catch(e){}
   if(!raw) return false;
-  try{ S=sanitize(JSON.parse(raw)); addXp(0); return S.started; }catch(e){ S=DEF_SAVE(); return false; }
+  try{ S=sanitize(JSON.parse(raw)); addXp(0);
+    try{ if(S.started&&!localStorage.getItem(heroKey(S.hero))) localStorage.setItem(heroKey(S.hero),raw); }catch(e){} // старое сохранение становится прогрессом своего бойца
+    return S.started; }catch(e){ S=DEF_SAVE(); return false; }
 }
 /* ---------- DEV MODE: настройки пишет отдельный файл dev-mode.html ---------- */
 const DEV_KEY='streetChampion_dev';
@@ -509,8 +690,7 @@ function devDamage(a,d,dmg){
 loadDev();
 function addXp(x){
   S.xp+=Math.max(0,Math.round(x)); let ups=0;
-  while(S.lvl<MAX_LVL && S.xp>=needXp(S.lvl)){ S.xp-=needXp(S.lvl); S.lvl++; S.pts+=2; S.maxEnergy+=5; ups++; }
-  if(S.lvl>=MAX_LVL) S.xp=Math.min(S.xp,needXp(S.lvl));
+  while(S.xp>=needXp(S.lvl)){ S.xp-=needXp(S.lvl); S.lvl++; S.pts+=2; if(S.lvl<=MAX_LVL) S.maxEnergy+=5; ups++; }
   return ups;
 }
 function addProg(k,amount){
@@ -763,7 +943,7 @@ function buildSprite(pal,pose,t,flash,rim){
 const HEROES=[
   {id:1,key:'1',n:'Громила',w:'тяжёлый вес',d:'Мощный и широкий, бьёт тяжело'},
   {id:2,key:'2',n:'Техник',w:'лёгкий вес',d:'Быстрый и точный боксёр'},
-  {id:3,key:'4',n:'Кикбоксёр',w:'средний вес',d:'Резкий, с хвостом и красными шортами'}
+  {id:3,key:'4',n:'Кикбоксёр',w:'средний вес',d:'Резкий, с хвостом и красными шортами',kicks:{ly:42,rx:13,rh:[9,41],rk:[5,51],sh:[18,41],sk:[20,52],sf:[21,62],legRest:-16,thRest:-22,shRest:-10}}
 ];
 const HERO_SPR={}; // key → {fr:{'idle0':{c,w,h,ax,reach,hx,white}}, ok}
 const HERO_REACH=31; // от стоп бойца до лица соперника (OX−PX минус полголовы)
@@ -788,8 +968,64 @@ function loadHeroes(){
         for(let i=0;i<im.data.length;i+=4){ if(im.data[i+3]){ im.data[i]=im.data[i+1]=im.data[i+2]=255; } } wg.putImageData(im,0,0);
         let hs=0,hn=0; for(let y=0;y<Math.min(10,h);y++) for(let x=0;x<w;x++) if(im.data[(y*w+x)*4+3]){ hs+=x; hn++; } // центр головы — по верхним строкам кадра
         HERO_SPR[hk].fr[anim+f]={c,w,h,ax,reach:w-1-ax,hx:hn?Math.round(hs/hn):ax,white:wc}; } // reach — как далеко вперёд от стоп достаёт кадр
+      const hr=HEROES.find(h=>h.key===hk); if(hr&&hr.kicks) addKickFrames(HERO_SPR[hk],hr.kicks); // удары ногами Кикбоксёра — из кадра стойки
       HERO_SPR[hk].ok=true; tintSprites(hk); if(typeof screen!=='undefined'&&screen==='hub') renderHub(); }catch(e){ diag('спрайты',e); } };
     img.src=D.strip; }
+}
+// поворот пиксельной картинки без искажений (RotSprite): Scale2x ×3, поворот, выборка; a — радианы (+ по часовой), вокруг (px,py)
+function rotSprite(im,a,px,py){
+  const s2x=(u,w,h)=>{ const o=new Uint32Array(w*h*4), W2=w*2, g=(x,y)=>u[Math.min(h-1,Math.max(0,y))*w+Math.min(w-1,Math.max(0,x))];
+    for(let y=0;y<h;y++) for(let x=0;x<w;x++){ const P=g(x,y),A=g(x,y-1),B=g(x+1,y),C=g(x-1,y),D=g(x,y+1); let e0=P,e1=P,e2=P,e3=P;
+      if(A!==D&&C!==B){ if(C===A) e0=A; if(A===B) e1=B; if(D===C) e2=C; if(B===D) e3=D; } o[2*y*W2+2*x]=e0; o[2*y*W2+2*x+1]=e1; o[(2*y+1)*W2+2*x]=e2; o[(2*y+1)*W2+2*x+1]=e3; } return o; };
+  const w=im.width,h=im.height; let u=new Uint32Array(im.data.buffer.slice(0)),cw=w,ch=h; for(let i=0;i<3;i++){ u=s2x(u,cw,ch); cw*=2; ch*=2; }
+  const out=new ImageData(w,h), ou=new Uint32Array(out.data.buffer), c=Math.cos(a), s=Math.sin(a);
+  for(let y=0;y<h;y++) for(let x=0;x<w;x++){ const dx=x+.5-px, dy=y+.5-py, X=Math.floor((c*dx+s*dy+px)*8), Y=Math.floor((-s*dx+c*dy+py)*8); if(X>=0&&Y>=0&&X<cw&&Y<ch) ou[y*w+x]=u[Y*cw+X]; }
+  return out;
+}
+/* Кадры ударов ногами Кикбоксёра — из его исходного кадра стойки, по физике референсов (art/references/strikes):
+   - бьёт ЗАДНЯЯ нога (раундхаус), передняя — опорная, её колено сгибается (bend), стопа остаётся на месте — всё тело опускается;
+   - корпус вместе с тазом наклоняется назад в бедре опорной ноги (lean): на хай-кике почти до горизонтали;
+   - таз разворачивается — заднее бедро выходит вперёд (hip, px); выпрямленная нога длиннее согнутой в стойке (st);
+   - фазы удара: замах коленом (kickcham0) → голень разгибается (…A) → прямая нога (…0) → обратно через замах.
+   Углы ног — от вертикали вниз, «+» — вперёд, к сопернику: leg — прямая нога, thigh/shin — бедро и голень отдельно. */
+const KICK_POSES=[
+  {n:'kickcham0',lean:-14,bend:10,hip:5,thigh:92,shin:-30,st:1.1},
+  {n:'lowkickA',lean:-6,bend:16,hip:5,thigh:55,shin:10,st:1.15},
+  {n:'lowkick0',lean:4,bend:18,hip:6,leg:66,st:1.3},
+  {n:'midkickA',lean:-24,bend:8,hip:6,thigh:90,shin:35,st:1.2},
+  {n:'midkick0',lean:-38,bend:5,hip:7,leg:95,st:1.35},
+  {n:'highkickA',lean:-34,bend:8,hip:6,thigh:112,shin:55,st:1.2},
+  {n:'highkick0',lean:-55,bend:4,hip:7,leg:135,st:1.35},
+  {n:'knee0',lean:-22,bend:8,hip:6,thigh:118,shin:-10,st:1.15}];
+function addKickFrames(H,K){
+  const F=H.fr.idle0; if(!F) return; const w=F.w,h=F.h, base=F.c.getContext('2d').getImageData(0,0,w,h), PAD=56, W2=w+PAD*2, H2=h+PAD*2, rad=d=>d*Math.PI/180;
+  const rotP=(p,c,a)=>{ const s=Math.sin(a),co=Math.cos(a),dx=p[0]-c[0],dy=p[1]-c[1]; return [c[0]+co*dx-s*dy,c[1]+s*dx+co*dy]; };
+  const rearLeg=(x,y)=>y>=K.ly&&x<=K.rx, supLeg=(x,y)=>y>=K.ly&&x>K.rx, upper=(x,y)=>y<K.ly;
+  // копия части кадра со сдвигом; st — растянуть по вертикали от строки st.y в st.s раз (выпрямленная нога длиннее)
+  const part=(test,dx,dy,st)=>{ const im=new ImageData(W2,H2); for(let y=0;y<h;y++) for(let x=0;x<w;x++){ const i=(y*w+x)*4; if(!base.data[i+3]||!test(x,y)) continue;
+      const y2=st?st.y+Math.round((y-st.y)*st.s):y, reps=st?Math.max(1,st.y+Math.round((y+1-st.y)*st.s)-y2):1;
+      for(let r=0;r<reps;r++){ const X=x+PAD+Math.round(dx||0), Y=y2+r+PAD+Math.round(dy||0); if(X>=0&&Y>=0&&X<W2&&Y<H2) im.data.set(base.data.subarray(i,i+4),(Y*W2+X)*4); } } return im; };
+  const over=(dst,src)=>{ for(let i=0;i<src.data.length;i+=4) if(src.data[i+3]) dst.data.set(src.data.subarray(i,i+4),i); };
+  for(const S of KICK_POSES){ const out=new ImageData(W2,H2);
+    // 1) опорная нога: бедро вперёд, голень назад — колено сгибается; стопа на месте, остальное тело сдвигается на off
+    const b=rad(S.bend||0), SH=K.sh, SK=K.sk, SF=K.sf, knee2=rotP(SK,SH,-b), foot2=rotP([SF[0]+knee2[0]-SK[0],SF[1]+knee2[1]-SK[1]],knee2,b*2), off=[SF[0]-foot2[0],SF[1]-foot2[1]];
+    over(out,rotSprite(part((x,y)=>supLeg(x,y)&&y>=SK[1],knee2[0]-SK[0]+off[0],knee2[1]-SK[1]+off[1]),b,knee2[0]+off[0]+PAD,knee2[1]+off[1]+PAD));
+    over(out,rotSprite(part((x,y)=>supLeg(x,y)&&y<SK[1],off[0],off[1]),-b,SH[0]+off[0]+PAD,SH[1]+off[1]+PAD));
+    // 2) корпус с тазом наклоняется в бедре опорной ноги
+    const L=rad(S.lean), hip=[SH[0]+off[0],SH[1]+off[1]];
+    over(out,rotSprite(part(upper,off[0],off[1]),L,hip[0]+PAD,hip[1]+PAD));
+    // 3) ударная нога — от заднего бедра, которое повернулось с тазом и вышло вперёд
+    const rh=rotP([K.rh[0]+off[0]+(S.hip||0),K.rh[1]+off[1]],hip,L), dxh=rh[0]-K.rh[0], dyh=rh[1]-K.rh[1];
+    if(S.shin==null) over(out,rotSprite(part(rearLeg,dxh,dyh,{y:K.rh[1],s:S.st||1}),-rad(S.leg-K.legRest),rh[0]+PAD,rh[1]+PAD));
+    else { const a=-rad(S.thigh-K.thRest), k0=[K.rk[0]-K.rh[0],(K.rk[1]-K.rh[1])*(S.st||1)], kk=[rh[0]+Math.cos(a)*k0[0]-Math.sin(a)*k0[1],rh[1]+Math.sin(a)*k0[0]+Math.cos(a)*k0[1]];
+      over(out,rotSprite(part((x,y)=>rearLeg(x,y)&&y>=K.rk[1],kk[0]-K.rk[0],kk[1]-K.rk[1],{y:K.rk[1],s:S.st||1}),-rad(S.shin-K.shRest),kk[0]+PAD,kk[1]+PAD));
+      over(out,rotSprite(part((x,y)=>rearLeg(x,y)&&y<=K.rk[1],dxh,dyh,{y:K.rh[1],s:S.st||1}),a,rh[0]+PAD,rh[1]+PAD)); }
+    let x0=W2,x1=-1,y0=H2; for(let y=0;y<H2;y++) for(let x=0;x<W2;x++) if(out.data[(y*W2+x)*4+3]){ x0=Math.min(x0,x); x1=Math.max(x1,x); y0=Math.min(y0,y); }
+    const gy=h-1+PAD, cw=x1-x0+1, chh=gy-y0+1, t=document.createElement('canvas'); t.width=W2; t.height=H2; t.getContext('2d').putImageData(out,0,0); // низ кадра — земля (стопа на месте)
+    const c=document.createElement('canvas'); c.width=cw; c.height=chh; c.getContext('2d').drawImage(t,-x0,-y0);
+    const wc=document.createElement('canvas'); wc.width=cw; wc.height=chh; const wg=wc.getContext('2d'), im=c.getContext('2d').getImageData(0,0,cw,chh);
+    for(let i=0;i<im.data.length;i+=4) if(im.data[i+3]) im.data[i]=im.data[i+1]=im.data[i+2]=255; wg.putImageData(im,0,0);
+    const ax=F.ax+PAD-x0; H.fr[S.n]={c,w:cw,h:chh,ax,reach:cw-1-ax,hx:F.hx+PAD-x0,white:wc}; }
 }
 /* Перекрашенные копии спрайтов соперников: те же кадры и анимации, другой цвет костюма.
    e0 — враги всех волн этапа 1: Вася (e1) в синем. Красится ткань (серо-синие тона по яркости), кожа, белые полосы, обувь и контур — как были. */
@@ -811,7 +1047,8 @@ function heroFrame(pose,t){
   switch(pose){
     case 'jab': return 'jab2'; case 'recover': return 'jab1';
     case 'hook': return 'hook1'; case 'uppercut': return 'uppercut0'; case 'windupU': return 'uppercut2'; // для ударов — кадр с самой вытянутой рукой
-    case 'heavy': case 'super': return 'cross1'; case 'windupH': return 'cross0';
+    case 'heavy': case 'super': case 'swing': case 'cross': case 'counter': return 'cross1'; case 'windupH': return 'cross0';
+    case 'lowkick': return 'lowkick0'; case 'midkick': return 'midkick0'; case 'highkick': return 'highkick0'; case 'knee': return 'knee0'; case 'windupK': case 'kickrec': return 'kickcham0'; case 'lowkickA': return 'lowkickA'; case 'midkickA': return 'midkickA'; case 'highkickA': return 'highkickA'; // удары ногами Кикбоксёра
     case 'block': return 'block1'; case 'dodge': return 'block2';
     case 'hit': return 'hit0'; case 'hurt': case 'tired': return 'hit1';
     case 'fall': return 'ko0'; case 'ko': case 'koBody': return 'ko1';
@@ -835,7 +1072,7 @@ let NEW_HERO=1;
 function heroPicksHTML(sel,act){
   return '<div class="picks">'+HEROES.map(h=>{ const D=typeof HERO_DATA!=='undefined'?HERO_DATA[h.key]:null;
     return '<button class="pick'+(h.id===sel?' on':'')+'" data-act="'+act+'" data-v="'+h.id+'">'+(D?'<img src="'+D.portrait+'" alt="" style="width:'+D.pw+'px;height:'+D.ph+'px">':'')+
-      '<b>'+h.id+'. '+h.n+'</b><small>'+h.w+'</small></button>'; }).join('')+'</div>';
+      '<b>'+h.id+'. '+h.n+'</b><small>'+h.w+' · '+schoolOf(h.id).n+'</small></button>'; }).join('')+'</div>';
 }
 function renderFighter(ctx,pal,pose,x,y,face,t,flash,rim,xs){
   if(isHero(pal)) return drawHero(ctx,pal.sprite,pose,x,y,face,t,flash,xs); // игрок — готовый спрайт выбранного бойца
@@ -1284,6 +1521,7 @@ function drawScene(ctx,ai,list,t,o){
   ctx.drawImage(B.ring,0,0);
   drawCrowd(ctx,B.side,t,ch);
   const vis=f=>{ if(f.pose==='ko'&&f.koT!=null&&f.koT<220) return 'fall';
+    if(f.pose==='windupK'&&f.pending&&f.pending.t<110&&/kick/.test(f.pending.m)) return f.pending.m+'A'; // вторая половина замаха — голень уже разгибается
     if(f.pose==='idle'&&f.maxHp&&f.hp/f.maxHp<.3) return 'hurt'; return f.pose; };
   const bounce=f=>f.pose==='ko'&&f.koT>=220&&f.koT<420?Math.round(5*Math.sin((f.koT-220)/200*Math.PI)):0;
   for(const f of list) shadowAt(ctx,f.x-(f.pose==='ko'?f.face*22:0),GROUND+1,(f.pose==='ko'?56:26)*(f.pal.scale||1));
@@ -1310,8 +1548,8 @@ function drawScene(ctx,ai,list,t,o){
 /* ---------- БОЙ ---------- */
 let F=null, fightSpeed=1;
 const INTRO_T=2900, VS_END=1100; // вступление: экран VS, затем «ГОТОВ?» / «БОЙ!»
-const ATK_POSES=new Set(['jab','hook','uppercut','heavy','super']);
-const windPose=id=>id==='heavy'||id==='super'?'windupH':id==='uppercut'?'windupU':'windup';
+const ATK_POSES=new Set([...Object.keys(MOVES).filter(k=>MOVES[k].type==='atk'),'cross','super']); // все удары школ + второй удар «двойки»
+const windPose=id=>id==='heavy'||id==='super'||id==='swing'?'windupH':id==='uppercut'?'windupU':/kick|knee/.test(id)?'windupK':'windup';
 // надпись пиксельным шрифтом с чёрной обводкой в отдельный canvas (имена в HUD, баннеры)
 // Собственный пиксельный шрифт 5×7 (кириллица, цифры, знаки) — чёткий в любом размере, без сглаживания
 const FONT5={
@@ -1413,12 +1651,13 @@ function makeFighter(name,st,moves,pal,face,x,isPlayer,dm){
 // from — с какой волны начать (контрольная точка — 5-я)
 function newFight(idx,sim,pst,pload,from){
   const p=makeFighter('Ты',pst||S.st,pload||S.load,PLAYER_PAL,1,PX,true);
-  applyGear(p); activeStyles(pload||S.load).forEach(s=>s.a(p)); p.dm*=seasonMe(); // снаряжение, стили боя, бонус сезонов
+  applyGear(p); schoolOf(S.hero).mod(p); activeStyles(pload||S.load).forEach(s=>s.a(p)); applyMast(p); p.dm*=seasonMe(); // снаряжение, школа бойца, стили боя, мастерство, бонус сезонов
+  p.hp0=p.maxHp; // здоровье на старте забега — от него считается урон врагов в новых кругах (dmgFloor)
   if(S.tired) p.maxHp=p.hp=p.ghost=Math.round(p.maxHp*TIRED_HP); // усталость после интенсивной тренировки
   const R={idx,arena:arenaOf(idx),p,o:null,wave:(from||1)-1,from:from||1,rageT:0,rageCd:5000,kills:0,earn:{money:0,xp:0,ups:0},perks:[],perkAt:[],loot:[],queue:[],team:1,round:1,deadMax:0,swapT:0,
     time:WAVE_TIME,state:sim?'fight':'intro',introT:VS_END,endT:0,hitstop:0,fx:[],speed:sim?1:fightSpeed,
     log:[],shake:0,parts:[],cheer:0,winner:null,sim:!!sim,flashAll:0,banner:'',
-    combo:0,comboMax:0,comboHits:0,comboMiss:0,cw:null,cwNext:2500,stunT:0,badChip:'',badT:0}; // окна комбо
+    ch:null,cd:COMBO_FIRST,cq:null,consCd:0,consUsed:0,comboHits:0,comboMiss:0,badChip:'',badT:0}; // комбо-связка: текущая связка, перезарядка, удар в очереди
   spawnEnemy(R); return R;
 }
 /* Контрольная точка: этап, на котором ты уже доходил до босса (или пройденный), можно начинать с 5-й волны.
@@ -1428,12 +1667,15 @@ const cpAvail=i=>i<S.beaten||(i===S.beaten&&S.best>WAVES);
 const startWaveOf=i=>S.cp&&cpAvail(i)?CP_WAVE:1;
 
 /* ---------- СНАРЯЖЕНИЕ ----------
-   4 слота. Вещи падают с врагов волн (6%) и всегда с босса; сила вещи = база слота × редкость × этап, где упала,
+   4 слота. Вещи падают с врагов волн (GEAR_DROP 2%) и с босса (BOSS_DROP 30%); сила вещи = база слота × редкость × этап, где упала,
    × уровень улучшения (за деньги, до 10). Лишнее — в сумку (до 10 вещей), из сумки можно надеть или продать. */
 const SLOTS={g:{n:'перчатки',ic:'🥊',pl:1},w:{n:'бинты',ic:'🩹',pl:1},s:{n:'кроссовки',ic:'👟',pl:1},m:{n:'капа',ic:'🦷',pl:0}};
 const SLOT_IDS=['g','w','s','m'];
 const RARITY=[{p:'Обычные',f:'Обычная',c:'#c8c8d0',k:1},{p:'Редкие',f:'Редкая',c:'#38a8ff',k:1.6},{p:'Эпические',f:'Эпическая',c:'#c060ff',k:2.4},{p:'Легендарные',f:'Легендарная',c:'#ffb020',k:3.5}];
-const GEAR_MAX_LVL=10, BAG_MAX=10, GEAR_CAP=.4, GEAR_DROP=.06; // скорость атак и защита от вещей — не больше 40%
+const GEAR_MAX_LVL=10, BAG_MAX=10, GEAR_CAP=.4, GEAR_DROP=.02, BOSS_DROP=.3; // скорость атак и защита от вещей — не больше 40%
+// редкость (накопленные доли): с босса — обычные 70%, редкие 25%, эпические 4,5%, легендарные 0,5%; с врагов волн — без легендарок
+const DROP_BOSS=[.7,.95,.995,1], DROP_WAVE=[.85,.98,1,1], LEGEND_FROM=.8; // легендарки — с последнего района (ринг) или в следующих кругах
+const legendOk=stage=>(S.season||0)>0||stage>=Math.floor(OPP.length*LEGEND_FROM);
 const gearVal=it=>RARITY[it.r].k*(1+.12*it.t)*(1+.15*(it.l-1));
 const gearName=it=>{ const S2=SLOTS[it.s], R2=RARITY[it.r]; return (S2.pl?R2.p:R2.f)+' '+S2.n+(it.l>1?' +'+(it.l-1):''); };
 function gearStat(it){ const v=gearVal(it); return it.s==='g'?{dm:.03*v}:it.s==='w'?{crit:.015*v}:it.s==='s'?{haste:.025*v}:{armor:.02*v,hp:.03*v}; }
@@ -1447,8 +1689,9 @@ const gearMul=()=>{ const b=gearBonus(); return Math.sqrt((1+b.dm)*(1+b.crit*.6)
 const gearUpCost=it=>Math.round(25*(1+it.t*.6)*RARITY[it.r].k*it.l);
 const gearSellPrice=it=>Math.round(10*(1+it.t*.5)*RARITY[it.r].k*it.l);
 function rollGear(stage,boss){
-  const x=Math.random(), cum=boss?[0,.6,.92,1]:[.7,.92,.99,1]; let r=0; while(x>cum[r]) r++;
-  return {s:SLOT_IDS[Math.floor(Math.random()*4)],r,t:stage+1+OPP.length*(S.season||0),l:1}; // в новых сезонах вещи сильнее
+  const x=Math.random(), cum=boss?DROP_BOSS:DROP_WAVE; let r=0; while(x>cum[r]) r++;
+  if(r===3&&!legendOk(stage)) r=2; // на ранних этапах первого круга легендарка становится эпической
+  return {s:SLOT_IDS[Math.floor(Math.random()*4)],r,t:Math.floor(OPP[stage].u)+1+OLD_N*(S.season||0),l:1}; // класс вещи — по старой лестнице из 16; в новых сезонах сильнее
 }
 // новая вещь: в пустой слот или вместо более слабой (старая — в сумку); иначе в сумку; сумка полна — продаётся самая слабая
 function giveGear(it){
@@ -1476,40 +1719,55 @@ function useRage(){
   F.flashAll=.35; F.shake=Math.max(F.shake,4); sfx('super'); floatTxt(F.p,'🔥 ЯРОСТЬ!','#ff8a2b',true);
   addLog('<b style="color:#ff8a2b">🔥 Ярость: 5 секунд урон +35%, атаки чаще!</b>'); hudCache.rage=null;
 }
-/* Окна комбо — бонус за внимание, бой идёт и без них. Раз в 1,5–2 с подсвечивается один из приёмов на 1,1 с.
-   Успел нажать — комбо +1: урон бойца ×1,2…×2, адреналин +10. Пропустил — комбо сбрасывается без наказания.
-   Нажал не тот приём — оглушение на 1 с: боец не бьёт и получает +25% урона.
-   Окон нет в «Авто», на скорости x4, в симуляции шанса и награде за отсутствие — баланс считается без комбо. */
-const COMBO_WIN=1100, COMBO_MUL=[1,1.15,1.3,1.45,1.6], COMBO_ADR=7, STUN_T=1000, STUN_DMG=1.25;
-const comboGap=()=>rnd(1500,2000);
+/* Комбо-связка — бонус за внимание, бой идёт и без неё. Раз в COMBO_CD (12 с) над кнопками появляется связка из 3 приёмов:
+   нажми их по порядку — на каждое следующее нажатие COMBO_STEP. Успел — боец проводит комбо-удар: последний приём связки
+   ×COMBO_HIT, не блокируется и не промахивается, вспышка, адреналин +COMBO_ADR. Фирменная связка школы (SCHOOL_CHAIN, если
+   все три приёма в комбинации) — ещё ×COMBO_SIG. Ошибся или не успел — связка сгорает, новая через COMBO_RETRY.
+   Связки нет в «Авто», на x4 и в награде за отсутствие; в симуляции шанса — с вероятностью твоей точности (comboRate). */
+const COMBO_CD=12000, COMBO_FIRST=4000, COMBO_RETRY=4000, COMBO_STEP=1400, COMBO_HIT=2.6, COMBO_SIG=1.3, COMBO_ADR=15;
+const SCHOOL_CHAIN={1:['hook','jab','uppercut'],2:['jab','double','uppercut'],3:['lowkick','knee','highkick']}; // Громила, Техник, Кикбоксёр
 const comboOn=()=>F&&!F.sim&&!S.auto&&F.speed>=1&&F.speed<=2&&S.load.length>0;
-const comboMul=()=>F&&(!F.sim||F.simCmb)?COMBO_MUL[Math.min(F.combo||0,COMBO_MUL.length-1)]:1;
-// точность игрока в окнах комбо (по всем боям); пока окон мало — считаем 50%. В «Авто» окон нет — 0
-const comboRate=()=>S.auto?0:S.cmbW>=10?S.cmbH/S.cmbW:.5;
+// точность игрока в связках (по всем боям): сколько связок выпало и сколько доведено до удара; пока мало — считаем 50%. В «Авто» — 0
+const comboRate=()=>S.auto?0:S.cmbW>=6?S.cmbH/S.cmbW:.5;
+function comboSeq(){ // фирменная связка школы, если все её приёмы в комбинации; иначе — 3 нажатия из своих приёмов, последнее — удар
+  const sc=SCHOOL_CHAIN[S.hero]||SCHOOL_CHAIN[1]; if(sc.every(m=>S.load.includes(m))) return {seq:sc.slice(),sig:true};
+  const atk=S.load.filter(m=>MOVES[m]&&MOVES[m].type==='atk'), any=S.load; if(!atk.length) return null;
+  const rp=a=>a[Math.floor(Math.random()*a.length)], seq=[rp(any),rp(any),rp(atk)];
+  if(any.length>1) while(seq[0]===seq[1]&&seq[1]===seq[2]) seq[1]=rp(any); // не три одинаковых подряд
+  return {seq,sig:false};
+}
 function comboTick(dt){
-  if(F.sim){ // симуляция шанса: окна идут так же, игрок ловит их с вероятностью F.simCmb (его реальная точность)
-    if(!F.simCmb||F.state!=='fight') return; F.cwNext-=dt; if(F.cwNext>0) return; F.cwNext=COMBO_WIN+comboGap();
-    if(Math.random()<F.simCmb){ F.combo++; F.p.adr=Math.min(100,F.p.adr+COMBO_ADR); } else F.combo=0; return; }
-  const rt=dt/(F.speed||1); // окна идут в реальном времени, на x2 не короче
-  if(F.stunT>0){ F.stunT-=rt; F.p.flash=F.stunT>0&&Math.floor(F.stunT/120)%2?.7:0; }
-  if(!comboOn()){ F.cw=null; F.combo=0; return; }
-  if(F.state!=='fight'){ F.cw=null; return; } // между волнами окно снимается, счёт комбо сохраняется
-  if(F.cw){ F.cw.t-=rt; if(F.cw.t<=0){ F.cw=null; F.cwNext=comboGap(); if(F.combo){ F.combo=0; floatTxt(F.p,'×1','#9a8cc0'); } } return; }
-  F.cwNext-=rt; if(F.cwNext<=0){ F.cw={m:S.load[Math.floor(Math.random()*S.load.length)],t:COMBO_WIN}; S.cmbW++; } // счёт окон — для точности игрока
+  if(F.sim){ // симуляция шанса: связка выпадает так же, игрок проводит её с вероятностью F.simCmb (его реальная точность)
+    if(!F.simCmb||F.state!=='fight') return; F.cd-=dt; if(F.cd>0) return; const c=comboSeq(); F.cd=COMBO_CD+2500;
+    if(c&&Math.random()<F.simCmb){ F.cq={m:c.seq[2],sig:c.sig}; F.p.adr=Math.min(100,F.p.adr+COMBO_ADR); } return; }
+  const rt=dt/(F.speed||1); // связка идёт в реальном времени, на x2 не короче
+  if(!comboOn()){ F.ch=null; return; }
+  if(F.state!=='fight') return; // между волнами связка ждёт, перезарядка стоит
+  if(F.ch){ if(F.ch.i>0){ F.ch.t-=rt; if(F.ch.t<=0) comboFail('НЕ УСПЕЛ',''); } return; } // первое нажатие связка ждёт сколько угодно
+  F.cd-=rt; if(F.cd<=0){ const c=comboSeq(); if(c){ F.ch={seq:c.seq,sig:c.sig,i:0,t:COMBO_STEP}; S.cmbW++; sfx('combo'); } else F.cd=COMBO_RETRY; }
 }
+function comboFail(txt,m){ F.ch=null; F.cd=COMBO_RETRY; F.comboMiss++; if(m){ F.badChip=m; F.badT=performance.now()+300; } floatTxt(F.p,txt,'#ff3048',true); sfx('miss'); }
 function comboTap(m){
-  if(!F||!F.cw||F.stunT>0||F.state!=='fight'||!comboOn()) return; // нажатие без окна ничего не делает
-  if(m===F.cw.m){ F.cw=null; F.cwNext=comboGap(); F.combo++; F.comboMax=Math.max(F.comboMax,F.combo); F.comboHits++; S.cmbH++;
-    F.p.adr=Math.min(100,F.p.adr+COMBO_ADR); floatTxt(F.p,'КОМБО ×'+F.combo+'!','#38e8ff',F.combo>=3); sfx('combo'); }
-  else { F.cw=null; F.cwNext=comboGap()+STUN_T; F.combo=0; F.stunT=STUN_T; F.comboMiss++; F.badChip=m; F.badT=performance.now()+300;
-    if(!F.p.pending){ F.p.pose='hurt'; F.p.poseT=STUN_T; } floatTxt(F.p,'ПРОМАХ!','#ff3048',true); sfx('miss'); }
+  if(!F||!F.ch||F.state!=='fight'||!comboOn()) return; // нажатие без связки ничего не делает
+  if(m!==F.ch.seq[F.ch.i]) return comboFail('СБИЛСЯ!',m);
+  F.ch.i++; F.ch.t=COMBO_STEP; floatTxt(F.p,F.ch.i+'/3','#38e8ff');
+  if(F.ch.i<3) return sfx('combo');
+  F.cq={m:F.ch.seq[2],sig:F.ch.sig}; F.ch=null; F.cd=COMBO_CD; F.comboHits++; S.cmbH++; // удар — как только боец закончит текущий
+  F.p.adr=Math.min(100,F.p.adr+COMBO_ADR); F.flashAll=.45; floatTxt(F.p,'КОМБО!','#38e8ff',true); sfx('super');
 }
+// комбо-удар из очереди: боец бьёт последним приёмом связки, удар не блокируется и не промахивается
+function comboStrike(f){ const q=F.cq; F.cq=null; f.cur=q.m; f.stance=null; f.stanceT=0; f.pending={m:q.m,t:140,cb:q.sig?COMBO_HIT*COMBO_SIG:COMBO_HIT}; f.pose=windPose(q.m); f.poseT=0; f.timer=Math.max(f.timer,intervalOf(f.st)*.6);
+  if(!F.sim) addLog('<b style="color:#38e8ff">КОМБО-УДАР'+(q.sig?' — фирменная связка школы':'')+'!</b>'); }
 function comboHUD(){
-  const cw=F.cw&&F.state==='fight'?F.cw:null, bad=F.badT>performance.now()?F.badChip:'';
-  const key=(cw?cw.m:'')+'|'+bad; if(hudCache.cw!==key){ hudCache.cw=key;
-    document.querySelectorAll('#fChips .mchip').forEach(el=>{ el.classList.toggle('cw',!!cw&&el.dataset.m===cw.m); el.classList.toggle('bad',!!bad&&el.dataset.m===bad); }); }
-  if(cw){ const pc=Math.round(cw.t/COMBO_WIN*20)*5; if(hudCache.cwt!==pc){ hudCache.cwt=pc; const el=document.querySelector('#fChips .mchip.cw'); if(el) el.style.setProperty('--cw',pc+'%'); } }
-  const mt=F.combo?'×'+String(comboMul()).replace('.',','):''; if(hudCache.cmb!==mt){ hudCache.cmb=mt; $('#comboMul').textContent=mt; }
+  const ch=F.ch&&F.state==='fight'?F.ch:null, cur=ch?ch.seq[ch.i]:'', bad=F.badT>performance.now()?F.badChip:'';
+  const key=cur+'|'+bad; if(hudCache.cw!==key){ hudCache.cw=key;
+    document.querySelectorAll('#fChips .mchip').forEach(el=>{ el.classList.toggle('cw',!!cur&&el.dataset.m===cur); el.classList.toggle('bad',!!bad&&el.dataset.m===bad); }); }
+  if(ch){ const pc=ch.i?Math.round(ch.t/COMBO_STEP*20)*5:100; if(hudCache.cwt!==pc){ hudCache.cwt=pc; const el=document.querySelector('#fChips .mchip.cw'); if(el) el.style.setProperty('--cw',pc+'%'); } }
+  // подсказка над кнопками: связка (сделано / сейчас / дальше), иначе — сколько ждать
+  const sec=Math.ceil(F.cd/1000), ht=ch?ch.seq.map((m,k)=>'<span class="st'+(k<ch.i?' ok':k===ch.i?' now':'')+'">'+(MOVE_IC[m]||'👊')+'</span>').join('<span class="ar">▶</span>')+(ch.sig?' <b>фирменная</b>':'')
+    :!comboOn()?(S.auto?'Комбо — только в ручном бою':F.speed>2?'Комбо — на скорости x1–x2':''):F.cq?'<b>КОМБО-УДАР!</b>':'Комбо через <b>'+sec+'</b> с';
+  if(hudCache.cmbH!==ht){ hudCache.cmbH=ht; $('#cmbHint').innerHTML=ht; }
+  if(hudCache.cmb!==''){ hudCache.cmb=''; $('#comboMul').textContent=''; }
 }
 /* Стили боя: сочетание приёмов в комбо даёт постоянный бонус (может быть активно сразу несколько). pm — вклад в «Силу». */
 const STYLES=[
@@ -1518,31 +1776,37 @@ const STYLES=[
   {ic:'🔪',n:'Уличный',req:['hook','heavy'],d:'+8% к шансу крита',pm:1.024,a:f=>{ f.critB=(f.critB||0)+.08; }},
   {ic:'🌀',n:'Технарь',req:['jab','dodge'],d:'6% шанс уйти от любого удара',pm:1.03,a:f=>{ f.evade=(f.evade||0)+.06; }},
   {ic:'🧱',n:'Стена',req:['block','uppercut'],d:'−10% входящего урона',pm:1.054,a:f=>{ f.armor=1-(1-(f.armor||0))*.9; }},
-  {ic:'⚡',n:'Контрпанчер',req:['block','dodge'],d:'адреналин копится на 40% быстрее',pm:1.03,a:f=>{ f.adrK=(f.adrK||1)*1.4; }}
+  {ic:'⚡',n:'Контрпанчер',req:['dodge','counter'],d:'адреналин копится на 40% быстрее',pm:1.03,a:f=>{ f.adrK=(f.adrK||1)*1.4; }},
+  // стили школ
+  {ic:'🔨',n:'Таран',req:['heavy','swing'],d:'+12% урона',pm:1.058,a:f=>{ f.dm*=1.12; }},
+  {ic:'✌️',n:'Снайпер',req:['jab','double'],d:'+6% к точности',pm:1.03,a:f=>{ f.accB=(f.accB||0)+.06; }},
+  {ic:'🦵',n:'Муай-тай',req:['lowkick','knee'],d:'+10% урона',pm:1.048,a:f=>{ f.dm*=1.1; }},
+  {ic:'🌪️',n:'Вихрь',req:['midkick','highkick'],d:'атаки на 8% чаще',pm:1.04,a:f=>{ f.haste=(f.haste||1)*.92; }}
 ];
 const activeStyles=load=>STYLES.filter(s=>s.req.every(m=>load.includes(m)));
 const styleMul=load=>activeStyles(load).reduce((a,s)=>a*s.pm,1);
 function stylesHTML(){
   return '<div class="card"><div class="h2">Стили боя</div><div class="dim" style="margin-bottom:6px">Собери пару приёмов в комбо — получишь постоянный бонус.</div>'+
-    STYLES.map(s=>{ const on=s.req.every(m=>S.load.includes(m));
+    STYLES.filter(s=>s.req.every(m=>schoolMoves(S.hero).includes(m))).map(s=>{ const on=s.req.every(m=>S.load.includes(m)); // только стили своей школы
       return '<div class="style'+(on?' on':'')+'"><b>'+s.ic+' '+s.n+'</b> <span class="dim">'+s.req.map(m=>MOVES[m].n).join(' + ')+'</span><br><small>'+s.d+(on?' · <span style="color:var(--grn)">активен</span>':'')+'</small></div>'; }).join('')+'</div>';
 }
-/* Сезоны (престиж): после победы над Королём — «Новый сезон»: этапы заново, соперники сильнее на 15% за сезон,
-   награды +25%, вещи сильнее; навсегда +5% урона бойца за каждый сезон. Сезонов сколько угодно — игра не кончается. */
-const seasonSt=()=>1+.15*(S.season||0), seasonDm=()=>1+.05*(S.season||0), seasonPay=()=>1+.25*(S.season||0), seasonMe=()=>1+.05*(S.season||0);
+/* Сезоны (круги лиги, престиж): после победы над Королём — «Новый сезон»: этапы заново, соперники сильнее на 15% за сезон —
+   и характеристики, и урон (seasonDm = seasonSt), у боссов особенности (bossMods), вещи сильнее; награды НЕ растут (seasonPay = 1);
+   навсегда +5% урона бойца за каждый сезон. Сезонов сколько угодно — игра не кончается. */
+const seasonSt=()=>1+.15*(S.season||0), seasonDm=seasonSt, seasonPay=()=>1, seasonMe=()=>1+.05*(S.season||0);
 const scaleSt=st=>{ const k=seasonSt(), r={}; for(const s in st) r[s]=Math.round(st[s]*k); return r; };
 // интенсивная тренировка: больше прогресса, но усталость — −15% здоровья в следующем забеге
 const TRAIN_COST_HARD=35, TRAIN_HARD_K=2.2, TIRED_HP=.85;
 const trainCost=()=>S.trMode==='hard'?TRAIN_COST_HARD:TRAIN_COST;
 function gearHTML(){
-  let h='<div class="card"><div class="h2">Снаряжение</div><div class="dim" style="margin-bottom:6px">Падает с врагов волн (6%) и всегда с босса. Чем дальше этап, тем сильнее вещь.</div>';
+  let h='<div class="card"><div class="h2">Снаряжение</div><div class="dim" style="margin-bottom:6px">Падает с боссов (в 30% побед) и изредка с врагов волн (2%). Легендарные — только с последних боссов лиги и в следующих кругах. Чем дальше этап, тем сильнее вещь.</div>';
   for(const k of SLOT_IDS){ const it=S.gear[k];
-    h+='<div class="gear">'+'<span class="gic">'+SLOTS[k].ic+'</span><div class="gtx">'+(it?'<b style="color:'+RARITY[it.r].c+'">'+gearName(it)+'</b><small>'+gearTxt(it)+' · с этапа '+it.t+'</small>':'<span class="dim">'+SLOTS[k].n[0].toUpperCase()+SLOTS[k].n.slice(1)+' — пусто</span>')+'</div>'+
+    h+='<div class="gear">'+'<span class="gic">'+SLOTS[k].ic+'</span><div class="gtx">'+(it?'<b style="color:'+RARITY[it.r].c+'">'+gearName(it)+'</b><small>'+gearTxt(it)+' · класс '+it.t+'</small>':'<span class="dim">'+SLOTS[k].n[0].toUpperCase()+SLOTS[k].n.slice(1)+' — пусто</span>')+'</div>'+
       (it?(it.l<GEAR_MAX_LVL?'<button class="btn sm yel" data-act="gup" data-v="'+k+'" '+(S.money>=gearUpCost(it)?'':'disabled')+'>⬆ $'+gearUpCost(it)+'</button>':'<span class="dim">MAX</span>'):'')+'</div>'; }
   h+='<div class="h2" style="margin-top:10px">Сумка '+S.bag.length+'/'+BAG_MAX+'</div>';
   if(!S.bag.length) h+='<div class="dim">Пусто.</div>';
   S.bag.forEach((it,j)=>{ const cur=S.gear[it.s], better=!cur||gearVal(it)>gearVal(cur);
-    h+='<div class="gear"><span class="gic">'+SLOTS[it.s].ic+'</span><div class="gtx"><b style="color:'+RARITY[it.r].c+'">'+gearName(it)+'</b><small>'+gearTxt(it)+' · с этапа '+it.t+(better?' · <span style="color:var(--grn)">лучше надетого</span>':'')+'</small></div>'+
+    h+='<div class="gear"><span class="gic">'+SLOTS[it.s].ic+'</span><div class="gtx"><b style="color:'+RARITY[it.r].c+'">'+gearName(it)+'</b><small>'+gearTxt(it)+' · класс '+it.t+(better?' · <span style="color:var(--grn)">лучше надетого</span>':'')+'</small></div>'+
       '<button class="btn sm" data-act="gequip" data-v="'+j+'">Надеть</button><button class="btn sm" data-act="gsell" data-v="'+j+'">$'+gearSellPrice(it)+'</button></div>'; });
   return h+'</div>';
 }
@@ -1552,13 +1816,13 @@ function bossFighter(m,dmg,idx){ const f=makeFighter(m.name,scaleSt(m.st),m.move
 function spawnEnemy(R){
   R.wave++; R.deadMax=0; R.round=1;
   if(R.wave<=WAVES){ const e=waveEnemy(R.idx,R.wave); R.o=makeFighter(e.name,e.st,e.moves,e.pal,-1,OX,false,e.dmg); R.queue=[]; R.team=1; R.time=WAVE_TIME;
-    R.o.maxHp=R.o.hp=R.o.ghost=Math.round(R.o.maxHp*(WAVE_HP0+WAVE_HP1*R.wave)); hpFloor(R.p,R.o,HITS_WAVE(R.wave)); } // враги волн крепче с каждой волной и не падают с одного удара
-  else { const o=OPP[R.idx]; R.o=bossFighter(oppMember(o,0),o.dmg,R.idx); R.queue=o.duo?o.members.slice(1):[]; R.team=o.duo?o.members.length:1; R.time=o.duo?BOSS_TIME_DUO:BOSS_TIME; hpFloor(R.p,R.o,o.duo?HITS_DUO:HITS_BOSS); }
+    R.o.maxHp=R.o.hp=R.o.ghost=Math.round(R.o.maxHp*(WAVE_HP0+WAVE_HP1*R.wave)); hpFloor(R.p,R.o,HITS_WAVE(R.wave)); dmgFloor(R.p.hp0,R.p,R.o,KO_WAVE); } // враги волн крепче с каждой волной и не падают с одного удара
+  else { const o=OPP[R.idx]; R.o=bossFighter(oppMember(o,0),o.dmg,R.idx); R.queue=o.duo?o.members.slice(1):[]; R.team=o.duo?o.members.length:1; R.time=o.duo?BOSS_TIME_DUO:BOSS_TIME; hpFloor(R.p,R.o,o.duo?HITS_DUO:HITS_BOSS); dmgFloor(R.p.hp0,R.p,R.o,KO_BOSS); bossMods(R.idx).forEach(m=>m.a(R.o)); }
   if(!R.sim&&R.idx===S.beaten&&R.wave>S.best){ S.best=R.wave; save(); } // рекорд волны на текущем этапе
   return R.o;
 }
 const isBoss=()=>F.wave>WAVES;
-const xpPay=i=>Math.round(OPP[i].xp*(i<S.beaten?.5:1)*seasonPay());
+const xpPay=i=>Math.round(OPP[i].xp*(i<S.beaten?REPEAT_XP:1)*seasonPay()), REPEAT_XP=.35; // повтор пройденного — 35% опыта
 // награда за каждого врага волны — сразу и навсегда, даже если забег сорвётся
 const waveMoney=i=>Math.max(1,Math.round(winPay(i)*.06)), waveXp=i=>Math.max(1,Math.round(xpPay(i)*.07));
 /* Усиления «1 из 3»: после волн 3, 6 и 9 игрок выбирает одно из трёх случайных. Действуют до конца забега,
@@ -1674,27 +1938,29 @@ function startSuper(f){
   f.timer=intervalOf(f.st)+260; F.flashAll=.5; sfx('super');
   floatTxt(f,'СУПЕР!','#ffd23f',true); addLog('<b style="color:#ffd23f">'+f.name+': СУПЕРУДАР!</b>');
 }
-function resolveAttack(a,d,id){
-  const isSup=id==='super', m=isSup?SUPER:MOVES[id];
+function resolveAttack(a,d,id,cb){ // cb — множитель комбо-удара (удар не блокируется и не промахивается)
+  const isSup=id==='super', m=isSup?SUPER:MOVES[id], sure=isSup||!!cb;
   a.smearFrom=a.pose; a.pose=isSup?'super':id; a.poseT=isSup?450:280; a.smear=90; // смаз руки на первых кадрах удара
-  const hx=d.x-d.face*3, hy=GROUND-(id==='uppercut'?54:50);
-  if(d.stance==='dodge'&&!isSup){
+  let second=false; if(m.multi>1&&!isSup){ if(a.mh){ a.mh=0; second=true; } else { a.mh=1; a.nextHit={m:id,t:150}; } } // «двойка»: второй удар через 0,15 с
+  if(m.multi) a.pose=second?'cross':'jab';
+  const hx=d.x-d.face*3, hy=GROUND-(id==='uppercut'||id==='highkick'?54:id==='lowkick'?24:id==='midkick'||id==='knee'?38:50);
+  if(d.stance==='dodge'&&!sure){
     if(Math.random()<clamp(dodgeOf(d.st)-a.st.spd*.008,.2,.85)){
       d.stance=null; d.stanceT=0; d.pose='dodge'; d.poseT=320; if(!d.pending) d.timer=Math.min(d.timer,220);
       floatTxt(d,'УКЛОН','#38e8ff'); sfx('whiff'); addLog(d.name+' уходит от удара!'); return;
     }
   }
-  const acc=isSup?1:clamp(m.acc+(a.st.spd-d.st.spd)*.012+a.st.agi*.004,.35,.97);
+  const acc=sure?1:clamp(m.acc+(a.st.spd-d.st.spd)*.012+a.st.agi*.004+(a.accB||0),.35,.97);
   if(Math.random()>acc){ floatTxt(d,'МИМО','#9a8cc0'); sfx('whiff'); return; }
-  if(!isSup&&d.evade&&Math.random()<d.evade){ d.pose='dodge'; d.poseT=260; floatTxt(d,'УКЛОН','#38e8ff'); sfx('whiff'); return; } // усиление «Скользкий»
-  let dmg=m.dmg*(1+a.st.str*.13)*a.dm*rnd(.88,1.12)*(raging(a)?RAGE_DMG:1)*(a.isPlayer?comboMul():d.isPlayer&&F.stunT>0?STUN_DMG:1); // комбо и оглушение
+  if(!sure&&d.evade&&Math.random()<d.evade){ d.pose='dodge'; d.poseT=260; floatTxt(d,'УКЛОН','#38e8ff'); sfx('whiff'); return; } // усиление «Скользкий»
+  let dmg=m.dmg*(1+a.st.str*.13)*a.dm*rnd(.88,1.12)*(raging(a)?RAGE_DMG:1)*(cb||1)*(m.counter&&(d.pending||ATK_POSES.has(d.pose))?m.counter:1); // комбо-удар, контрудар
   const crit=!isSup&&Math.random()<critOf(a.st)+(a.critB||0); if(crit) dmg*=1.6;
   if(d.armor) dmg*=1-d.armor;
   let blocked=false;
-  if(d.stance==='block'&&!isSup){ dmg*=m.pierce; blocked=true; d.sta=Math.max(0,d.sta-m.dmg*.6); }
+  if(d.stance==='block'&&!sure){ dmg*=m.pierce; blocked=true; d.sta=Math.max(0,d.sta-m.dmg*.6); }
   dmg=Math.max(1,Math.round(dmg/(1+d.st.end*.025)));
   dmg=devDamage(a,d,dmg);
-  d.hp=Math.max(0,d.hp-dmg); a.hits++; a.dealt+=dmg;
+  d.hp=Math.max(0,d.hp-dmg); a.hits++; a.dealt+=dmg; if(m.staHit) d.sta=Math.max(0,d.sta-m.staHit*(blocked?.5:1)); // лоу-кик отнимает стамину
   if(a.vamp&&a.hp>0) a.hp=Math.min(a.maxHp,a.hp+dmg*a.vamp);
   d.flash=blocked?.35:.85; d.push=blocked?2:(crit||isSup||m.dmg>=11?8:4);
   if(!blocked){ d.pose='hit'; d.poseT=230; if(!d.pending) d.timer+=160; }
@@ -1703,7 +1969,8 @@ function resolveAttack(a,d,id){
   sparks(hx,hy,blocked?5:crit||isSup?16:9,blocked?['#9fe0ff','#fff']:['#fff','#ffd23f','#ff8a2b']);
   if(!F.sim){ F.fx.push({x:hx,y:hy,t:0,life:blocked?140:200,type:blocked?'block':'hit',big:crit||isSup||m.dmg>=11,dir:d.face});
     F.hitstop=Math.max(F.hitstop,blocked?45:crit||isSup?140:m.dmg>=11?100:70); } // стоп-кадр: удар «чувствуется»
-  floatTxt(d,(blocked?'БЛОК -':crit?'КРИТ -':'-')+dmg,blocked?'#9fe0ff':crit||isSup?'#ffd23f':'#ff5a6a',crit||isSup);
+  if(cb&&!F.sim){ F.shake=Math.max(F.shake,7); F.hitstop=Math.max(F.hitstop,170); F.flashAll=.5; sparks(hx,hy,18,['#fff','#38e8ff','#9fe0ff']); }
+  floatTxt(d,(cb?'КОМБО -':blocked?'БЛОК -':crit?'КРИТ -':'-')+dmg,cb?'#38e8ff':blocked?'#9fe0ff':crit||isSup?'#ffd23f':'#ff5a6a',crit||isSup||!!cb);
   sfx(blocked?'block':(crit||isSup)?'crit':'hit');
   if(!blocked&&(crit||isSup||Math.random()<.35)) addLog(a.name+': '+m.n.toLowerCase()+(crit?' — критический!':'')+' ('+dmg+')');
   if(d.hp<=0) ko(a,d);
@@ -1723,15 +1990,15 @@ function updateFighter(f,o,dt){
   f.sta=Math.min(f.maxSta,f.sta+dt/1000*(3+f.st.end*.35)*(f.stance==='block'?.6:1)*(f.staK||1));
   if(f.stanceT>0){ f.stanceT-=dt; if(f.stanceT<=0){ f.stance=null; f.stanceT=0; if(f.pose==='block'||f.pose==='dodge') f.pose='idle'; } }
   if(f.poseT>0){ f.poseT-=dt; if(f.poseT<=0){ f.poseT=0; const wasAtk=ATK_POSES.has(f.pose);
-    f.pose=f.pending?windPose(f.pending.m):wasAtk?'recover':(f.stance||'idle'); if(wasAtk&&!f.pending) f.poseT=90; } }
-  if(f.pending){ f.pending.t-=dt; if(f.pending.t<=0){ const id=f.pending.m; f.pending=null; resolveAttack(f,o,id); } return; }
-  if(f.isPlayer&&F.stunT>0) return; // оглушён после неверного нажатия в окне комбо
+    f.pose=f.pending?windPose(f.pending.m):wasAtk?(/kick|knee/.test(f.cur||'')?'kickrec':'recover'):(f.stance||'idle'); if(wasAtk&&!f.pending) f.poseT=/kick|knee/.test(f.cur||'')?150:90; } } // после удара ногой — возврат через замах
+  if(f.pending){ f.pending.t-=dt; if(f.pending.t<=0){ const id=f.pending.m, cb=f.pending.cb; f.pending=null; resolveAttack(f,o,id,cb); if(f.nextHit&&F&&F.state==='fight'&&o.hp>0) f.pending=f.nextHit; f.nextHit=null; } return; }
+  if(f.isPlayer&&F.cq&&F.state==='fight'){ comboStrike(f); return; } // связка проведена — комбо-удар без очереди
   if(f.adr>=100){ startSuper(f); return; } // автобатлер: суперудар срабатывает сам
   f.timer-=dt; if(f.timer<=0) act(f,o);
 }
 function nextMember(){
   const m=F.queue.shift(); F.deadMax+=F.o.maxHp; F.round++;
-  F.o=bossFighter(m,F.o.dm,F.idx); hpFloor(F.p,F.o,HITS_DUO); F.o.enter=150; F.o.timer=1200;
+  F.o=bossFighter(m,OPP[F.idx].dmg,F.idx); hpFloor(F.p,F.o,HITS_DUO); dmgFloor(F.p.hp0,F.p,F.o,KO_BOSS); bossMods(F.idx).forEach(md=>md.a(F.o)); F.o.enter=150; F.o.timer=1200; // множитель урона — заново от этапа, не от прошлого бойца
   F.p.pose='idle'; F.p.poseT=0; F.p.timer=Math.max(F.p.timer,600); F.state='fight'; hudCache={};
   addLog('На ринг выходит <b>'+m.name+'</b>!');
   if(!F.sim){ setName('oName',m.name+' ('+F.round+'/'+F.team+')'); const txt=m.name.toUpperCase()+'!'; showBanner(txt); setTimeout(()=>{ if(F&&F.banner===txt) hideBanner(); },1300); }
@@ -1752,7 +2019,7 @@ function updateFight(dt){
   for(const s of F.fx) s.t+=dt; F.fx=F.fx.filter(s=>s.t<s.life);
   if(F.hitstop>0&&!F.sim){ F.hitstop-=dt; F.shake=Math.max(0,F.shake-dt/80); return; } // стоп-кадр: всё замирает
   const p=F.p, o=F.o;
-  comboTick(dt);
+  comboTick(dt); consTick(dt);
   if(F.state==='intro'){
     F.introT-=dt;
     if(F.introT<=VS_END) showBanner(F.introT>550?'ГОТОВ?':'БОЙ!');
@@ -1777,7 +2044,7 @@ function updateFight(dt){
   } else if(F.state==='swap'){
     F.swapT-=dt; if(F.swapT<=0){ if(F.queue.length) nextMember(); else if(perkDue(F)) offerPerks(); else nextWave(); }
   } else if(F.state==='end'){
-    F.endT-=dt; if(F.endT<=0){ F.state='done'; if(!F.sim){ if(ADS_ON&&F.winner==='o'&&!F.surrender&&!F.revived) offerRevive(); else finishFight(); } }
+    F.endT-=dt; if(F.endT<=0){ F.state='done'; if(!F.sim){ if(F.winner==='o'&&!F.surrender&&!F.revived&&(ADS_ON||S.cons.nash>0)) offerRevive(); else finishFight(); } } // встать: за рекламу или нашатырём
   }
   cosmetic(F.p,dt); cosmetic(F.o,dt);
   if(!F) return;
@@ -1803,6 +2070,7 @@ function renderHUD(){
   const rg=F.rageT>0?'on'+Math.ceil(F.rageT/1000):F.rageCd>0?'cd'+Math.ceil(F.rageCd/1000):'ready'; // кнопка «Ярость»: идёт / перезарядка / готова
   if(hudCache.rage!==rg){ hudCache.rage=rg; const b=$('#rageBtn'); b.disabled=rg!=='ready'; b.classList.toggle('ready',rg==='ready'); b.classList.toggle('active',F.rageT>0);
     b.textContent=F.rageT>0?'🔥 ЯРОСТЬ! '+Math.ceil(F.rageT/1000)+' с':F.rageCd>0?'🔥 Ярость через '+Math.ceil(F.rageCd/1000)+' с':'🔥 ЯРОСТЬ — ЖМИ!'; }
+  consHUD();
   const ri=F.wave+'|'+F.kills+'|'+F.earn.money+'|'+F.earn.xp+'|'+F.perks.length;
   if(hudCache.ri!==ri){ hudCache.ri=ri; const od=OPP[F.idx];
     $('#runInfo').innerHTML='<span>'+(isBoss()?'БОСС: '+od.name:'Этап '+(F.idx+1)+' · волна '+F.wave+'/'+WAVES)+(F.perks.length?' '+F.perks.map(id=>PERKS[id].ic).join(''):'')+'</span><span><span class="money">+$'+F.earn.money+'</span> · <span class="xp">+'+F.earn.xp+' XP</span></span>'; }
@@ -1819,18 +2087,19 @@ function hideBanner(){ $('#banner').classList.remove('on'); if(F) F.banner=''; }
 const stageCost=i=>i<S.beaten?0:FIGHT_COST;
 /* Автофарм: только пройденные этапы — без боя сразу награда за весь забег, как за победу: 10 волн (деньги, опыт,
    шанс вещи с каждого врага) и босс (призовые, опыт, вещь). Стоит AUTOFARM_COST энергии — чтобы не нажимать бесконечно. */
-const AUTOFARM_COST=10;
+const AUTOFARM_COST=10, AUTOFARM_XP=.5;
 function autoFarm(i){
   if(F) return; if(i>=S.beaten) return toast('Автофарм — только для пройденных боссов');
   if(S.energy<AUTOFARM_COST&&!dev('infEnergy')) return toast('Мало энергии на автофарм: нужно '+AUTOFARM_COST+'⚡');
   spendEnergy(AUTOFARM_COST);
   let money=0,xp=0; const loot=[];
   for(let w=1;w<=WAVES;w++){ money+=waveMoney(i); xp+=waveXp(i); if(Math.random()<GEAR_DROP) loot.push(giveGear(rollGear(i,false))); }
-  money+=winPay(i); xp+=xpPay(i); loot.push(giveGear(rollGear(i,true)));
+  xp=Math.round(xp*AUTOFARM_XP); // автофарм без боя — опыта вдвое меньше, чем за бой
+  money+=winPay(i); xp+=Math.round(xpPay(i)*AUTOFARM_XP); if(Math.random()<BOSS_DROP) loot.push(giveGear(rollGear(i,true))); // вещь с босса — не гарантирована
   S.money+=money; S.kills+=WAVES+(OPP[i].duo?OPP[i].members.length:1); S.wins++; const ups=addXp(xp); save();
   openModal('<div class="title" style="color:var(--grn)">АВТОФАРМ</div><p style="text-align:center">Этап '+(i+1)+' · '+OPP[i].name+': '+WAVES+' волн и босс пройдены без боя.</p>'+
     '<div class="rew"><div class="money">+$'+money+'</div><div class="lv">+'+xp+' XP</div>'+(ups?'<div style="color:var(--yel)">Новый уровень '+S.lvl+'!</div>':'')+'</div>'+
-    '<div class="loot">🎁 <b>Добыча:</b><br>'+loot.join('<br>')+'</div>'+
+    '<div class="loot">🎁 <b>Добыча:</b><br>'+(loot.length?loot.join('<br>'):'<span class="dim">в этот раз ничего не выпало</span>')+'</div>'+
     '<button class="btn grn" data-act="farmagain" data-v="'+i+'">⚡ Ещё раз ('+AUTOFARM_COST+'⚡)</button><div class="gap"></div><button class="btn" data-act="closemodal">Закрыть</button>');
   sfx(ups?'lvl':'coin'); renderHub();
 }
@@ -1852,29 +2121,30 @@ function startFight(idx){
   hideBanner(); renderWaves(); updAutoBtn(); showScreen('fight'); sfx('bell');
   return true;
 }
-// утешительные деньги за поражение: с Бизона (4-й соперник) — 10% от того, что дала бы победа в этом бою
+// утешительные деньги за поражение: с Бизона (u ≥ 3 на старой лестнице) — 10% от того, что дала бы победа в этом бою
 const LOSS_PAY_FROM=3, LOSS_PAY_SHARE=.1;
 const winPay=i=>Math.round(OPP[i].money*(i<S.beaten?.4:1)*seasonPay());
-const lossPay=i=>i>=LOSS_PAY_FROM?Math.round(winPay(i)*LOSS_PAY_SHARE):0;
+const lossPay=i=>OPP[i].u>=LOSS_PAY_FROM?Math.round(winPay(i)*LOSS_PAY_SHARE):0;
 /* «Второе дыхание»: упал — можно один раз за забег встать за рекламу и продолжить с той же волны
    (50% здоровья, полный адреналин). В режиме авто без ответа через 5 с — итоги. */
 let REV_T=0;
 function offerRevive(){
   F.state='revive';
   openModal('<div class="title" style="color:var(--red)">ТЫ В НОКАУТЕ!</div><p style="text-align:center">'+(isBoss()?'Босс':'Волна '+F.wave+' из '+WAVES)+'. Встать и продолжить с этого места?</p>'+
-    '<button class="btn yel" data-act="revive">📺 Второе дыхание: встать с 50% здоровья</button><div class="gap"></div>'+
+    (S.cons.nash>0?'<button class="btn grn" data-act="nash">🧪 Нашатырь: встать с 40% здоровья (есть '+S.cons.nash+')</button><div class="gap"></div>':'')+
+    (ADS_ON?'<button class="btn yel" data-act="revive">📺 Второе дыхание: встать с 50% здоровья</button><div class="gap"></div>':'')+
     '<button class="btn" data-act="norevive">Нет, к итогам</button>'+(S.auto?'<div class="dim" id="revAuto" style="text-align:center;margin-top:8px">Итоги через 5 с</div>':''));
   if(S.auto){ let left=5; const run=F; const tick=()=>{ if(F!==run||F.state!=='revive'||AD) return; if(--left<=0) return ACT.norevive();
     const el=$('#revAuto'); if(el) el.textContent='Итоги через '+left+' с'; REV_T=setTimeout(tick,1000); }; REV_T=setTimeout(tick,1000); }
 }
-function revive(){
+function revive(hpK,nash){ // hpK — доля здоровья; nash — нашатырём (без полного адреналина)
   const p=F.p, o=F.o; clearTimeout(REV_T); closeModal();
   F.revived=true; F.winner=null; F.state='fight'; F.endT=0;
-  p.hp=Math.max(p.hp,Math.round(p.maxHp*.5)); p.sta=p.maxSta; p.adr=100; p.pose='idle'; p.poseT=0; p.koT=0; p.pending=null; p.stance=null; p.stanceT=0; p.timer=500; p.flash=0;
+  p.hp=Math.max(p.hp,Math.round(p.maxHp*(hpK||.5))); p.sta=p.maxSta; if(!nash) p.adr=100; p.hot=null; p.pose='idle'; p.poseT=0; p.koT=0; p.pending=null; p.stance=null; p.stanceT=0; p.timer=500; p.flash=0;
   if(o.pose==='win'||o.pose==='tired'){ o.pose='idle'; o.poseT=0; } o.pending=null; o.timer=Math.max(o.timer,900);
   F.time=Math.max(F.time,isBoss()?30000:15000); hudCache={}; renderWaves();
-  showBanner('ВТОРОЕ ДЫХАНИЕ!'); setTimeout(()=>{ if(F&&F.banner==='ВТОРОЕ ДЫХАНИЕ!') hideBanner(); },1200);
-  addLog('<b style="color:#ffd23f">Второе дыхание! '+S.name+' снова на ногах.</b>'); sfx('super');
+  const bt=nash?'НАШАТЫРЬ!':'ВТОРОЕ ДЫХАНИЕ!'; showBanner(bt); setTimeout(()=>{ if(F&&F.banner===bt) hideBanner(); },1200);
+  addLog('<b style="color:#ffd23f">'+(nash?'Нашатырь!':'Второе дыхание!')+' '+S.name+' снова на ногах.</b>'); sfx('super');
 }
 /* ADS_ON — реклама за награду включена. Временно выключена по просьбе пользователя (2026-10-26): нет окна «Второе дыхание»,
    кнопок «×2 награда» в итогах и «Забрать ×2» за время отсутствия, раздела о рекламе в «Как играть». Вернуть — поставить true. */
@@ -1883,16 +2153,20 @@ const ADS_ON=false;
 function watchAd(onReward){ if(!ADS_ON) return; if(dev('noAds')) onReward(); else showRewardedAd(onReward); }
 /* Награда за время отсутствия: пока игрока нет, боец фармит лучший пройденный этап (или 1-й) — 40 врагов в час,
    не больше 8 часов, по награде за врага волны. Показывается при входе в карьеру и при возврате в игру. */
-const OFF_MIN=5*60e3, OFF_CAP=8*3600e3, OFF_KPH=40;
+const OFF_STEP=30*60e3, OFF_CAP=2*3600e3, OFF_KPS=20; // награда за каждые полные 30 мин (20 врагов), не больше 2 часов
+// опыт за 2 часа отсутствия — не больше, чем за первое прохождение этапа 1 (10 волн + первый босс)
+const offXpCap=()=>{ const bx=Math.round(OPP[0].xp*seasonPay()); return WAVES*Math.max(1,Math.round(bx*.07))+bx; };
+const MEALS_MAX=3; // еда: 3 раза между снами (окно 8 часов)
+function mealsReset(){ if(S.meals&&Date.now()-S.mealT>=SLEEP_CD){ S.meals=0; S.mealT=0; } }
 let OFF=null;
 const fmtDur=ms=>{ const m=Math.floor(ms/60e3), h=Math.floor(m/60); return (h?h+' ч ':'')+(m%60)+' мин'; };
 function checkOffline(){
   if(!S.started||OFF||screen==='fight'||TR) return;
-  const away=Date.now()-(S.ts||Date.now()); if(away<OFF_MIN) return;
-  const ms=Math.min(away,OFF_CAP), i=Math.max(0,S.beaten-1), kills=Math.max(1,Math.floor(ms/3600e3*OFF_KPH));
+  const away=Date.now()-(S.ts||Date.now()); if(away<OFF_STEP) return;
+  const steps=Math.floor(Math.min(away,OFF_CAP)/OFF_STEP), i=Math.max(0,S.beaten-1), kills=steps*OFF_KPS; // 1–4 получаса
   const en=regenEnergy(); renderTop(); // энергия за это время тоже восстановилась
-  OFF={money:kills*waveMoney(i),xp:kills*waveXp(i),kills,i}; save(); // время отсчитано — второй раз не начислится
-  openModal('<div class="title" style="color:var(--yel)">ПОКА ТЕБЯ НЕ БЫЛО</div><p style="text-align:center">'+fmtDur(away)+(away>OFF_CAP?' (засчитано 8 ч)':'')+
+  OFF={money:kills*waveMoney(i),xp:Math.round(offXpCap()*steps/(OFF_CAP/OFF_STEP)),kills,i}; save(); // время отсчитано — второй раз не начислится
+  openModal('<div class="title" style="color:var(--yel)">ПОКА ТЕБЯ НЕ БЫЛО</div><p style="text-align:center">'+fmtDur(away)+(away>OFF_CAP?' (засчитано 2 ч — это максимум)':' (засчитано '+fmtDur(steps*OFF_STEP)+')')+
     ' боец фармил этап '+(i+1)+'. Побеждено врагов: '+kills+'.</p><div class="rew"><div class="money">+$'+OFF.money+'</div><div class="lv">+'+OFF.xp+' XP</div>'+(en?'<div style="color:var(--org)">+'+en+' ⚡</div>':'')+'</div>'+
     (ADS_ON?'<button class="btn yel" data-act="offx2">📺 Забрать ×2</button><div class="gap"></div>':'')+'<button class="btn grn" data-act="offtake">Забрать</button>');
 }
@@ -1910,7 +2184,7 @@ function updAutoBtn(){ const b=$('#autoBtn'); if(b){ b.textContent='Авто: '+
 function finishFight(){
   const win=F.winner==='p', i=F.idx, o=OPP[i], first=win&&i===S.beaten&&!F.surrender, boss=isBoss();
   let money=0,xp=0;
-  if(win){ money=winPay(i); xp=xpPay(i); S.wins++; F.loot.push(giveGear(rollGear(i,true))); if(first){ S.beaten=i+1; S.best=0; } } // с босса — всегда вещь, чаще редкая
+  if(win){ money=winPay(i); xp=xpPay(i); S.wins++; if(Math.random()<BOSS_DROP) F.loot.push(giveGear(rollGear(i,true))); if(first){ S.beaten=i+1; S.best=0; } } // с босса — вещь в 30% случаев
   else if(!F.surrender){ S.losses++; if(boss){ xp=Math.round(o.xp*.25); money=lossPay(i); } } // проигрыш боссу: 25% опыта, с Бизона — 10% призовых
   S.money+=money; const ups=addXp(xp)+F.earn.ups;
   const champNow=first&&S.beaten>=OPP.length&&!S.champ; if(champNow) S.champ=true;
@@ -1933,7 +2207,7 @@ function finishFight(){
   if(S.auto&&!F.surrender) html+=autoTo>=0
     ?'<div class="note" id="autoNote">▶ Авто: этап '+(autoTo+1)+autoWhy+' через <b id="autoSec">4</b> с <button class="btn sm" data-act="autostop" style="margin-left:6px;min-height:0;padding:4px 8px">Стоп</button></div>'
     :'<div class="note" id="autoNote">Авто остановлено: на новый этап нужно '+FIGHT_COST+'⚡. Поешь или выспись.</div>';
-  if(ups) html+='<div class="note">НОВЫЙ УРОВЕНЬ '+S.lvl+'! +'+(ups*2)+' очка характеристик, +'+(ups*5)+' к макс. энергии</div>';
+  if(ups) html+='<div class="note">НОВЫЙ УРОВЕНЬ '+S.lvl+'! +'+(ups*2)+' очка характеристик'+(S.lvl-ups<MAX_LVL?', +'+5*(Math.min(S.lvl,MAX_LVL)-(S.lvl-ups))+' к макс. энергии':'')+'</div>';
   if(champNow) html+='<div class="note" style="color:var(--yel)">🏆 ТЫ — ЧЕМПИОН УЛИЦ! Пояс твой. Этапы можно проходить снова ради денег и опыта.</div>';
   const next=win?(i+1<OPP.length&&i+1<=S.beaten?i+1:-1):i;
   if(next>=0) html+='<button class="btn red" data-act="again" data-v="'+next+'">'+(win?'Этап '+(next+1)+' →':'Ещё раз')+costTxt(next)+'</button><div class="gap"></div>';
@@ -2126,7 +2400,7 @@ function toast(m){ const t=$('#toast'); t.textContent=m; t.classList.remove('on'
 function openModal(html){ $('#mbox').innerHTML=html; $('#modal').classList.add('on'); }
 function closeModal(){ $('#modal').classList.remove('on'); }
 function renderTop(){
-  const need=needXp(S.lvl), maxed=S.lvl>=MAX_LVL;
+  const need=needXp(S.lvl), maxed=false; // уровень без предела
   $('#topbar').innerHTML='<button class="chip lv" data-act="menu" aria-label="Меню" style="cursor:pointer">☰ УР '+S.lvl+'</button><div class="xpw"><div class="bar"><i style="background:var(--yel);width:'+(maxed?100:S.xp/need*100)+'%"></i></div><div class="dim" style="font-size:10px">'+(maxed?'MAX':S.xp+'/'+need+' XP')+'</div></div><span class="chip money">$'+fmt(S.money)+'</span><span class="chip day">'+(DEV.enabled?'<b style="color:var(--red)">DEV</b> ':'')+'ДЕНЬ '+S.day+'</span>'+
     '<div class="enw"><span style="color:var(--org);font-weight:bold">⚡ЭНЕРГИЯ</span><div class="bar"><i style="background:linear-gradient(90deg,#ff8a2b,#ffd23f);width:'+(S.energy/S.maxEnergy*100)+'%"></i></div><b>'+S.energy+'/'+S.maxEnergy+'</b><span class="ent" id="enT"></span></div>';
   tickEnergyUI();
@@ -2139,9 +2413,9 @@ function tickEnergyUI(){
 // на заставке не сохраняем: иначе пропадёт награда за отсутствие
 setInterval(()=>{ if(!S.started||screen==='title') return; const e=S.energy; if(regenEnergy()) save(); if(S.energy!==e&&screen==='hub') renderTop(); else tickEnergyUI(); },1000);
 function statRow(k){
-  const v=S.st[k], need=needProg(v), max=v>=MAX_STAT;
-  return '<div class="stat"><div><b>'+STATS[k].ic+' '+STATS[k].n+'</b><div class="dim" style="font-size:11px">'+STATS[k].d+'</div></div><div class="v">'+v+'</div>'+
-    '<button class="plus" data-act="addpt" data-v="'+k+'" '+(S.pts>0&&!max?'':'disabled')+' aria-label="Повысить">+</button>'+
+  const v=S.st[k], need=needProg(v), max=v>=MAX_STAT, ms=mastOf(k); // на максимуме очки идут в мастерство
+  return '<div class="stat"><div><b>'+STATS[k].ic+' '+STATS[k].n+'</b><div class="dim" style="font-size:11px">'+(max?'<span style="color:var(--yel)">★ Мастерство '+ms+'/'+MAST_MAX+'</span>'+(ms?': '+MAST[k].t(ms):' — очки дают бонус: '+MAST[k].t(1)+' за очко'):STATS[k].d)+'</div></div><div class="v">'+v+'</div>'+
+    '<button class="plus" data-act="addpt" data-v="'+k+'" '+(S.pts>0&&(!max||ms<MAST_MAX)?'':'disabled')+' aria-label="Повысить">+</button>'+
     '<div class="bar"><i style="background:var(--cyan);width:'+(max?100:S.prog[k]/need*100)+'%"></i></div></div>';
 }
 /* «Сила» — одно число по характеристикам: урон в секунду × живучесть, как в idle-RPG. Босс считается с его
@@ -2151,33 +2425,35 @@ function powerOf(st,dm,hpMul){
   return Math.round(Math.sqrt(atk*def)*4);
 }
 const myPower=()=>Math.round(powerOf(S.st,1,1)*buildMul()); // со снаряжением и прочими постоянными бонусами
-const buildMul=()=>gearMul()*styleMul(S.load)*Math.sqrt(seasonMe())*(S.tired?Math.sqrt(TIRED_HP):1);
-const buildSig=()=>JSON.stringify(S.gear)+'|'+(S.season||0)+'|'+(S.tired?1:0);
-function bossPower(i){ const o=OPP[i], ps=(o.duo?o.members:[o]).map(m=>powerOf(scaleSt(m.st),o.dmg*seasonDm(),bossHp(i))); return Math.round(Math.sqrt(ps.reduce((a,b)=>a+b*b,0))); }
-const CHANCE={}; let CHANCE_Q=0;
+const buildMul=()=>gearMul()*schoolOf(S.hero).pm*styleMul(S.load)*mastMul()*Math.sqrt(seasonMe())*(S.tired?Math.sqrt(TIRED_HP):1);
+const buildSig=()=>JSON.stringify(S.gear)+'|'+JSON.stringify(S.mast)+'|'+(S.season||0)+'|'+(S.tired?1:0);
+function bossPower(i){ const o=OPP[i]; let k=1;
+  if(S.season>0){ const R=newFight(i,true), b=bossFighter(oppMember(o,0),o.dmg,i), d0=b.dm; dmgFloor(R.p.hp0,R.p,b,KO_BOSS); k=b.dm/d0; } // в новых кругах урон босса подтянут под бойца
+  const ps=(o.duo?o.members:[o]).map(m=>powerOf(scaleSt(m.st),o.dmg*seasonDm()*k,bossHp(i))); return Math.round(Math.sqrt(ps.reduce((a,b)=>a+b*b,0))*bossMods(i).reduce((a,m)=>a*m.pm,1)); }
+const CHANCE={}, CHANCE_LAST={}; let CHANCE_Q=0;
 const chanceKey=i=>i+'|'+S.st.str+','+S.st.spd+','+S.st.end+','+S.st.agi+'|'+S.load.join(',')+'|'+buildSig()+'|'+startWaveOf(i)+'|'+Math.round(comboRate()*10);
 function chanceOf(i){
-  const k=chanceKey(i); if(k in CHANCE) return CHANCE[k];
-  if(!CHANCE_Q) CHANCE_Q=setTimeout(()=>{ CHANCE_Q=0; CHANCE[chanceKey(i)]=simBattle(S.st,i,S.load,80,startWaveOf(i),comboRate()); if(screen==='hub') renderHub(); },80); // считаем после отрисовки, чтобы не тормозить
-  return null;
+  const k=chanceKey(i); if(k in CHANCE) return (CHANCE_LAST[i]=CHANCE[k]);
+  if(!CHANCE_Q) CHANCE_Q=setTimeout(()=>{ CHANCE_Q=0; CHANCE[chanceKey(i)]=CHANCE_LAST[i]=simBattle(S.st,i,S.load,80,startWaveOf(i),comboRate()); if(screen==='hub') renderHub(); },80); // считаем после отрисовки, чтобы не тормозить
+  return CHANCE_LAST[i]||null; // пока пересчитывается — прежний шанс: высота блока не меняется, экран не дёргается
 }
 function chanceHTML(i){
   const r=chanceOf(i); if(!r) return '<span class="dim">шанс считается…</span>';
   const w=Math.round(r.winRate*100), c=w>=70?'var(--grn)':w>=35?'var(--yel)':'var(--red)';
   const cr=comboRate(), g=gearBonus(), hasGear=SLOT_IDS.some(k=>S.gear[k]);
   return 'шанс пройти <b style="color:'+c+'">~'+w+'%</b> · дойти до босса ~'+Math.round(r.bossRate*100)+'%'+
-    '<br><span class="dim">учтено: '+(hasGear?'снаряжение (урон +'+Math.round(g.dm*100)+'%, здоровье +'+Math.round(g.hp*100)+'%…), ':'')+'стили, '+(cr?'комбо — твоя точность '+Math.round(cr*100)+'%':'без комбо (авто)')+'</span>';
+    '<br><span class="dim">учтено: '+(hasGear?'снаряжение (урон +'+Math.round(g.dm*100)+'%, здоровье +'+Math.round(g.hp*100)+'%…), ':'')+'стили, '+(cr?'комбо-связки — твоя точность '+Math.round(cr*100)+'%':'без комбо (авто)')+'</span>';
 }
 function tabFighter(){
   const s=S.st, next=S.beaten<OPP.length?OPP[S.beaten]:null;
-  return '<div class="card hero"><canvas id="portrait" width="96" height="96"></canvas><div><canvas id="heroName" class="heroname" width="10" height="10"></canvas><div class="h">'+RANKS[Math.min(S.beaten,RANKS.length-1)]+(S.season?' · сезон '+(S.season+1):'')+'</div>'+(S.tired?'<div class="dim" style="color:var(--org)">😮‍💨 Устал: −15% здоровья в следующем забеге</div>':'')+
+  return '<div class="card hero"><canvas id="portrait" width="96" height="96"></canvas><div><canvas id="heroName" class="heroname" width="10" height="10"></canvas><div class="h">'+RANKS[Math.round(S.beaten/OPP.length*(RANKS.length-1))]+(S.season?' · сезон '+(S.season+1):'')+'</div>'+(S.tired?'<div class="dim" style="color:var(--org)">😮‍💨 Устал: −15% здоровья в следующем забеге</div>':'')+
     '<div class="dim">Победы: '+S.wins+' · Поражения: '+S.losses+'</div><div class="dim">Зал: '+GYM[S.gym-1].n+'</div>'+
     '<div class="dim">'+(next?'Этап '+(S.beaten+1)+', босс: <b style="color:var(--red)">'+next.name+'</b>':'<b style="color:var(--yel)">🏆 Пояс чемпиона твой</b>')+'</div>'+
     '<div class="power">💪 Сила <b>'+myPower()+'</b>'+(next?' · босс <b>'+bossPower(S.beaten)+'</b>':'')+'</div>'+
     (next?'<div class="dim" style="font-size:11px">'+chanceHTML(S.beaten)+'</div>':'')+'</div></div>'+
-    (S.pts?'<div class="note">Свободные очки: '+S.pts+' — жми «+» у характеристики!</div>':'')+
+    '<div class="note" style="'+(S.pts?'':'opacity:.55')+'">'+(S.pts?'Свободные очки: '+S.pts+' — жми «+» у характеристики!':'Очков нет — +2 за новый уровень')+'</div>' /* строка есть всегда — при последнем очке экран не дёргается */+
     '<div class="card"><div class="h2">Характеристики</div>'+Object.keys(STATS).map(statRow).join('')+'<div class="dim" style="margin-top:6px">Полоска под характеристикой — прогресс тренировок.</div></div>'+
-    '<div class="card"><div class="h2">Твой боец</div>'+heroPicksHTML(S.hero,'sethero')+'<div class="dim" style="margin-top:6px">Выбор меняет только внешность — характеристики и прогресс общие.</div></div>'+gearHTML()+'<div class="card"><div class="h2">В бою</div><div class="grid2">'+
+    '<div class="card"><div class="h2">Твой боец: '+heroOf(S.hero).n+'</div><div class="dim">У каждого бойца свой прогресс: уровень, характеристики, этапы, деньги и снаряжение. Вещи с боссов — только этому бойцу.</div><div class="gap"></div><button class="btn" data-act="herolist">👥 Сменить бойца</button></div>'+gearHTML()+'<div class="card"><div class="h2">В бою</div><div class="grid2">'+
     '<div class="kv"><span>Здоровье</span><b>'+maxHpOf(s)+'</b></div><div class="kv"><span>Стамина</span><b>'+maxStaOf(s)+'</b></div>'+
     '<div class="kv"><span>Атака раз в</span><b>'+(intervalOf(s)/1000).toFixed(2)+' c</b></div><div class="kv"><span>Множ. урона</span><b>x'+(1+s.str*.13).toFixed(2)+'</b></div>'+
     '<div class="kv"><span>Уклонение</span><b>'+Math.round(dodgeOf(s)*100)+'%</b></div><div class="kv"><span>Крит</span><b>'+Math.round(critOf(s)*100)+'%</b></div>'+
@@ -2192,16 +2468,21 @@ function tabGym(){
   h+='<div class="h2" style="margin-top:14px">Отдых и еда</div>';
   h+='<button class="tcard" data-act="sleep"><div class="ico">🛏</div><div class="tx"><div class="nm">Выспаться</div><div class="dim">Новый день, энергия на максимум. Раз в 8 часов<br><b id="sleepT" style="color:var(--yel)"></b></div></div><div class="cost">+⚡MAX</div></button>';
   h+='<div class="dim" style="margin:-2px 0 8px">⚡ Энергия восстанавливается сама: +1 каждые 3 минуты, даже когда ты не в игре.</div>';
-  for(const f of FOOD) h+='<button class="tcard" data-act="eat" data-v="'+f.id+'"><div class="ico">'+f.ic+'</div><div class="tx"><div class="nm">'+f.n+'</div><div class="dim">+'+f.en+' энергии</div></div><div class="cost" style="color:var(--grn)">$'+f.cost+'</div></button>';
+  mealsReset(); h+='<div class="dim" style="margin:-2px 0 8px">🍽 Поесть можно '+MEALS_MAX+' раза между снами (или за 8 часов). Осталось: <b style="color:var(--yel)">'+(MEALS_MAX-S.meals)+'</b></div>';
+  for(const f of FOOD) h+='<button class="tcard" data-act="eat" data-v="'+f.id+'" '+(S.meals>=MEALS_MAX?'disabled':'')+'><div class="ico">'+f.ic+'</div><div class="tx"><div class="nm">'+f.n+'</div><div class="dim">+'+f.en+' энергии</div></div><div class="cost" style="color:var(--grn)">$'+f.cost+'</div></button>';
   const pay=workPay();
   h+='<button class="tcard" data-act="work"><div class="ico">📦</div><div class="tx"><div class="nm">Подработка грузчиком</div><div class="dim">Тратит 30 энергии, платит наличкой</div></div><div class="cost" style="color:var(--grn)">+$'+pay+'</div></button>';
+  nashReset(); h+='<div class="h2" style="margin-top:14px">Аптечка и запас</div><div class="dim" style="margin:-2px 0 8px">Для боя: кнопки рядом с «Яростью», одна вещь раз в '+CONS_CD/1000+' с. Нашатырь поднимает после нокаута (раз за забег), купить — не больше '+NASH_DAY+' в сутки. Цена растёт с этапом.</div>';
+  for(const k in CONS){ const c=CONS[k], pr=consPrice(k), have=S.cons[k]||0, dis=have>=c.max||(k==='nash'&&S.nashN>=NASH_DAY)||S.money<pr;
+    h+='<button class="tcard" data-act="buycons" data-v="'+k+'" '+(dis?'disabled':'')+'><div class="ico">'+c.ic+'</div><div class="tx"><div class="nm">'+c.n+'</div><div class="dim">'+c.d+' · есть '+have+'/'+c.max+(k==='nash'?' · сегодня '+S.nashN+'/'+NASH_DAY:'')+'</div></div><div class="cost" style="color:var(--grn)">$'+pr+'</div></button>'; }
   h+='<div class="h2" style="margin-top:14px">Зал</div>';
   if(S.gym<GYM.length){ const nx=GYM[S.gym];
     h+='<div class="card"><b>'+GYM[S.gym-1].n+'</b> → <b style="color:var(--yel)">'+nx.n+'</b><div class="dim" style="margin:4px 0 8px">Эффективность тренировок x'+gymMult().toFixed(2)+' → x'+(1+S.gym*.35).toFixed(2)+'</div><button class="btn yel" data-act="upgym" '+(S.money>=nx.cost?'':'disabled')+'>Улучшить за $'+nx.cost+'</button></div>';
   } else h+='<div class="card"><b style="color:var(--yel)">'+GYM[S.gym-1].n+'</b><div class="dim">Лучший зал в городе.</div></div>';
   return h;
 }
-const workPay=()=>20+S.beaten*5; // от $20 в начале до $100 после всей лиги
+/* Подработка платит МЕНЬШЕ, чем стоят 30⚡ из самой дешёвой еды, — круг «поел → поработал» больше не приносит денег (баг бесконечных денег). */
+const workPay=()=>Math.max(1,Math.floor(30*Math.min(...FOOD.map(f=>f.cost/f.en)))-1);
 function moveStats(m){
   if(m.type==='atk') return '<div class="mvst"><span>Урон <b>'+m.dmg+'</b></span><span>Точн. <b>'+Math.round(m.acc*100)+'%</b></span><span>Темп <b>'+(1/m.spd).toFixed(1)+'</b></span><span>Стамина <b>'+m.sta+'</b></span><span>Сквозь блок <b>'+Math.round(m.pierce*100)+'%</b></span></div>';
   return '<div class="mvst"><span>Длит. <b>'+(m.dur/1000).toFixed(1)+' c</b></span><span>Стамина <b>'+m.sta+'</b></span></div>';
@@ -2210,11 +2491,12 @@ function tabMoves(){
   let h=stylesHTML()+'<div class="h2">Комбинация (до 3 приёмов)</div><div class="slots">';
   for(let i=0;i<3;i++){ const m=S.load[i]; h+='<div class="slot'+(m?'':' empty')+'">'+(m?MOVES[m].n:'пусто')+'</div>'; }
   h+='</div><div class="dim" style="margin-bottom:10px">Боец сам выбирает приёмы из комбинации в бою. Нужен хотя бы один атакующий.</div>';
-  for(const id of MOVE_ORDER){ const m=MOVES[id], own=S.owned.includes(id), sel=S.load.includes(id), lockLv=S.lvl<m.lvl;
+  const sc=schoolOf(S.hero); h+='<div class="note">🥋 Школа: <b>'+sc.n+'</b> ('+sc.st+'). '+sc.d+'</div>';
+  for(const id of schoolMoves(S.hero)){ const m=MOVES[id], own=S.owned.includes(id), sel=S.load.includes(id), lockLv=S.lvl<mvLvl(id);
     h+='<div class="mv'+(sel?' sel':'')+'"><div class="t"><span class="nm">'+m.n+'</span><span class="tag '+m.type+'">'+(m.type==='atk'?'атака':'защита')+'</span></div>'+moveStats(m)+'<div class="dim">'+m.d+'</div><div class="gap"></div>';
     if(own) h+='<button class="btn sm '+(sel?'':'mag')+'" data-act="toggle" data-v="'+id+'">'+(sel?'Убрать из комбо':'В комбо')+'</button>';
-    else if(lockLv) h+='<button class="btn sm" disabled>🔒 С '+m.lvl+' уровня</button>';
-    else h+='<button class="btn sm yel" data-act="buy" data-v="'+id+'" '+(S.money>=m.cost?'':'disabled')+'>Выучить за $'+m.cost+'</button>';
+    else if(lockLv) h+='<button class="btn sm" disabled>🔒 С '+mvLvl(id)+' уровня</button>';
+    else h+='<button class="btn sm yel" data-act="buy" data-v="'+id+'" '+(S.money>=mvCost(id)?'':'disabled')+'>Выучить за $'+mvCost(id)+'</button>';
     h+='</div>';
   }
   return h;
@@ -2222,14 +2504,18 @@ function tabMoves(){
 function tabLeague(){
   let h='<div class="h2">Этапы · '+S.beaten+'/'+OPP.length+(S.season?' · сезон '+(S.season+1):'')+'</div><div class="dim" style="margin-bottom:8px">Этап — '+WAVES+' волн по одному врагу, затем босс. Боец дерётся сам, здоровье между волнами восстанавливается лишь частично. За каждого врага — деньги и опыт сразу.</div>';
   h+='<button class="btn sm" data-act="cp" style="margin-bottom:8px">⏭ Начинать с '+CP_WAVE+'-й волны там, где уже доходил до босса: <b style="color:'+(S.cp?'var(--grn)':'var(--dim)')+'">'+(S.cp?'вкл':'выкл')+'</b></button>';
-  if(S.champ) h+='<div class="note">🏆 Ты чемпион улиц! Повторные этапы приносят 40% денег и 50% опыта.</div><button class="btn yel" data-act="season" style="margin-bottom:10px">🏆 Новый сезон '+((S.season||0)+2)+': соперники сильнее, награды больше, +5% урона навсегда</button>';
-  if(S.season) h+='<div class="dim" style="margin-bottom:8px">Сезон '+(S.season+1)+': соперники сильнее на '+S.season*15+'%, награды +'+S.season*25+'%, твой урон +'+S.season*5+'%.</div>';
-  OPP.forEach((o,i)=>{ const done=i<S.beaten, next=i===S.beaten, lock=i>S.beaten, mem=o.duo?o.members:[o];
+  if(S.champ) h+='<div class="note">🏆 Ты чемпион улиц! Повторные этапы приносят 40% денег и 35% опыта.</div><button class="btn yel" data-act="season" style="margin-bottom:10px">🏆 Новый сезон '+((S.season||0)+2)+': соперники сильнее, у боссов особенности, +5% урона навсегда</button>';
+  if(S.season) h+='<div class="dim" style="margin-bottom:8px">Сезон '+(S.season+1)+': соперники сильнее на '+S.season*15+'% (и бьют больнее), у боссов особенности, твой урон +'+S.season*5+'%.</div>';
+  const curD=Math.floor(Math.min(S.beaten,OPP.length-1)/10);
+  OPP.forEach((o,i)=>{ const done=i<S.beaten, next=i===S.beaten, lock=i>S.beaten, mem=o.duo?o.members:[o], dn=Math.floor(i/10);
+    if(i%10===0) h+='<div class="h2" style="margin-top:12px">Район '+(dn+1)+' · '+ARENAS[arenaOf(i)].n+(dn>curD?' 🔒':'')+'</div>'+(dn>curD?'<div class="dim" style="margin-bottom:8px">Откроется, когда пройдёшь район '+dn+'.</div>':'');
+    if(dn>curD) return; // дальние районы свёрнуты: 50 карточек сразу не рисуем
     const stl=mem.map(m=>scaleSt(m.st)).map((ms,mi)=>'<div class="ostat">'+(o.duo?'<b>'+mem[mi].name+'</b>: ':'')+'СИЛ '+ms.str+' · СКР '+ms.spd+' · ВЫН '+ms.end+' · ЛОВ '+ms.agi+'</div>').join('');
     h+='<div class="opp'+(done?' done':'')+(next?' next':'')+(lock?' lock':'')+'"><canvas width="80" height="80" data-opp="'+i+'"></canvas><div class="tx"><div class="nm">Этап '+(i+1)+(lock?'':' · '+o.name)+(o.duo?' <span class="tag duo">👥 дуэт</span>':'')+'</div>'+
       '<div class="dim">'+(lock?'Пройди предыдущий этап':'Босс «'+o.title+'» · '+ARENAS[arenaOf(i)].n)+'</div>'+
       (lock?'':stl+'<div class="ostat" style="color:var(--red)">Урон x'+o.dmg.toFixed(2)+(o.duo?' · 2 бойца подряд':' · здоровье x'+BOSS_HP)+'</div>'+
         '<div class="ostat" style="color:var(--grn)">Волна: $'+waveMoney(i)+' · '+waveXp(i)+' XP · Босс: $'+winPay(i)+' · '+xpPay(i)+' XP</div>'+
+        (S.season?'<div class="ostat" style="color:var(--org)">Особенность: '+modsTxt(i)+'</div>':'')+
         '<div class="ostat power">💪 Сила босса <b>'+bossPower(i)+'</b> · твоя <b>'+myPower()+'</b></div>'+
         (next?'<div class="ostat">'+chanceHTML(i)+'</div>':'')+
         (next&&S.best?'<div class="ostat" style="color:var(--yel)">Рекорд: '+(S.best>WAVES?'дошёл до босса':'волна '+S.best+'/'+WAVES)+'</div>':''))+
@@ -2258,22 +2544,24 @@ function drawPortrait(t){
 }
 function helpHTML(){
   return '<div class="title" style="color:var(--cyan)">КАК ИГРАТЬ</div><div class="help">'+
-  '<p>Ты — никто из спального района. Цель — пройти 16 этапов и забрать пояс «Короля Асфальта». Бой идёт сам — твоя задача прокачать бойца так, чтобы его хватило до конца.</p>'+
+  '<p>Ты — никто из спального района. Цель — пройти 5 районов, 50 этапов, и забрать пояс «Короля Асфальта». Бой идёт сам — твоя задача прокачать бойца так, чтобы его хватило до конца.</p>'+
   '<h4>🗺 Этапы</h4><ul><li>Каждый этап — 10 волн, в каждой по одному врагу. Они выходят один за другим, без остановки.</li><li>После 10-й волны выходит <b>босс</b> — соперник из подпольной лиги. У него вдвое больше здоровья, и бой с ним дольше: 2 минуты (с дуэтом — 2,5).</li><li>Здоровье переходит из волны в волну: после каждого врага восстанавливается 30%. Перед боссом — передышка и полное восстановление: исход решает только сила бойца.</li><li>Каждый 5-й босс — дуэт: двое по очереди.</li><li>Упал — забег окончен, но деньги и опыт за побеждённых врагов остаются. Можно отступить в любой момент.</li></ul>'+
   '<h4>⏭ Контрольная точка</h4><ul><li>На этапе, где ты уже доходил до босса (и на пройденных), забег начинается с 5-й волны. Волны 1–4 и их награды пропускаются. Переключатель — на вкладке «Этапы».</li></ul>'+
-  '<h4>🎁 Снаряжение</h4><ul><li>Перчатки (урон), бинты (крит), кроссовки (скорость атак), капа (защита и здоровье).</li><li>Падают с врагов волн (6%) и всегда с босса. Редкость: обычные, редкие, эпические, легендарные. Чем дальше этап, тем сильнее вещь.</li><li>Улучшай за деньги (до +9), лишнее продавай. Всё — на вкладке «Боец».</li></ul>'+
+  '<h4>🎁 Снаряжение</h4><ul><li>Перчатки (урон), бинты (крит), кроссовки (скорость атак), капа (защита и здоровье).</li><li>Падают с боссов (в 30% побед) и изредка с врагов волн (2%). Редкость с босса: обычные 70%, редкие 25%, эпические 4,5%, легендарные 0,5% — легендарные только с последних боссов лиги и в следующих кругах. Автофарм вещь не гарантирует. Чем дальше этап, тем сильнее вещь.</li><li>Улучшай за деньги (до +9), лишнее продавай. Всё — на вкладке «Боец».</li></ul>'+
   '<h4>🔥 Ярость</h4><ul><li>Кнопка в бою: 5 секунд урон +35% и атаки чаще. Перезарядка 30 секунд. В «Авто» срабатывает сама.</li></ul>'+
+  '<h4>🧰 Расходники</h4><ul><li>Покупаются в «Зале» → «Аптечка и запас», применяются в бою кнопками рядом с «Яростью» (одна вещь раз в 6 с): <b>аптечка</b> — +35% здоровья сразу, <b>бинт с мазью</b> — +25% за 10 с, <b>энергетик</b> — полная стамина и +30 адреналина.</li><li><b>Нашатырь</b> — упал в нокаут: можно встать с 40% здоровья (раз за забег). Дорогой, купить — не больше 3 в сутки.</li><li>Цена растёт с этапом. Шанс победы считается без расходников.</li></ul>'+
   '<h4>🥋 Стили боя</h4><ul><li>Пары приёмов в комбо дают постоянный бонус: Боксёр (джеб + хук), Нокаутёр (апперкот + тяжёлый), Уличный (хук + тяжёлый), Технарь (джеб + уклон), Стена (блок + апперкот), Контрпанчер (блок + уклон). Список — на вкладке «Приёмы».</li></ul>'+
-  '<h4>🏆 Сезоны</h4><ul><li>Победил Короля — можно начать новый сезон: этапы заново, соперники сильнее на 15%, награды +25%, вещи сильнее, а твой урон навсегда +5% за каждый сезон. Сезонов сколько угодно.</li></ul>'+
+  '<h4>🏆 Сезоны</h4><ul><li>Победил Короля — можно начать новый сезон: этапы заново, соперники сильнее на 15% и бьют больнее, у каждого босса особенность (бешеный, быстрый, живучий…; с 4-го сезона — две), вещи сильнее, а твой урон навсегда +5% за каждый сезон. Награды за этапы те же. Сезонов сколько угодно.</li></ul>'+
   '<h4>⭐ Усиления</h4><ul><li>После 3-й, 6-й и 9-й волны выбери одно усиление из трёх: урон, вампиризм, крит, броня, здоровье, деньги и другие.</li><li>Они действуют до конца забега, одинаковые складываются.</li></ul>'+
-  '<h4>💪 Сила и шанс</h4><ul><li>«Сила» — одно число по характеристикам. Сравни её с силой босса на вкладке «Этапы».</li><li>Шанс пройти этап считается по 80 пробным забегам с твоими характеристиками, комбинацией, снаряжением и стилями, а в ручном бою — ещё и с твоей точностью в окнах комбо.</li></ul>'+
+  '<h4>💪 Сила и шанс</h4><ul><li>«Сила» — одно число по характеристикам. Сравни её с силой босса на вкладке «Этапы».</li><li>Шанс пройти этап считается по 80 пробным забегам с твоими характеристиками, комбинацией, снаряжением и стилями, а в ручном бою — ещё и с твоей точностью в комбо-связках.</li></ul>'+
   '<h4>▶ Авто</h4><ul><li>Кнопка «Авто» в бою: после победы сам начнётся следующий этап, после поражения — повтор предыдущего (фарм). Усиления выберутся сами через 5 секунд.</li><li>Если на новый этап не хватает энергии, авто фармит последний пройденный — бесплатно. Остановить — кнопкой «Стоп».</li></ul>'+
   (ADS_ON?'<h4>📺 Реклама за награду</h4><ul><li><b>Второе дыхание</b>: упал — один раз за забег можно встать с 50% здоровья и полным адреналином и продолжить с той же волны.</li><li><b>×2 награда</b> — в итогах забега и за время отсутствия.</li></ul>':'')+
   '<h4>⚡ Автофарм</h4><ul><li>У пройденных боссов на вкладке «Этапы» — кнопка «Автофарм»: без боя сразу вся награда за этап — 10 волн и босс (деньги, опыт, вещи). Стоит '+AUTOFARM_COST+'⚡.</li></ul>'+
-  '<h4>💤 Пока тебя нет</h4><ul><li>Боец сам фармит лучший пройденный этап: 40 врагов в час, до 8 часов. Награду выдадут, когда вернёшься.</li></ul>'+
-  '<h4>🥊 Бой</h4><ul><li>Боец сам выбирает приёмы из твоей комбинации (до 3).</li><li>Шкала адреналина полна — боец сам проводит <b>СУПЕРУДАР</b>: неблокируемый удар.</li><li>Стамина тратится на удары. Кончилась — боец переводит дух.</li><li>На врага волны — 40 секунд, с каждой волной враги крепче. Не уложился — побеждает тот, у кого больше % здоровья.</li><li>Кнопка скорости ускоряет бой до x4.</li></ul>'+
+  '<h4>🥋 Школы боя</h4><ul><li><b>Громила</b> — уличный бокс: тяжёлые удары, «Размашистый» пробивает любой блок.</li><li><b>Техник</b> — классический бокс: «Двойка», «Контрудар», уклонения, частые точные удары.</li><li><b>Кикбоксёр</b> — кикбоксинг: лоу-кик (отнимает стамину), мидл-кик, колено, хай-кик.</li><li>У каждой школы свои приёмы на вкладке «Приёмы» и свои стили.</li></ul>'+
+  '<h4>💤 Пока тебя нет</h4><ul><li>Боец сам фармит лучший пройденный этап: награда за каждые полчаса, максимум за 2 часа. Деньги — как за врагов этапа, опыта немного (за 2 часа — как за первый этап). Забери, когда вернёшься.</li></ul>'+
+  '<h4>🥊 Бой</h4><ul><li>Боец сам выбирает приёмы из твоей комбинации (до 3).</li><li>Шкала адреналина полна — боец сам проводит <b>СУПЕРУДАР</b>: неблокируемый удар.</li><li><b>Комбо-связка:</b> раз в 12 с над кнопками приёмов появляются 3 значка — нажми эти приёмы по порядку (на каждое нажатие ~1,4 с). Успел — <b>комбо-удар</b>: сильный, не блокируется и не промахивается, +адреналин. Ошибся — связка сгорает, новая через 4 с. Фирменная связка школы (Громила: хук → джеб → апперкот; Техник: джеб → двойка → апперкот; Кикбоксёр: лоу-кик → колено → хай-кик) — если все три приёма в комбинации — бьёт ещё сильнее. Связки нет в «Авто» и на x4.</li><li>Стамина тратится на удары. Кончилась — боец переводит дух.</li><li>На врага волны — 40 секунд, с каждой волной враги крепче. Не уложился — побеждает тот, у кого больше % здоровья.</li><li>Кнопка скорости ускоряет бой до x4.</li></ul>'+
   '<h4>🏋 Зал</h4><ul><li>Тренировка идёт сама 3 секунды и даёт прогресс характеристики. Обычная — 20⚡; интенсивная — 35⚡ и ×2,2 прогресса, но усталость: −15% здоровья в следующем забеге.</li><li>Энергия тратится на новые этапы, тренировки и работу. Повтор пройденного этапа (фарм) — бесплатно. Энергия восстанавливается сама: +1 каждые 3 минуты, даже когда ты не в игре. Ещё её дают еда и сон — «Выспаться» раз в 8 часов.</li><li>Улучшай зал — тренировки станут эффективнее.</li></ul>'+
-  '<h4>📈 Прогресс</h4><ul><li>Опыт → уровни → 2 свободных очка характеристик за уровень.</li><li>Проиграл боссу — 25% опыта, а начиная с Бизона ещё и 10% его призовых.</li><li>Новые приёмы открываются с уровнем и покупаются за деньги.</li><li>Прогресс сохраняется автоматически.</li></ul>'+
+  '<h4>📈 Прогресс</h4><ul><li>Опыт → уровни → 2 свободных очка характеристик за уровень. Уровень без предела, но каждый следующий требует больше опыта. Повтор пройденного этапа даёт 35% опыта, автофарм — вдвое меньше.</li><li>Характеристика на максимуме (30) — очки идут в её ★ мастерство (до 50): +1% урона, скорости атак или здоровья за очко, у ловкости +0,4% к уходу от удара.</li><li>Проиграл боссу — 25% опыта, а начиная с Бизона ещё и 10% его призовых.</li><li>Новые приёмы открываются с уровнем и покупаются за деньги.</li><li>Прогресс сохраняется автоматически.</li></ul>'+
   '<h4>Приёмы</h4><ul><li><b>Блок</b> гасит быстрые удары, но апперкот и тяжёлый его пробивают.</li><li><b>Уклон</b> — шанс полностью избежать удара и контратаковать.</li></ul></div>'+
   '<button class="btn grn" data-act="closemodal">Понятно</button>';
 }
@@ -2282,7 +2570,7 @@ const ACT={
   offtake(){ claimOffline(1); },
   offx2(){ if(OFF) watchAd(()=>claimOffline(2)); },
   newgame(){
-    if(S.started) openModal('<div class="title" style="color:var(--red)">НОВАЯ КАРЬЕРА?</div><p style="text-align:center">Текущий прогресс будет удалён.</p><div class="row"><button class="btn" data-act="closemodal">Нет</button><button class="btn red" data-act="confirmnew">Да</button></div>');
+    if(S.started) openModal('<div class="title" style="color:var(--red)">НОВАЯ КАРЬЕРА?</div><p style="text-align:center">Прогресс выбранного бойца начнётся с нуля. Другие бойцы сохранят свой прогресс.</p><div class="row"><button class="btn" data-act="closemodal">Нет</button><button class="btn red" data-act="confirmnew">Да</button></div>');
     else ACT.confirmnew();
   },
   confirmnew(){ // перед стартом новой карьеры — выбор бойца и имени
@@ -2295,36 +2583,46 @@ const ACT={
       '<div class="row"><button class="btn" data-act="closemodal">Отмена</button><button class="btn grn" data-act="startcareer">Начать</button></div>');
   },
   pickhero(el){ NEW_HERO=+el.dataset.v; document.querySelectorAll('[data-act="pickhero"]').forEach(b=>b.classList.toggle('on',+b.dataset.v===NEW_HERO)); },
-  sethero(el){ const id=+el.dataset.v; if(id===S.hero) return; S.hero=id; save(); sfx('lvl'); toast('Твой боец: '+heroOf(id).n); renderHub(); },
+  herolist(){ // список бойцов с их прогрессом; другой боец — свой прогресс или карьера с нуля
+    openModal('<div class="title" style="color:var(--yel)">БОЙЦЫ</div><p style="text-align:center">Каждого бойца качаешь отдельно. Новый боец начинает с нуля — без уровня и вещей.</p>'+
+      '<div class="picks">'+HEROES.map(h=>{ const D=typeof HERO_DATA!=='undefined'?HERO_DATA[h.key]:null, p=heroProfile(h.id), cur=h.id===S.hero;
+        return '<button class="pick'+(cur?' on':'')+'" data-act="sethero" data-v="'+h.id+'">'+(D?'<img src="'+D.portrait+'" alt="" style="width:'+D.pw+'px;height:'+D.ph+'px">':'')+
+          '<b>'+h.id+'. '+h.n+'</b><small>'+(cur?'играешь сейчас':p?'ур. '+p.lvl+' · этапы '+p.beaten+'/'+OPP.length:'с нуля')+'</small></button>'; }).join('')+'</div>'+
+      '<div class="gap"></div><button class="btn" data-act="closemodal">Закрыть</button>'); },
+  sethero(el){ const id=+el.dataset.v; if(id===S.hero) return closeModal(); const p=heroProfile(id);
+    openModal('<div class="title" style="color:var(--yel)">'+heroOf(id).n.toUpperCase()+'</div><p style="text-align:center">'+(p?'Продолжить за этого бойца: ур. '+p.lvl+', этапы '+p.beaten+'/'+OPP.length+'.':'Этим бойцом ты ещё не играл — карьера начнётся с нуля: 1-й уровень, без вещей и денег.')+
+      ' Прогресс бойца «'+heroOf(S.hero).n+'» сохранится — к нему можно вернуться.</p><div class="row"><button class="btn" data-act="herolist">Назад</button><button class="btn grn" data-act="doswitch" data-v="'+id+'">'+(p?'Играть':'Начать с нуля')+'</button></div>'); },
+  doswitch(el){ switchHero(+el.dataset.v); },
   rollname(){ const inp=$('#nameIn'); if(!inp) return; let n=nextRandomName(); if(n===inp.value.trim()) n=nextRandomName(); inp.value=n; $('#nameErr').textContent=''; },
   startcareer(){
     const inp=$('#nameIn'), name=cleanName(inp?inp.value:'');
     if(!name){ $('#nameErr').textContent='Только русские буквы, цифры, пробел, точка или дефис (до '+NAME_MAX+' знаков).'; return; }
-    const snd=S.sound; S=DEF_SAVE(); S.sound=snd; S.started=true; S.name=name; S.hero=NEW_HERO; save(); closeModal(); tab='fighter'; showScreen('hub'); setTimeout(()=>openModal(helpHTML()),50);
+    const snd=S.sound; S=DEF_SAVE(); S.sound=snd; S.started=true; S.name=name; S.hero=NEW_HERO; S=sanitize(Object.assign({},S,{owned:[],load:[]})); save(); closeModal(); tab='fighter'; showScreen('hub'); setTimeout(()=>openModal(helpHTML()),50); // стартовые приёмы своей школы
   },
   help(){ openModal(helpHTML()); },
   sound(){ S.sound=!S.sound; save(); $('#btnSound').textContent='Звук: '+(S.sound?'вкл':'выкл'); },
   closemodal(){ closeModal(); },
   tab(el){ tab=el.dataset.v; $('#tabBody').scrollTop=0; renderHub(); },
-  addpt(el){ const k=el.dataset.v; if(S.pts<=0||S.st[k]>=MAX_STAT) return; S.pts--; S.st[k]++; save(); renderHub(); },
+  addpt(el){ const k=el.dataset.v; if(S.pts<=0) return; if(S.st[k]<MAX_STAT) S.st[k]++; else if(mastOf(k)<MAST_MAX) S.mast[k]=mastOf(k)+1; else return; S.pts--; save(); renderHub(); }, // на максимуме — в мастерство
   train(el){ openTrain(el.dataset.v); },
   trclose(){ closeTrain(); },
   sleep(){
     const left=sleepLeft(); if(left) return toast('Пока не спится. Выспаться снова можно через '+fmtClock(left));
     if(S.energy>=S.maxEnergy) return toast('Энергия и так полная');
-    S.sleeps++; S.day++; S.energy=S.maxEnergy; S.enAt=S.sleptAt=Date.now(); save(); toast('День '+S.day+'. Ты отлично выспался!'); renderHub(); // бесплатно, но раз в 8 часов
+    S.sleeps++; S.day++; S.energy=S.maxEnergy; S.enAt=S.sleptAt=Date.now(); S.meals=0; S.mealT=0; save(); toast('День '+S.day+'. Ты отлично выспался!'); renderHub(); // бесплатно, но раз в 8 часов; после сна снова можно поесть
   },
   adclaim(){ if(AD&&AD.left<=0) AD.reward(); },
   adcancel(){ if(AD) AD.cancel(); },
-  eat(el){ const f=FOOD.find(x=>x.id===el.dataset.v); if(!f) return;
+  eat(el){ const f=FOOD.find(x=>x.id===el.dataset.v); if(!f) return; mealsReset();
+    if(S.meals>=MEALS_MAX) return toast('Больше не лезет! Снова поесть — после сна или через '+fmtClock(S.mealT+SLEEP_CD-Date.now()));
     if(S.money<f.cost) return toast('Не хватает денег');
     if(S.energy>=S.maxEnergy) return toast('Энергия и так полная');
-    S.money-=f.cost; S.energy=Math.min(S.maxEnergy,S.energy+f.en); save(); sfx('coin'); toast(f.n+': +'+f.en+' энергии'); renderHub(); },
+    if(!S.meals) S.mealT=Date.now(); S.meals++; S.money-=f.cost; S.energy=Math.min(S.maxEnergy,S.energy+f.en); save(); sfx('coin'); toast(f.n+': +'+f.en+' энергии · поесть ещё: '+(MEALS_MAX-S.meals)); renderHub(); },
   work(){ if(S.energy<30) return toast('Слишком устал для работы'); const pay=workPay(); spendEnergy(30); S.money+=pay; addXp(1); save(); sfx('coin'); toast('Разгрузил фуру: +$'+pay); renderHub(); },
   upgym(){ if(S.gym>=GYM.length) return; const c=GYM[S.gym].cost; if(S.money<c) return toast('Не хватает денег'); S.money-=c; S.gym++; save(); sfx('lvl'); toast('Теперь ты тренируешься в: '+GYM[S.gym-1].n); renderHub(); },
-  buy(el){ const id=el.dataset.v, m=MOVES[id]; if(!m||S.owned.includes(id)) return;
-    if(S.lvl<m.lvl) return toast('Нужен уровень '+m.lvl); if(S.money<m.cost) return toast('Не хватает денег');
-    S.money-=m.cost; S.owned.push(id); S.owned=MOVE_ORDER.filter(x=>S.owned.includes(x)); if(S.load.length<3) S.load.push(id);
+  buy(el){ const id=el.dataset.v, m=MOVES[id]; if(!m||S.owned.includes(id)||!schoolMoves(S.hero).includes(id)) return; // только приёмы своей школы
+    if(S.lvl<mvLvl(id)) return toast('Нужен уровень '+mvLvl(id)); if(S.money<mvCost(id)) return toast('Не хватает денег');
+    S.money-=mvCost(id); S.owned.push(id); S.owned=schoolMoves(S.hero).filter(x=>S.owned.includes(x)); if(S.load.length<3) S.load.push(id);
     save(); sfx('lvl'); toast('Выучен приём: '+m.n); renderHub(); },
   toggle(el){ const id=el.dataset.v; if(!S.owned.includes(id)) return;
     if(S.load.includes(id)){ const rest=S.load.filter(x=>x!==id); if(!rest.some(x=>MOVES[x].type==='atk')) return toast('В комбо нужен хотя бы один удар!'); S.load=rest; }
@@ -2334,10 +2632,16 @@ const ACT={
   autofarm(el){ autoFarm(+el.dataset.v); },
   farmagain(el){ closeModal(); autoFarm(+el.dataset.v); },
   rage(){ useRage(); },
+  cons(el){ useCons(el.dataset.v); },
+  nash(){ if(!F||F.state!=='revive'||!(S.cons.nash>0)) return; S.cons.nash--; F.consUsed++; save(); revive(.4,true); },
+  buycons(el){ const k=el.dataset.v, c=CONS[k]; if(!c) return; nashReset(); const pr=consPrice(k);
+    if((S.cons[k]||0)>=c.max) return toast('Больше не унести: '+c.max+' шт.'); if(k==='nash'&&S.nashN>=NASH_DAY) return toast('Нашатырь — не больше '+NASH_DAY+' в сутки');
+    if(S.money<pr) return toast('Не хватает денег'); S.money-=pr; S.cons[k]=(S.cons[k]||0)+1; if(k==='nash'){ if(!S.nashN) S.nashT=Date.now(); S.nashN++; }
+    save(); sfx('coin'); toast(c.n+': теперь '+S.cons[k]+' шт.'); renderHub(); },
   trmode(el){ S.trMode=el.dataset.v==='hard'?'hard':'normal'; save(); renderHub(); },
   season(){ if(!S.champ) return; const n=(S.season||0)+1;
-    openModal('<div class="title" style="color:var(--yel)">СЕЗОН '+(n+1)+'?</div><p style="text-align:center">Этапы начнутся заново с первого. Соперники сильнее на '+Math.round(n*15)+'%, награды больше на '+Math.round(n*25)+'%, вещи с врагов — сильнее.<br><br>Остаются: уровень, характеристики, приёмы, снаряжение, деньги.<br>Навсегда: <b style="color:var(--grn)">+'+(n*5)+'% урона</b> бойца.</p><div class="row"><button class="btn" data-act="closemodal">Не сейчас</button><button class="btn yel" data-act="doseason">Начать сезон</button></div>'); },
-  doseason(){ if(!S.champ) return closeModal(); S.season=(S.season||0)+1; S.beaten=0; S.best=0; S.champ=false; save(); closeModal(); sfx('lvl'); toast('Сезон '+(S.season+1)+' начался! Соперники сильнее, награды больше.'); tab='league'; renderHub(); },
+    openModal('<div class="title" style="color:var(--yel)">СЕЗОН '+(n+1)+'?</div><p style="text-align:center">Этапы начнутся заново с первого. Соперники сильнее на '+Math.round(n*15)+'% и бьют больнее, у боссов появятся особенности, вещи с врагов — сильнее. Награды за этапы — те же.<br><br>Остаются: уровень, характеристики, приёмы, снаряжение, деньги.<br>Навсегда: <b style="color:var(--grn)">+'+(n*5)+'% урона</b> бойца.</p><div class="row"><button class="btn" data-act="closemodal">Не сейчас</button><button class="btn yel" data-act="doseason">Начать сезон</button></div>'); },
+  doseason(){ if(!S.champ) return closeModal(); S.season=(S.season||0)+1; S.beaten=0; S.best=0; S.champ=false; save(); closeModal(); sfx('lvl'); toast('Сезон '+(S.season+1)+' начался! Соперники сильнее, у боссов особенности.'); tab='league'; renderHub(); },
   cp(){ S.cp=!S.cp; save(); renderHub(); toast(S.cp?'Старт с '+CP_WAVE+'-й волны, где уже доходил до босса':'Всегда с 1-й волны'); },
   gup(el){ const it=S.gear[el.dataset.v]; if(!it||it.l>=GEAR_MAX_LVL) return; const c=gearUpCost(it); if(S.money<c) return toast('Не хватает денег'); S.money-=c; it.l++; save(); sfx('lvl'); toast(gearName(it)+': '+gearTxt(it)); renderHub(); },
   gequip(el){ const j=+el.dataset.v, it=S.bag[j]; if(!it) return; const cur=S.gear[it.s]; S.bag.splice(j,1); if(cur) S.bag.push(cur); S.gear[it.s]=it; save(); sfx('ui'); renderHub(); },
@@ -2452,10 +2756,14 @@ function tgHaptic(n){
 // сохранение в облаке Telegram: прогресс переносится между телефонами и не теряется при очистке кэша
 function tgCloudSave(json){
   if(!TGA.cloud||json.length>4096) return;
-  clearTimeout(TGA.timer); TGA.timer=setTimeout(()=>{ try{ TGA.app.CloudStorage.setItem('save',json); }catch(e){} },1500);
+  const hk='save_h'+S.hero; // копия прогресса этого бойца — у каждого бойца своя
+  clearTimeout(TGA.timer); TGA.timer=setTimeout(()=>{ try{ TGA.app.CloudStorage.setItem('save',json); TGA.app.CloudStorage.setItem(hk,json); }catch(e){} },1500);
 }
 function tgCloudLoad(){
   if(!TGA.cloud) return;
+  try{ TGA.app.CloudStorage.getItems(HEROES.map(h=>'save_h'+h.id),(err,vals)=>{ if(err||!vals) return; // прогресс других бойцов — если в облаке новее
+    for(const h of HEROES){ const v=vals['save_h'+h.id]; if(!v) continue; try{ const d=JSON.parse(v), loc=JSON.parse(localStorage.getItem(heroKey(h.id))||'{}');
+      if((+d.ts||0)>(+loc.ts||0)&&!(S.started&&S.hero===h.id)) localStorage.setItem(heroKey(h.id),v); }catch(e){} } }); }catch(e){}
   try{ TGA.app.CloudStorage.getItem('save',(err,val)=>{
     if(err||!val) return;
     let d; try{ d=JSON.parse(val); }catch(e){ return; }
@@ -2481,7 +2789,7 @@ function tgBack(){
 
 /* ---------- ДИАГНОСТИКА: ошибки на телефоне видны прямо в игре ----------
    Нажатие на номер сборки на заставке показывает сведения об устройстве; нажатие на панель — скрывает её. */
-const BUILD='65 · 2026-10-26'; // номер сборки — видно на заставке, свежая версия или старая из кэша Telegram
+const BUILD='76 · 2026-10-27'; // номер сборки — видно на заставке, свежая версия или старая из кэша Telegram
 let FRAMES=0, PRESENT_MODE='чёткий';
 /* Сторож: раз в секунду, независимо от кадров. Если игра открыта, а кадры не идут — или бой стоит без открытых окон, —
    показываем панель ошибок с подробностями (по ней видно причину, например на ПК). */
