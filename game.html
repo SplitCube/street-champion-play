@@ -75,6 +75,16 @@ button.chip{font:inherit;font-weight:bold;cursor:pointer;position:relative;min-h
 .nav button:last-child{border-right:none}
 .nav button.on{color:var(--yel);background:#1f1640;box-shadow:inset 0 3px 0 var(--yel)}
 .nav .ic{font-size:18px;line-height:1}
+.nav button{position:relative}
+.nav .dot{position:absolute;top:5px;left:calc(50% + 8px);width:10px;height:10px;background:var(--red);border:2px solid #000;display:none}
+.nav button.has .dot{display:block}
+#fightbar{padding:6px 10px;background:#120d24;border-top:3px solid #000}
+#fightbar:empty{display:none}
+.fbtn{width:100%;display:flex;align-items:center;justify-content:space-between;gap:8px;background:var(--red);color:#fff;border:3px solid #000;box-shadow:inset 0 -3px 0 rgba(0,0,0,.35),3px 3px 0 #000;padding:8px 10px;font:inherit;font-weight:bold;font-size:16px;text-transform:uppercase;text-align:left;cursor:pointer}
+.fbtn .fst{display:block;font-size:11px;font-weight:normal;text-transform:none;opacity:.92;margin-top:2px}
+.fbtn .pct{flex:none;font-size:20px;background:#000;padding:3px 8px;border:2px solid currentColor}
+.ibtn{display:inline-grid;place-items:center;width:20px;height:20px;margin-left:6px;vertical-align:middle;background:#000;color:var(--cyan);border:2px solid var(--cyan);font-weight:bold;font-size:12px;line-height:1;padding:0;cursor:pointer;text-transform:none;letter-spacing:0}
+.chance{font-size:16px}
 /* hub */
 .hero{display:flex;gap:10px;align-items:center}
 .hero canvas{width:96px;height:96px;background:#0a0716;border:3px solid #000;box-shadow:inset 0 0 0 2px var(--line);flex:none}
@@ -269,7 +279,7 @@ div.power:not(.ostat){font-size:13px;margin-top:4px}
 #build{color:#6c5ea0;cursor:pointer}
 #toast{position:absolute;left:50%;top:calc(70px + var(--sat));transform:translateX(-50%);background:#000;border:3px solid var(--yel);color:var(--yel);padding:8px 12px;font-size:13px;font-weight:bold;z-index:40;display:none;max-width:90%;text-align:center;box-shadow:4px 4px 0 #000}
 #toast.on{display:block;animation:pop .2s steps(3)}
-#tip{position:absolute;left:10px;right:10px;bottom:calc(78px + var(--sab));z-index:30;background:#0b0818;border:3px solid #000;box-shadow:inset 0 0 0 2px var(--cyan),4px 4px 0 #000;padding:10px 12px;display:none;font-size:13px;line-height:1.45}
+#tip{position:absolute;left:10px;right:10px;bottom:calc(150px + var(--sab));z-index:30;background:#0b0818;border:3px solid #000;box-shadow:inset 0 0 0 2px var(--cyan),4px 4px 0 #000;padding:10px 12px;display:none;font-size:13px;line-height:1.45}
 #tip.on{display:block;animation:pop .2s steps(3)}
 #tip.top{bottom:auto;top:calc(64px + var(--sat))}
 #tip b{display:block;color:var(--cyan);margin-bottom:4px}
@@ -299,11 +309,12 @@ div.power:not(.ostat){font-size:13px;margin-top:4px}
   <div id="scr-hub" class="screen">
     <div class="top" id="topbar"></div>
     <div class="scroll" id="tabBody"></div>
+    <div id="fightbar"></div>
     <nav class="nav" id="nav">
-      <button data-act="tab" data-v="fighter"><span class="ic">🥊</span>Боец</button>
-      <button data-act="tab" data-v="gym"><span class="ic">🏋</span>Зал</button>
-      <button data-act="tab" data-v="moves"><span class="ic">👊</span>Приёмы</button>
-      <button data-act="tab" data-v="league"><span class="ic">🏆</span>Этапы</button>
+      <button data-act="tab" data-v="fighter"><span class="ic">🥊</span>Боец<i class="dot"></i></button>
+      <button data-act="tab" data-v="gym"><span class="ic">🏋</span>Зал<i class="dot"></i></button>
+      <button data-act="tab" data-v="moves"><span class="ic">👊</span>Приёмы<i class="dot"></i></button>
+      <button data-act="tab" data-v="league"><span class="ic">🏆</span>Этапы<i class="dot"></i></button>
     </nav>
   </div>
 
@@ -2083,7 +2094,7 @@ const STYLES=[
 const activeStyles=load=>STYLES.filter(s=>s.req.every(m=>load.includes(m)));
 const styleMul=load=>activeStyles(load).reduce((a,s)=>a*s.pm,1);
 function stylesHTML(){
-  return '<div class="card"><div class="h2">Стили боя</div><div class="dim" style="margin-bottom:6px">Собери пару приёмов в комбо — получишь постоянный бонус.</div>'+
+  return '<div class="card"><div class="h2">Стили боя'+ib('styles')+'</div>'+
     STYLES.filter(s=>s.req.every(m=>schoolMoves(S.hero).includes(m))).map(s=>{ const on=s.req.every(m=>S.load.includes(m)); // только стили своей школы
       return '<div class="style'+(on?' on':'')+'"><b>'+s.ic+' '+s.n+'</b> <span class="dim">'+s.req.map(m=>MOVES[m].n).join(' + ')+'</span><br><small>'+s.d+(on?' · <span style="color:var(--grn)">активен</span>':'')+'</small></div>'; }).join('')+'</div>';
 }
@@ -2096,7 +2107,7 @@ const scaleSt=st=>{ const k=seasonSt(), r={}; for(const s in st) r[s]=Math.round
 const TRAIN_COST_HARD=35, TRAIN_HARD_K=2.2, TIRED_HP=.85;
 const trainCost=()=>S.trMode==='hard'?TRAIN_COST_HARD:TRAIN_COST;
 function gearHTML(){
-  let h='<div class="card"><div class="h2">Снаряжение</div><div class="dim" style="margin-bottom:6px">Падает с боссов (в 30% побед) и изредка с врагов волн (2%). Легендарные — только с последних боссов лиги и в следующих кругах. Чем дальше этап, тем сильнее вещь. Вещи изнашиваются (−'+WEAR_RUN+'% прочности за забег, при 0% — половина силы): чини. ✦ — перековка: попытка поднять редкость.</div>';
+  let h='<div class="card"><div class="h2">Снаряжение'+ib('gear')+'</div>';
   const rc=repairAll(); if(rc) h+='<button class="btn sm yel" data-act="repair" style="margin-bottom:6px" '+(S.money>=rc?'':'disabled')+'>🔧 Починить всё за $'+rc+'</button>';
   for(const k of SLOT_IDS){ const it=S.gear[k], w=it?(it.w==null?100:it.w):100;
     h+='<div class="gear">'+'<span class="gic">'+SLOTS[k].ic+'</span><div class="gtx">'+(it?'<b style="color:'+gearCol(it)+'">'+gearName(it)+'</b><small>'+gearTxt(it)+' · класс '+it.t+' · <span style="color:'+(w<50?'var(--org)':'inherit')+'">прочность '+w+'%</span></small>':'<span class="dim">'+SLOTS[k].n[0].toUpperCase()+SLOTS[k].n.slice(1)+' — пусто</span>')+'</div>'+
@@ -2754,10 +2765,36 @@ function chanceOf(i){
 function chanceHTML(i){
   const r=chanceOf(i); if(!r) return '<span class="dim">шанс считается…</span>';
   const w=Math.round(r.winRate*100), c=w>=70?'var(--grn)':w>=35?'var(--yel)':'var(--red)';
-  const cr=comboRate(), g=gearBonus(), hasGear=SLOT_IDS.some(k=>S.gear[k]);
-  return 'шанс пройти <b style="color:'+c+'">~'+w+'%</b> · дойти до босса ~'+Math.round(r.bossRate*100)+'%'+
-    '<br><span class="dim">учтено: '+(hasGear?'снаряжение (урон +'+Math.round(g.dm*100)+'%, здоровье +'+Math.round(g.hp*100)+'%…), ':'')+'стили, '+(cr?'комбо-связки — твоя точность '+Math.round(cr*100)+'%':'без комбо (авто)')+'</span>';
+  return 'шанс пройти <b class="chance" style="color:'+c+'">~'+w+'%</b> · до босса ~'+Math.round(r.bossRate*100)+'%'+ib('chance');
 }
+// кнопка «i»: пояснение открывается по нажатию, на экране — только иконки, названия, числа и кнопки
+const ib=k=>'<button class="ibtn" data-act="info" data-v="'+k+'" aria-label="Пояснение">i</button>';
+const INFO={
+  chance:()=>{ const cr=comboRate(), g=gearBonus(), hasGear=SLOT_IDS.some(k=>S.gear[k]);
+    return 'Шанс считается по 80 пробным забегам с твоими характеристиками и комбинацией.<br>Учтено: '+(hasGear?'снаряжение (урон +'+Math.round(g.dm*100)+'%, здоровье +'+Math.round(g.hp*100)+'%…), ':'')+'стили, '+(cr?'комбо-связки — твоя точность '+Math.round(cr*100)+'%.':'без комбо (авто).')+' Расходники не учитываются.'; },
+  stats:'Каждый уровень — '+PTS_LVL+' очка: «+» у характеристики или в дерево навыков. Полоска под характеристикой — прогресс тренировок в «Зале». На максимуме ('+MAX_STAT+') очки идут в ★ мастерство.',
+  hero:'Уровень, характеристики, деньги, снаряжение, лига и зал — общие для всех бойцов. У каждого бойца свои приёмы и своё дерево навыков из 3 школ.',
+  gear:()=>'Падает с боссов (в 30% побед) и изредка с врагов волн (2%). Легендарные — только с последних боссов лиги и в следующих кругах. Чем дальше этап, тем сильнее вещь.<br>Вещи изнашиваются: −'+WEAR_RUN+'% прочности за забег, при 0% — половина силы, чини. ✦ — перековка: попытка поднять редкость.',
+  train:()=>'Тренировка поднимает характеристику и тратит ⚡.<br>Обычная — без усталости. Интенсивная — прогресс ×'+String(TRAIN_HARD_K).replace('.',',')+', но усталость: −15% здоровья в следующем забеге.',
+  rest:()=>'⚡ Энергия восстанавливается сама: +1 каждые 3 минуты, даже когда ты не в игре.<br>Сон — энергия на максимум, раз в 8 часов. Поесть можно '+MEALS_MAX+' раза между снами (или за 8 часов).',
+  cons:()=>'Для боя: кнопки рядом с «Яростью», одна вещь раз в '+CONS_CD/1000+' с. Нашатырь поднимает после нокаута (раз за забег), купить — не больше '+NASH_DAY+' в сутки. Цена растёт с этапом.',
+  combo:'В бою боец сам выбирает приёмы из комбинации (до 3). Нужен хотя бы один атакующий.',
+  styles:'Собери пару приёмов в комбо — получишь постоянный бонус стиля.',
+  tree:'Очки развития общие с характеристиками. У бойца 3 школы — баффы, дебаффы и новые приёмы; следующая школа откроется после '+SCH_OPEN+' очков в предыдущей.',
+  league:()=>'Этап — '+WAVES+' волн по одному врагу, затем босс. Боец дерётся сам, здоровье между волнами восстанавливается лишь частично. За каждого врага — деньги и опыт сразу.<br>Новый этап — '+FIGHT_COST+'⚡, повтор пройденного (фарм) — бесплатно. Автофарм — награда за весь этап без боя за '+AUTOFARM_COST+'⚡.'};
+// панель «В бой» над нижней навигацией — на всех вкладках
+function fightBarHTML(){
+  const i=S.beaten;
+  if(i>=OPP.length) return S.champ?'<button class="fbtn" data-act="tab" data-v="league" style="background:var(--yel);color:#000">🏆 Новый сезон →</button>':'';
+  const r=chanceOf(i), w=r?Math.round(r.winRate*100):null, c=w==null?'#fff':w>=70?'var(--grn)':w>=35?'var(--yel)':'#ff5a5a';
+  return '<button class="fbtn" data-act="fight" data-v="'+i+'"><span>⚔ В бой<span class="fst">Этап '+(i+1)+' · '+OPP[i].name+' · '+FIGHT_COST+'⚡</span></span><span class="pct" style="color:'+c+'">'+(w==null?'…':w+'%')+'</span></button>';
+}
+// красные точки на вкладках: есть что сделать
+function navBadges(){ const nx=S.beaten<OPP.length, cl=CHANCE_LAST[S.beaten];
+  return {fighter:S.pts>0,
+    gym:!sleepLeft()&&S.energy<S.maxEnergy/2,
+    moves:schoolMoves(S.hero).some(id=>!S.owned.includes(id)&&S.lvl>=mvLvl(id)&&S.money>=mvCost(id)),
+    league:S.champ||(nx&&S.energy>=FIGHT_COST&&!!cl&&cl.winRate>=.5)}; }
 function tabFighter(){
   const s=S.st, next=S.beaten<OPP.length?OPP[S.beaten]:null;
   return '<div class="card hero"><canvas id="portrait" width="96" height="96"></canvas><div><canvas id="heroName" class="heroname" width="10" height="10"></canvas><div class="h">'+RANKS[Math.round(S.beaten/OPP.length*(RANKS.length-1))]+(S.season?' · сезон '+(S.season+1):'')+'</div>'+(S.tired?'<div class="dim" style="color:var(--org)">😮‍💨 Устал: −15% здоровья в следующем забеге</div>':'')+
@@ -2766,27 +2803,26 @@ function tabFighter(){
     '<div class="power">💪 Сила <b>'+myPower()+'</b>'+(next?' · босс <b>'+bossPower(S.beaten)+'</b>':'')+'</div>'+
     (next?'<div class="dim" style="font-size:11px">'+chanceHTML(S.beaten)+'</div>':'')+'</div></div>'+
     '<div class="note" style="'+(S.pts?'':'opacity:.55')+'">'+(S.pts?'Свободные очки развития: '+S.pts+' — жми «+» у характеристики или вкладывай в дерево навыков (вкладка «Приёмы»)':'Очков нет — +'+PTS_LVL+' за новый уровень (в характеристики или дерево навыков)')+'</div>' /* строка есть всегда — при последнем очке экран не дёргается */+
-    '<div class="card"><div class="h2">Характеристики</div>'+Object.keys(STATS).map(statRow).join('')+'<div class="dim" style="margin-top:6px">Полоска под характеристикой — прогресс тренировок.</div>'+(allocSum()?'<button class="btn sm" data-act="resetstats" style="margin-top:8px" '+(S.money>=statResetCost()?'':'disabled')+'>↺ Сбросить очки характеристик — $'+statResetCost()+'</button>':'')+'</div>'+
-    '<div class="card"><div class="h2">Твой боец: '+heroOf(S.hero).n+'</div><div class="dim">Уровень, характеристики, деньги, снаряжение, лига и зал — общие для всех бойцов. У каждого бойца свои приёмы и своё дерево навыков из 3 школ.</div><div class="gap"></div><button class="btn" data-act="herolist">👥 Сменить бойца</button><div class="gap"></div><button class="btn yel" data-act="hof">🏛 Зал славы</button></div>'+gearHTML()+'<div class="card"><div class="h2">В бою</div><div class="grid2">'+
+    '<div class="card"><div class="h2">Характеристики'+ib('stats')+'</div>'+Object.keys(STATS).map(statRow).join('')+(allocSum()?'<button class="btn sm" data-act="resetstats" style="margin-top:8px" '+(S.money>=statResetCost()?'':'disabled')+'>↺ Сбросить очки характеристик — $'+statResetCost()+'</button>':'')+'</div>'+
+    '<div class="card"><div class="h2">Твой боец: '+heroOf(S.hero).n+ib('hero')+'</div><button class="btn" data-act="herolist">👥 Сменить бойца</button><div class="gap"></div><button class="btn yel" data-act="hof">🏛 Зал славы</button></div>'+gearHTML()+'<div class="card"><div class="h2">В бою</div><div class="grid2">'+
     '<div class="kv"><span>Здоровье</span><b>'+maxHpOf(s)+'</b></div><div class="kv"><span>Стамина</span><b>'+maxStaOf(s)+'</b></div>'+
     '<div class="kv"><span>Атака раз в</span><b>'+(intervalOf(s)/1000).toFixed(2)+' c</b></div><div class="kv"><span>Множ. урона</span><b>x'+(1+s.str*.13).toFixed(2)+'</b></div>'+
     '<div class="kv"><span>Уклонение</span><b>'+Math.round(dodgeOf(s)*100)+'%</b></div><div class="kv"><span>Крит</span><b>'+Math.round(critOf(s)*100)+'%</b></div>'+
     '</div></div><button class="btn red" data-act="tab" data-v="league">'+(next?'К этапам →':'Этапы →')+'</button>';
 }
 function tabGym(){
-  let h='<div class="h2">Тренировки · x'+trainMult().toFixed(2)+'</div><div class="frow" style="margin-bottom:8px"><button class="btn sm'+(S.trMode==='hard'?'':' grn')+'" data-act="trmode" data-v="normal">Обычная −'+TRAIN_COST+'⚡</button><button class="btn sm'+(S.trMode==='hard'?' red':'')+'" data-act="trmode" data-v="hard">Интенсивная −'+TRAIN_COST_HARD+'⚡</button></div>'+
-    '<div class="dim" style="margin-bottom:8px">'+(S.trMode==='hard'?'Интенсивная: прогресс ×'+String(TRAIN_HARD_K).replace('.',',')+', но усталость — −15% здоровья в следующем забеге.':'Обычная: без усталости.')+(S.tired?' <b style="color:var(--org)">Сейчас ты устал.</b>':'')+'</div>';
+  let h='<div class="h2">Тренировки · x'+trainMult().toFixed(2)+ib('train')+'</div><div class="frow" style="margin-bottom:8px"><button class="btn sm'+(S.trMode==='hard'?'':' grn')+'" data-act="trmode" data-v="normal">Обычная −'+TRAIN_COST+'⚡</button><button class="btn sm'+(S.trMode==='hard'?' red':'')+'" data-act="trmode" data-v="hard">Интенсивная −'+TRAIN_COST_HARD+'⚡</button></div>'+
+    (S.tired?'<div class="dim" style="margin-bottom:8px;color:var(--org)">😮‍💨 Сейчас ты устал: −15% здоровья в следующем забеге.</div>':'');
   for(const k in STATS){ const v=S.st[k], max=v>=MAX_STAT;
     h+='<button class="tcard" data-act="train" data-v="'+k+'" '+(max?'disabled':'')+'><div class="ico">'+STATS[k].ic+'</div><div class="tx"><div class="nm">'+STATS[k].tr+'</div><div class="dim">'+STATS[k].n+': '+v+(max?' (макс)':' · '+S.prog[k]+'/'+needProg(v))+'</div><div class="bar"><i style="background:var(--cyan);width:'+(max?100:S.prog[k]/needProg(v)*100)+'%"></i></div></div><div class="cost">-'+trainCost()+'⚡</div></button>';
   }
-  h+='<div class="h2" style="margin-top:14px">Отдых и еда</div>';
+  h+='<div class="h2" style="margin-top:14px">Отдых и еда'+ib('rest')+'</div>';
   h+='<button class="tcard" data-act="sleep"><div class="ico">🛏</div><div class="tx"><div class="nm">Выспаться</div><div class="dim">Новый день, энергия на максимум. Раз в 8 часов<br><b id="sleepT" style="color:var(--yel)"></b></div></div><div class="cost">+⚡MAX</div></button>';
-  h+='<div class="dim" style="margin:-2px 0 8px">⚡ Энергия восстанавливается сама: +1 каждые 3 минуты, даже когда ты не в игре.</div>';
-  mealsReset(); h+='<div class="dim" style="margin:-2px 0 8px">🍽 Поесть можно '+MEALS_MAX+' раза между снами (или за 8 часов). Осталось: <b style="color:var(--yel)">'+(MEALS_MAX-S.meals)+'</b></div>';
+  mealsReset(); h+='<div class="dim" style="margin:-2px 0 8px">🍽 Еда до сна: <b style="color:var(--yel)">'+(MEALS_MAX-S.meals)+'/'+MEALS_MAX+'</b></div>';
   for(const f of FOOD) h+='<button class="tcard" data-act="eat" data-v="'+f.id+'" '+(S.meals>=MEALS_MAX?'disabled':'')+'><div class="ico">'+f.ic+'</div><div class="tx"><div class="nm">'+f.n+'</div><div class="dim">+'+f.en+' энергии</div></div><div class="cost" style="color:var(--grn)">$'+f.cost+'</div></button>';
   const pay=workPay();
   h+='<button class="tcard" data-act="work"><div class="ico">📦</div><div class="tx"><div class="nm">Подработка грузчиком</div><div class="dim">Тратит 30 энергии, платит наличкой</div></div><div class="cost" style="color:var(--grn)">+$'+pay+'</div></button>';
-  nashReset(); h+='<div class="h2" style="margin-top:14px">Аптечка и запас</div><div class="dim" style="margin:-2px 0 8px">Для боя: кнопки рядом с «Яростью», одна вещь раз в '+CONS_CD/1000+' с. Нашатырь поднимает после нокаута (раз за забег), купить — не больше '+NASH_DAY+' в сутки. Цена растёт с этапом.</div>';
+  nashReset(); h+='<div class="h2" style="margin-top:14px">Аптечка и запас'+ib('cons')+'</div>';
   for(const k in CONS){ const c=CONS[k], pr=consPrice(k), have=S.cons[k]||0, dis=have>=c.max||(k==='nash'&&S.nashN>=NASH_DAY)||S.money<pr;
     h+='<button class="tcard" data-act="buycons" data-v="'+k+'" '+(dis?'disabled':'')+'><div class="ico">'+c.ic+'</div><div class="tx"><div class="nm">'+c.n+'</div><div class="dim">'+c.d+' · есть '+have+'/'+c.max+(k==='nash'?' · сегодня '+S.nashN+'/'+NASH_DAY:'')+'</div></div><div class="cost" style="color:var(--grn)">$'+pr+'</div></button>'; }
   h+='<div class="h2" style="margin-top:14px">Зал</div>';
@@ -2804,9 +2840,9 @@ function moveStats(m){
   return '<div class="mvst"><span>Длит. <b>'+(m.dur/1000).toFixed(1)+' c</b></span><span>Стамина <b>'+m.sta+'</b></span></div>';
 }
 function tabMoves(){
-  let h='<div class="card"><div class="h2">🌳 Дерево навыков</div><div class="dim" style="margin-bottom:6px">Активная школа: <b>'+schoolOf(S.hero).n+'</b>. '+'Свободных очков развития: <b style="color:var(--yel)">'+skillPts(S.hero)+'</b> — общие с характеристиками.'+' У бойца 3 школы — баффы, дебаффы и новые приёмы.</div><button class="btn yel" data-act="tree">Открыть дерево</button></div>'+stylesHTML()+'<div class="h2">Комбинация (до 3 приёмов)</div><div class="slots">';
+  let h='<div class="card"><div class="h2">🌳 Дерево навыков'+ib('tree')+'</div><div class="dim" style="margin-bottom:6px">Школа: <b>'+schoolOf(S.hero).n+'</b> · свободных очков: <b style="color:var(--yel)">'+skillPts(S.hero)+'</b></div><button class="btn yel" data-act="tree">Открыть дерево</button></div>'+stylesHTML()+'<div class="h2">Комбинация (до 3 приёмов)'+ib('combo')+'</div><div class="slots">';
   for(let i=0;i<3;i++){ const m=S.load[i]; h+='<div class="slot'+(m?'':' empty')+'">'+(m?MOVES[m].n:'пусто')+'</div>'; }
-  h+='</div><div class="dim" style="margin-bottom:10px">Боец сам выбирает приёмы из комбинации в бою. Нужен хотя бы один атакующий.</div>';
+  h+='</div><div style="margin-bottom:10px"></div>';
   const sc=schoolOf(S.hero); h+='<div class="note">🥋 Школа: <b>'+sc.n+'</b> ('+sc.st+'). '+sc.d+'</div>';
   for(const id of schoolMoves(S.hero)){ const m=MOVES[id], own=S.owned.includes(id), sel=S.load.includes(id), lockLv=S.lvl<mvLvl(id);
     h+='<div class="mv'+(sel?' sel':'')+'"><div class="t"><span class="nm">'+m.n+'</span><span class="tag '+m.type+'">'+(m.type==='atk'?'атака':'защита')+'</span></div>'+moveStats(m)+'<div class="dim">'+m.d+'</div><div class="gap"></div>';
@@ -2818,7 +2854,7 @@ function tabMoves(){
   return h;
 }
 function tabLeague(){
-  let h='<div class="h2">Этапы · '+S.beaten+'/'+OPP.length+(S.season?' · сезон '+(S.season+1):'')+'</div><div class="dim" style="margin-bottom:8px">Этап — '+WAVES+' волн по одному врагу, затем босс. Боец дерётся сам, здоровье между волнами восстанавливается лишь частично. За каждого врага — деньги и опыт сразу.</div>';
+  let h='<div class="h2">Этапы · '+S.beaten+'/'+OPP.length+(S.season?' · сезон '+(S.season+1):'')+ib('league')+'</div>';
   h+='<button class="btn sm" data-act="cp" style="margin-bottom:8px">⏭ Начинать с '+CP_WAVE+'-й волны там, где уже доходил до босса: <b style="color:'+(S.cp?'var(--grn)':'var(--dim)')+'">'+(S.cp?'вкл':'выкл')+'</b></button>';
   if(S.champ) h+='<div class="note">🏆 Ты чемпион улиц! Повторные этапы приносят 40% денег и 50% опыта.</div><button class="btn yel" data-act="season" style="margin-bottom:10px">🏆 Новый сезон '+((S.season||0)+2)+': соперники сильнее, у боссов особенности, +5% урона навсегда</button>';
   if(S.season) h+='<div class="dim" style="margin-bottom:8px">Сезон '+(S.season+1)+': соперники сильнее на '+S.season*15+'% (и бьют больнее), у боссов особенности, твой урон +'+S.season*5+'%.</div>';
@@ -2838,7 +2874,6 @@ function tabLeague(){
       '</div>'+(lock?'':'<div class="obtns"><button class="btn '+(next?'red':'')+'" data-act="fight" data-v="'+i+'">'+(next?'В бой '+FIGHT_COST+'⚡':'Фарм 0⚡')+'</button>'+
         (done?'<button class="btn grn" data-act="autofarm" data-v="'+i+'">Автофарм '+AUTOFARM_COST+'⚡</button>':'')+'</div>')+'</div>'; // автофарм — только у пройденных боссов
   });
-  h+='<div class="dim" style="text-align:center">Новый этап стоит '+FIGHT_COST+' ⚡ энергии, повтор пройденного (фарм) — бесплатно. Автофарм — награда за весь этап сразу, без боя, за '+AUTOFARM_COST+' ⚡</div>';
   return h;
 }
 function renderHub(){
@@ -2848,7 +2883,8 @@ function renderHub(){
   const hn=document.getElementById('heroName');
   if(hn){ pixelLabel(hn,S.name.toUpperCase(),'#fff',9); const hk=crispK(hn.width,200,2); hn.style.width=hn.width*hk+'px'; hn.style.height=hn.height*hk+'px'; } // имя бойца, до 2×
   body.scrollTop=sc; tickEnergyUI();
-  document.querySelectorAll('#nav button').forEach(b=>b.classList.toggle('on',b.dataset.v===tab));
+  $('#fightbar').innerHTML=fightBarHTML(); const nb=navBadges();
+  document.querySelectorAll('#nav button').forEach(b=>{ b.classList.toggle('on',b.dataset.v===tab); b.classList.toggle('has',!!nb[b.dataset.v]); });
   document.querySelectorAll('canvas[data-opp]').forEach(c=>{ const i=+c.dataset.opp, g=c.getContext('2d'); g.imageSmoothingEnabled=false; ditherGrad(g,0,0,80,74,['#0e0a1c','#161028','#201634']); R(g,0,74,80,6,'#2a2236'); const o=OPP[i], pose=i<S.beaten?'idle':'win', fl=i>S.beaten?1:0; // закрытые — силуэтом
     if(o.duo){ renderFighter(g,o.members[1].pal,pose,54,78,-1,0,fl); renderFighter(g,o.members[0].pal,pose,26,78,1,0,fl); }
     else renderFighter(g,o.pal,pose,38,78,1,0,fl); });
@@ -2960,6 +2996,7 @@ const ACT={
     else { if(S.load.length>=3) return toast('Максимум 3 приёма — сначала убери один'); S.load.push(id); }
     save(); renderHub(); },
   fight(el){ startFight(+el.dataset.v); },
+  info(el){ const t=INFO[el.dataset.v]; if(!t) return; openModal('<div class="title" style="color:var(--cyan)">ℹ ПОЯСНЕНИЕ</div><p style="line-height:1.5">'+(typeof t==='function'?t():t)+'</p><button class="btn grn" data-act="closemodal">Понятно</button>'); },
   autofarm(el){ autoFarm(+el.dataset.v); },
   farmagain(el){ closeModal(); autoFarm(+el.dataset.v); },
   rage(){ useRage(); },
@@ -3146,7 +3183,7 @@ function tgBack(){
 
 /* ---------- ДИАГНОСТИКА: ошибки на телефоне видны прямо в игре ----------
    Нажатие на номер сборки на заставке показывает сведения об устройстве; нажатие на панель — скрывает её. */
-const BUILD='94 · 2026-10-29'; // номер сборки — видно на заставке, свежая версия или старая из кэша Telegram
+const BUILD='95 · 2026-10-29'; // номер сборки — видно на заставке, свежая версия или старая из кэша Telegram
 let FRAMES=0, PRESENT_MODE='чёткий';
 /* Сторож: раз в секунду, независимо от кадров. Если игра открыта, а кадры не идут — или бой стоит без открытых окон, —
    показываем панель ошибок с подробностями (по ней видно причину, например на ПК). */
