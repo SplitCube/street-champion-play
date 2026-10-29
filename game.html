@@ -108,6 +108,8 @@ button.chip{font:inherit;font-weight:bold;cursor:pointer;position:relative;min-h
 .kv b{display:block;font-size:15px;color:var(--txt)}
 .kv span{color:var(--dim)}
 .tcard{display:flex;gap:10px;align-items:center;background:var(--panel);border:3px solid #000;box-shadow:inset 0 0 0 2px var(--line);padding:10px;margin-bottom:8px;width:100%;text-align:left}
+.tcard.deal{box-shadow:inset 0 0 0 2px var(--grn)}
+.tcard .dtag{font-size:10px;color:#000;background:var(--grn);padding:1px 4px;text-transform:none;white-space:nowrap}
 .tcard .ico{font-size:26px;width:42px;height:42px;display:grid;place-items:center;background:#0b0818;border:2px solid #000;flex:none}
 .tcard .tx{flex:1;min-width:0}
 .tcard .nm{font-weight:bold;text-transform:uppercase;font-size:13px}
@@ -732,13 +734,13 @@ function tasksToday(){ const k=dayKey(); if(S.dq&&S.dq.d===k) return S.dq.l;
   S.dq={d:k,l}; return l; }
 function taskAdd(k,n){ if(!S.started) return; const t=tasksToday().find(x=>x.k===k); if(!t||t.got||t.c>=t.n) return; t.c=Math.min(t.n,t.c+(n||1)); if(t.c>=t.n&&!(F&&F.sim)) toast('📋 Задание выполнено: '+TASKS[k].d.toLowerCase()+' — забери награду'); }
 const rewStage=()=>Math.max(0,S.beaten-1);
-function taskRew(t){ const o=OPP[rewStage()], k=15*TASK_MUL[t.lv]; return {money:Math.max(5,Math.round(o.money*.06*k)),xp:Math.max(3,Math.round(o.xp*.07*k*.5))}; }
+function taskRew(t){ const o=OPP[rewStage()], k=15*TASK_MUL[t.lv]; return {money:Math.max(5,Math.round(o.money*.06*k*seasonPay())),xp:Math.max(3,Math.round(o.xp*.07*k*.5))}; }
 // серия входов: ls.last — день последней награды, ls.day — её номер (1–7)
 const STREAK=[{m:.3},{x:.3},{m:.3,c:{med:1}},{x:.5},{c:{band:1,nrg:1},m:.2},{m:.6,x:.6},{u:1}];
 const UNIQ={g:{n:'Перчатки «Неделя»',c:'#3ee07a'},w:{n:'Бинты «Упорство»',c:'#3ee07a'},s:{n:'Кроссовки «Каждый день»',c:'#3ee07a'},m:{n:'Капа «Верность»',c:'#3ee07a'}};
 function streakNext(){ const ls=S.ls||{}, today=dayKey(); if(ls.last===today) return 0; const yest=dayKey(Date.now()-864e5); return ls.last===yest&&ls.day<7?ls.day+1:1; }
 function streakRew(d){ const s=STREAK[d-1], o=OPP[Math.min(S.beaten,OPP.length-1)], r={money:0,xp:0,cons:{},item:null};
-  if(s.m) r.money=Math.max(10,Math.round(o.money*s.m)); if(s.x) r.xp=Math.max(10,Math.round(o.xp*s.x)); if(s.c) r.cons=s.c; if(s.u) r.item=1; return r; }
+  if(s.m) r.money=Math.max(10,Math.round(o.money*s.m*seasonPay())); if(s.x) r.xp=Math.max(10,Math.round(o.xp*s.x)); if(s.c) r.cons=s.c; if(s.u) r.item=1; return r; }
 function streakItem(){ const done=S.uniq||0, k=SLOT_IDS[done%4]; return {s:k,r:2,t:Math.floor(OPP[rewStage()].u)+1+OLD_N*(S.season||0),l:1,w:100,uq:1}; } // по очереди: перчатки, бинты, кроссовки, капа
 const rewTxt=r=>[r.money?'$'+r.money:'',r.xp?r.xp+' XP':'',...Object.keys(r.cons||{}).map(k=>CONS[k].ic+'×'+r.cons[k]),r.item?'🎁 уникальная вещь':''].filter(Boolean).join(' + ');
 const tasksBadge=()=>!!streakNext()||tasksToday().some(t=>t.c>=t.n&&!t.got);
@@ -761,7 +763,7 @@ const SP_COND={nocons:{d:'без расходников',burn:1},norage:{d:'бе
 const SP_TIME=24*3600e3, SP_K=12;
 function spOffers(){ let h=0; for(const ch of dayKey()+'|'+(S.spN||0)) h=(Math.imul(h,31)+ch.charCodeAt(0))>>>0; const r=mulberry(h), ids=Object.keys(SP_COND), l=[];
   while(l.length<3){ const c=ids[Math.floor(r()*ids.length)]; if(l.some(x=>x.c===c)) continue; l.push({c,need:2+Math.floor(r()*3),n:SP_NAMES[Math.floor(r()*SP_NAMES.length)]}); } return l; }
-function spRew(need){ const o=OPP[Math.min(S.beaten,OPP.length-1)], K=SP_K*need; return {money:Math.max(10,Math.round(o.money*.06*K)),xp:Math.max(10,Math.round(o.xp*.07*K))}; }
+function spRew(need){ const o=OPP[Math.min(S.beaten,OPP.length-1)], K=SP_K*need; return {money:Math.max(10,Math.round(o.money*.06*K*seasonPay())),xp:Math.max(10,Math.round(o.xp*.07*K))}; }
 const spAct=()=>{ if(S.sp&&Date.now()>S.sp.exp){ S.sp=null; save(); toast('📋 Контракт со спонсором истёк'); } return S.sp; };
 const spIs=c=>{ const s=spAct(); return !!s&&s.c===c; };
 function spBreak(c){ if(!F||F.sim||!spIs(c)||!SP_COND[c].burn) return; const s=S.sp; S.sp=null; save(); toast('❌ Контракт «'+s.n+'» сгорел: нарушено «'+SP_COND[c].d+'»'); addLog('<b style="color:#ff5a6a">Контракт со спонсором сгорел</b>'); }
@@ -848,9 +850,21 @@ function mergeHeroes(){ if(!S.started||S.mh) return; const cur=S, ps=[S];
   S.gear={g:null,w:null,s:null,m:null}; S.bag=[]; items.sort((a,b)=>gearVal(b)-gearVal(a)).forEach(it=>giveGear(it));
   for(const h of HEROES){ try{ const k=heroKey(h.id), raw=localStorage.getItem(k); if(raw){ localStorage.setItem(k+'_old',raw); localStorage.removeItem(k); } }catch(e){} } // старые записи бойцов — в резерв: второй перенос не сложит деньги ещё раз
   S.mh=1; save(); if(ps.length>1) setTimeout(()=>toast('Прогресс бойцов объединён: общий уровень, деньги и вещи'),600); }
+/* Еда (сборка 99): 10 блюд, у каждого свой баф на следующий забег (ранг = порядок, от слабого к сильному).
+   В меню на день — 3 блюда (по дате, у всех одинаково); блюдо дня — со слабейшим бафом из трёх, −30%.
+   Цена: энергия × ставка района × (1 + 5% за ранг); ставка = 1,5× оплаты подработки района (foodRate) —
+   даже со скидкой еда дороже подработки за ту же энергию (круг «поел → поработал» в минус). Баф один: новое блюдо заменяет прежний. */
 const FOOD=[
-  {id:'shawa',n:'Шаверма',ic:'🌯',cost:15,en:35},
-  {id:'prot',n:'Протеиновый коктейль',ic:'🥤',cost:45,en:80}
+  {id:'shawa',n:'Шаверма',ic:'🌯',en:35,d:'+5% денег за забег',a:(p,R)=>{ R.goldK=(R.goldK||1)+.05; R.payK=1.05; }},
+  {id:'pies',n:'Пирожки',ic:'🥟',en:35,d:'+10% опыта за забег',a:(p,R)=>{ R.xpK=1.1; }},
+  {id:'borsch',n:'Борщ',ic:'🍲',en:50,d:'+10% здоровья',a:p=>{ p.maxHp=p.hp=p.ghost=Math.round(p.maxHp*1.1); }},
+  {id:'pizza',n:'Пицца',ic:'🍕',en:50,d:'+25 адреналина на старте',a:p=>{ p.adr=Math.max(p.adr||0,25); }},
+  {id:'wok',n:'Лапша вок',ic:'🍜',en:50,d:'+15% стамины',a:p=>{ p.maxSta=p.sta=Math.round(p.maxSta*1.15); }},
+  {id:'sushi',n:'Суши-сет',ic:'🍣',en:50,d:'+5% к шансу крита',a:p=>{ p.critB=(p.critB||0)+.05; }},
+  {id:'plov',n:'Плов',ic:'🍛',en:80,d:'+6% защиты',a:p=>{ p.armor=(p.armor||0)+.06; }},
+  {id:'burger',n:'Бургер',ic:'🍔',en:80,d:'атаки на 6% чаще',a:p=>{ p.haste=(p.haste||1)*.94; }},
+  {id:'steak',n:'Стейк',ic:'🥩',en:80,d:'+8% урона',a:p=>{ p.dm*=1.08; }},
+  {id:'champ',n:'Спортпит «Чемпион»',ic:'🥤',en:80,d:'раз за забег встать после нокаута с 30% здоровья',a:(p,R)=>{ R.foodRev=1; }}
 ];
 const arenaOf=i=>Math.min(ARENAS.length-1,Math.floor(i/10)); // район = арена: по 10 этапов
 const needXp=l=>Math.round(50+(l-1)*25+(l-1)*(l-1)*1.5); // уровень без предела, опыта до следующего всё больше; до 50-го — 88 886 (сборка 84; было 410 816)
@@ -944,7 +958,7 @@ function sanitize(d){
   s.ls={last:d.ls&&typeof d.ls.last==='string'?d.ls.last.slice(0,10):'',day:num(d.ls&&d.ls.day,0,0,7)};
   s.dq=d.dq&&typeof d.dq.d==='string'&&Array.isArray(d.dq.l)?{d:d.dq.d.slice(0,10),l:d.dq.l.filter(t=>t&&TASKS[t.k]).slice(0,3).map(t=>({k:t.k,lv:num(t.lv,0,0,2),n:num(t.n,1,1,999),c:num(t.c,0,0,999),got:t.got?1:0}))}:null; s.beaten=num(d.beaten,0,0,OPP.length);
   s.best=num(d.best,0,0,WAVES+1); s.kills=num(d.kills,0,0,1e9); s.auto=d.auto===true; s.enAt=num(d.enAt,0,0,9e15); s.sleptAt=num(d.sleptAt,0,0,9e15); s.cp=d.cp!==false; s.hero=num(d.hero,1,1,HEROES.length); s.season=num(d.season,0,0,999); s.trMode=d.trMode==='hard'?'hard':'normal'; s.tired=d.tired===true; if(d.gear&&typeof d.gear==='object') for(const k of SLOT_IDS){ const it=cleanItem(d.gear[k]); if(it&&it.s===k) s.gear[k]=it; } if(Array.isArray(d.bag)) s.bag=d.bag.map(cleanItem).filter(Boolean).slice(0,BAG_MAX); // enAt — отсчёт восстановления энергии, sleptAt — последний сон // best — рекорд волны на текущем этапе, kills — всего врагов побеждено
-  s.wins=num(d.wins,0,0,1e6); s.losses=num(d.losses,0,0,1e6); s.sleeps=num(d.sleeps,0,0,1e9); s.meals=num(d.meals,0,0,99); s.mealT=num(d.mealT,0,0,9e15); s.cons={}; for(const k in CONS) s.cons[k]=num((d.cons||{})[k],0,0,CONS[k].max); s.nashN=num(d.nashN,0,0,99); s.nashT=num(d.nashT,0,0,9e15); s.cmbW=d.cv===2?num(d.cmbW,0,0,1e9):0; s.cmbH=d.cv===2?Math.min(num(d.cmbH,0,0,1e9),s.cmbW):0; s.cv=2; // cv 2 — счёт по комбо-связкам (старые окна комбо не переносим) // еда: сколько раз поел и когда началось окно; окна комбо: показано / поймано — для шанса победы
+  s.wins=num(d.wins,0,0,1e6); s.losses=num(d.losses,0,0,1e6); s.sleeps=num(d.sleeps,0,0,1e9); s.meals=num(d.meals,0,0,99); s.food=FOOD.some(f=>f.id===d.food)?d.food:null; s.mealT=num(d.mealT,0,0,9e15); s.cons={}; for(const k in CONS) s.cons[k]=num((d.cons||{})[k],0,0,CONS[k].max); s.nashN=num(d.nashN,0,0,99); s.nashT=num(d.nashT,0,0,9e15); s.cmbW=d.cv===2?num(d.cmbW,0,0,1e9):0; s.cmbH=d.cv===2?Math.min(num(d.cmbH,0,0,1e9),s.cmbW):0; s.cv=2; // cv 2 — счёт по комбо-связкам (старые окна комбо не переносим) // еда: сколько раз поел и когда началось окно; окна комбо: показано / поймано — для шанса победы
   s.hs=cleanHs(d.hs,num); s.mh=d.mh?1:0; // свои у каждого бойца: дерево навыков, активная школа, приёмы неактивных бойцов
   s.alloc={}; for(const k of ['str','spd','end','agi']) s.alloc[k]=num((d.alloc||{})[k],-1,0,99);
   if(Object.values(s.alloc).some(v=>v<0)) allocGuess(s); // старое сохранение: сколько очков вложено руками — оценка
@@ -991,8 +1005,8 @@ function loadDev(){ try{ DEV=JSON.parse(localStorage.getItem(DEV_KEY))||{}; }cat
 const dev=k=>DEV.enabled?DEV[k]:undefined;
 function spendEnergy(n){ if(dev('infEnergy')) return; if(S.energy>=S.maxEnergy) S.enAt=Date.now(); S.energy=Math.max(0,S.energy-n); } // с полной энергии отсчёт восстановления начинается заново
 /* Энергия восстанавливается сама: +1 каждые 3 минуты, в том числе пока игрока нет (по времени S.enAt).
-   «Выспаться» — полное восстановление, но не чаще раза в 8 часов (S.sleptAt). */
-const EN_REGEN_MS=3*60e3, SLEEP_CD=8*3600e3;
+   «Выспаться» — полное восстановление, но не чаще раза в 2 часа (S.sleptAt, сборка 99). */
+const EN_REGEN_MS=3*60e3, SLEEP_CD=2*3600e3; // сон — раз в 2 часа (сборка 99; было 8)
 function regenEnergy(){
   const now=Date.now(); if(!S.enAt||S.enAt>now) S.enAt=now;
   if(S.energy>=S.maxEnergy){ S.enAt=now; return 0; }
@@ -1973,11 +1987,12 @@ function makeFighter(name,st,moves,pal,face,x,isPlayer,dm){
 function newFight(idx,sim,pst,pload,from){
   const p=makeFighter('Ты',pst||S.st,pload||S.load,PLAYER_PAL,1,PX,true);
   applyGear(p); schoolOf(S.hero).mod(p); applyTree(p); activeStyles(pload||S.load).forEach(s=>s.a(p)); applyMast(p); p.dm*=seasonMe(); // снаряжение, школа бойца, стили боя, мастерство, бонус сезонов
+  const fd=foodOf(S.food), R0={}; if(fd) fd.a(p,R0); // баф еды (сборка 99): в симуляции шанса — тоже, чтобы шанс показывал пользу
   p.hp0=p.maxHp; // здоровье на старте забега — от него считается урон врагов в новых кругах (dmgFloor)
   if(S.tired) p.maxHp=p.hp=p.ghost=Math.round(p.maxHp*TIRED_HP); // усталость после интенсивной тренировки
   const R={idx,arena:arenaOf(idx),p,o:null,wave:(from||1)-1,from:from||1,rageT:0,rageCd:5000,kills:0,earn:{money:0,xp:0,ups:0},perks:[],perkAt:[],loot:[],queue:[],team:1,round:1,deadMax:0,swapT:0,
     time:WAVE_TIME,state:sim?'fight':'intro',introT:VS_END,endT:0,hitstop:0,fx:[],speed:sim?1:fightSpeed,
-    log:[],shake:0,parts:[],cheer:0,winner:null,sim:!!sim,flashAll:0,banner:'',
+    log:[],shake:0,parts:[],cheer:0,winner:null,sim:!!sim,flashAll:0,banner:'',food:fd?fd.id:null,...R0,
     ch:null,cd:COMBO_FIRST,cq:null,consCd:0,consUsed:0,comboHits:0,comboMiss:0,badChip:'',badT:0}; // комбо-связка: текущая связка, перезарядка, удар в очереди
   spawnEnemy(R); return R;
 }
@@ -2003,7 +2018,8 @@ const gearVal=it=>RARITY[it.r].k*(1+.12*it.t)*(1+.15*(it.l-1));
    Ремонт — за деньги (repairCost). Перековка — попытка поднять редкость за деньги (REFORGE_P — шанс по текущей редкости). */
 const WEAR_RUN=4, REFORGE_P=[.5,.3,.12];
 const wearK=it=>.5+.5*(it.w==null?100:it.w)/100;
-const repairCost=it=>Math.ceil((100-(it.w==null?100:it.w))/100*gearUpCost(it)*.6);
+// ремонт (сборка 98): от цены вещи без улучшений и класса не выше 16 (первый круг), ×seasonPay — растёт вместе с наградами, а не с классом вещей
+const repairCost=it=>Math.ceil((100-(it.w==null?100:it.w))/100*gearUpCost({...it,l:1,t:Math.min(it.t,OLD_N)})*1.5*seasonPay());
 const repairAll=()=>SLOT_IDS.reduce((a,k)=>a+(S.gear[k]?repairCost(S.gear[k]):0),0);
 const reforgeCost=it=>Math.round(gearUpCost({...it,l:1})*3*(it.r+1)); // от вещи без улучшений: улучшения сохраняются, цену не раздувают
 const reforgeOk=it=>!it.uq&&(it.r<2||(it.r===2&&legendOk(Math.max(0,S.beaten-1)))); // в легендарку — только когда легендарки уже падают
@@ -2124,9 +2140,9 @@ function stylesHTML(){
       return '<div class="style'+(on?' on':'')+'"><b>'+s.ic+' '+s.n+'</b> <span class="dim">'+s.req.map(m=>MOVES[m].n).join(' + ')+'</span><br><small>'+s.d+(on?' · <span style="color:var(--grn)">активен</span>':'')+'</small></div>'; }).join('')+'</div>';
 }
 /* Сезоны (круги лиги, престиж): после победы над Королём — «Новый сезон»: этапы заново, соперники сильнее на 15% за сезон —
-   и характеристики, и урон (seasonDm = seasonSt), у боссов особенности (bossMods), вещи сильнее; награды НЕ растут (seasonPay = 1);
+   и характеристики, и урон (seasonDm = seasonSt), у боссов особенности (bossMods), вещи сильнее; денежные награды растут так же — +15% за сезон (seasonPay, сборка 98), опыт — нет (seasonXp = 1);
    навсегда +5% урона бойца за каждый сезон. Сезонов сколько угодно — игра не кончается. */
-const seasonSt=()=>1+.15*(S.season||0), seasonDm=seasonSt, seasonPay=()=>1, seasonMe=()=>1+.05*(S.season||0);
+const seasonSt=()=>1+.15*(S.season||0), seasonDm=seasonSt, seasonPay=seasonSt, seasonXp=()=>1, seasonMe=()=>1+.05*(S.season||0);
 const scaleSt=st=>{ const k=seasonSt(), r={}; for(const s in st) r[s]=Math.round(st[s]*k); return r; };
 // интенсивная тренировка: больше прогресса, но усталость — −15% здоровья в следующем забеге
 const TRAIN_COST_HARD=35, TRAIN_HARD_K=2.2, TIRED_HP=.85;
@@ -2174,7 +2190,7 @@ function spawnEnemy(R){
   return R.o;
 }
 const isBoss=()=>F.wave>WAVES;
-const xpPay=i=>Math.round(OPP[i].xp*(i<S.beaten?REPEAT_XP:1)*seasonPay()), REPEAT_XP=.5; // повтор пройденного — вдвое меньше опыта
+const xpPay=i=>Math.round(OPP[i].xp*(i<S.beaten?REPEAT_XP:1)*seasonXp()), REPEAT_XP=.5; // повтор пройденного — вдвое меньше опыта
 // награда за каждого врага волны — сразу и навсегда, даже если забег сорвётся
 const waveMoney=i=>Math.max(1,Math.round(winPay(i)*.06)), waveXp=i=>Math.max(1,Math.round(xpPay(i)*.07));
 /* Усиления «1 из 3»: после волн 3, 6 и 9 игрок выбирает одно из трёх случайных. Действуют до конца забега,
@@ -2215,7 +2231,7 @@ function offerPerks(){
 }
 function enemyDown(l){
   F.kills++; if(F.sim||l.boss) return; taskAdd('kill');
-  const m=Math.round(waveMoney(F.idx)*(F.goldK||1)), x=waveXp(F.idx);
+  const m=Math.round(waveMoney(F.idx)*(F.goldK||1)), x=Math.round(waveXp(F.idx)*(F.xpK||1));
   S.money+=m; S.kills++; const ups=addXp(x);
   if(Math.random()<GEAR_DROP){ const it=rollGear(F.idx,false); F.loot.push(giveGear(it)); floatTxt(F.p,'🎁 '+SLOTS[it.s].ic,gearCol(it),true); addLog('<b style="color:'+gearCol(it)+'">Добыча: '+gearName(it)+'</b>'); }
   save();
@@ -2397,7 +2413,7 @@ function updateFight(dt){
   } else if(F.state==='swap'){
     F.swapT-=dt; if(F.swapT<=0){ if(F.queue.length) nextMember(); else if(perkDue(F)) offerPerks(); else nextWave(); }
   } else if(F.state==='end'){
-    F.endT-=dt; if(F.endT<=0){ F.state='done'; if(!F.sim){ if(F.winner==='o'&&!F.surrender&&!F.revived&&(ADS_ON||S.cons.nash>0)) offerRevive(); else finishFight(); } } // встать: за рекламу или нашатырём
+    F.endT-=dt; if(F.endT<=0){ F.state='done'; if(!F.sim){ if(F.winner==='o'&&!F.surrender&&F.foodRev&&!F.revived){ F.foodRev=0; revive(.3,true,'СПОРТПИТ!'); } else if(F.winner==='o'&&!F.surrender&&!F.revived&&(ADS_ON||S.cons.nash>0)) offerRevive(); else finishFight(); } } // встать: за рекламу или нашатырём
   }
   cosmetic(F.p,dt); cosmetic(F.o,dt);
   if(!F) return;
@@ -2467,12 +2483,13 @@ function startFight(idx){
   const from=startWaveOf(idx); F=newFight(idx,false,null,null,from); hudCache={}; F.autoSeen=S.auto; F.jabLoad=S.load.includes('jab'); // для условий спонсора
   if(spAct()) addLog('<b style="color:#3ee07a">🤝 Спонсор «'+S.sp.n+'»: '+SP_COND[S.sp.c].d+' ('+S.sp.done+'/'+S.sp.need+')</b>');
   const tiredNow=S.tired; if(tiredNow){ S.tired=false; save(); } // усталость действует на один забег
+  const fdNow=foodOf(F.food); if(fdNow){ S.food=null; save(); } // баф еды — тоже на один забег
   setName('pName',S.name); setName('oName',F.o.name);
   $('#fChips').style.setProperty('--n',S.load.length||1); // кнопок столько, сколько приёмов в комбо — пустых ячеек нет
   $('#fChips').innerHTML=S.load.map(m=>'<div class="mchip" data-m="'+m+'"><span class="ic">'+(MOVE_IC[m]||'👊')+'</span>'+MOVES[m].n+'</div>').join('');
   const od=OPP[idx];
   const sty=activeStyles(S.load);
-  $('#flog').innerHTML=(tiredNow?'<div style="color:var(--org)">😮‍💨 Усталость после интенсивной тренировки: −15% здоровья в этом забеге</div>':'')+(sty.length?'<div style="color:var(--cyan)">Стиль: '+sty.map(s=>s.ic+' '+s.n).join(', ')+'</div>':'')+(from>1?'<div style="color:var(--yel)">⏭ Контрольная точка: старт с '+from+'-й волны</div>':'')+'<div>Волна '+from+': выходит <b>'+F.o.name+'</b></div><div>Этап '+(idx+1)+' · '+ARENAS[F.arena].n+'. '+WAVES+' волн, затем босс: '+od.name+(od.duo?' (дуэт)':'')+'</div>';
+  $('#flog').innerHTML=(fdNow?'<div style="color:var(--grn)">🍽 '+fdNow.ic+' '+fdNow.n+': '+fdNow.d+'</div>':'')+(tiredNow?'<div style="color:var(--org)">😮‍💨 Усталость после интенсивной тренировки: −15% здоровья в этом забеге</div>':'')+(sty.length?'<div style="color:var(--cyan)">Стиль: '+sty.map(s=>s.ic+' '+s.n).join(', ')+'</div>':'')+(from>1?'<div style="color:var(--yel)">⏭ Контрольная точка: старт с '+from+'-й волны</div>':'')+'<div>Волна '+from+': выходит <b>'+F.o.name+'</b></div><div>Этап '+(idx+1)+' · '+ARENAS[F.arena].n+'. '+WAVES+' волн, затем босс: '+od.name+(od.duo?' (дуэт)':'')+'</div>';
   $('#fx').innerHTML=''; $('#speedBtn').textContent='⏩ x'+F.speed;
   hideBanner(); renderWaves(); updAutoBtn(); showScreen('fight'); sfx('bell'); setTimeout(()=>{ if(screen==='fight') showTip('fight',1); },600);
   return true;
@@ -2493,14 +2510,14 @@ function offerRevive(){
   if(S.auto){ let left=5; const run=F; const tick=()=>{ if(F!==run||F.state!=='revive'||AD) return; if(--left<=0) return ACT.norevive();
     const el=$('#revAuto'); if(el) el.textContent='Итоги через '+left+' с'; REV_T=setTimeout(tick,1000); }; REV_T=setTimeout(tick,1000); }
 }
-function revive(hpK,nash){ // hpK — доля здоровья; nash — нашатырём (без полного адреналина)
+function revive(hpK,nash,label){ // hpK — доля здоровья; nash — нашатырём (без полного адреналина); label — своя надпись (спортпит)
   const p=F.p, o=F.o; clearTimeout(REV_T); closeModal();
   F.revived=true; F.winner=null; F.state='fight'; F.endT=0;
   p.hp=Math.max(p.hp,Math.round(p.maxHp*(hpK||.5))); p.sta=p.maxSta; if(!nash) p.adr=100; p.hot=null; p.pose='idle'; p.poseT=0; p.koT=0; p.pending=null; p.stance=null; p.stanceT=0; p.timer=500; p.flash=0;
   if(o.pose==='win'||o.pose==='tired'){ o.pose='idle'; o.poseT=0; } o.pending=null; o.timer=Math.max(o.timer,900);
   F.time=Math.max(F.time,isBoss()?30000:15000); hudCache={}; renderWaves();
-  const bt=nash?'НАШАТЫРЬ!':'ВТОРОЕ ДЫХАНИЕ!'; showBanner(bt); setTimeout(()=>{ if(F&&F.banner===bt) hideBanner(); },1200);
-  addLog('<b style="color:#ffd23f">'+(nash?'Нашатырь!':'Второе дыхание!')+' '+S.name+' снова на ногах.</b>'); sfx('super');
+  const bt=label||(nash?'НАШАТЫРЬ!':'ВТОРОЕ ДЫХАНИЕ!'); showBanner(bt); setTimeout(()=>{ if(F&&F.banner===bt) hideBanner(); },1200);
+  addLog('<b style="color:#ffd23f">'+(label?'Спортпит «Чемпион»!':nash?'Нашатырь!':'Второе дыхание!')+' '+S.name+' снова на ногах.</b>'); sfx('super');
 }
 /* ADS_ON — реклама за награду включена. Временно выключена по просьбе пользователя (2026-10-26): нет окна «Второе дыхание»,
    кнопок «×2 награда» в итогах и «Забрать ×2» за время отсутствия, раздела о рекламе в «Как играть». Вернуть — поставить true. */
@@ -2512,8 +2529,8 @@ function watchAd(onReward){ if(!ADS_ON) return; if(dev('noAds')) onReward(); els
 const OFF_STEP=30*60e3, OFF_CAP=2*3600e3, OFF_KPS=20; // награда за каждые полные 30 мин (20 врагов), не больше 2 часов
 // опыт за 2 часа отсутствия — не больше, чем за первое прохождение этапа 1 (10 волн + первый босс)
 // опыт за отсутствие (2 ч): как за 1-й этап до сборки 84 (без XP_K) и ещё +20% (OFF_XP_K)
-const OFF_XP_K=1.2, offXpCap=()=>{ const bx=Math.round(OPP[0].xp/XP_K*seasonPay()); return Math.round((WAVES*Math.max(1,Math.round(bx*.07))+bx)*OFF_XP_K); };
-const MEALS_MAX=3; // еда: 3 раза между снами (окно 8 часов)
+const OFF_XP_K=1.2, offXpCap=()=>{ const bx=Math.round(OPP[0].xp/XP_K*seasonXp()); return Math.round((WAVES*Math.max(1,Math.round(bx*.07))+bx)*OFF_XP_K); };
+const MEALS_MAX=3; // еда: 3 раза между снами (окно SLEEP_CD — 2 часа)
 function mealsReset(){ if(S.meals&&Date.now()-S.mealT>=SLEEP_CD){ S.meals=0; S.mealT=0; } }
 let OFF=null;
 const fmtDur=ms=>{ const m=Math.floor(ms/60e3), h=Math.floor(m/60); return (h?h+' ч ':'')+(m%60)+' мин'; };
@@ -2548,6 +2565,7 @@ function finishFight(){
   if(win) taskAdd('boss');
   if(win){ money=winPay(i); xp=xpPay(i); S.wins++; S.hof[i]=Math.max(S.hof[i]||0,(S.season||0)+1); /* зал славы */ if(Math.random()<BOSS_DROP) F.loot.push(giveGear(rollGear(i,true))); if(first){ S.beaten=i+1; S.best=0; } } // с босса — вещь в 30% случаев
   else if(!F.surrender){ S.losses++; if(boss){ xp=Math.round(o.xp*.25); money=lossPay(i); } } // проигрыш боссу: 25% опыта, с Бизона — 10% призовых
+  money=Math.round(money*(F.payK||1)); xp=Math.round(xp*(F.xpK||1)); // баф еды: шаверма / пирожки
   S.money+=money; const ups=addXp(xp)+F.earn.ups;
   const champNow=first&&S.beaten>=OPP.length&&!S.champ; if(champNow) S.champ=true;
   save(); renderWaves();
@@ -2804,7 +2822,7 @@ function powerOf(st,dm,hpMul){
 }
 const myPower=()=>Math.round(powerOf(S.st,1,1)*buildMul()); // со снаряжением и прочими постоянными бонусами
 const buildMul=()=>gearMul()*schoolOf(S.hero).pm*treePm()*styleMul(S.load)*mastMul()*Math.sqrt(seasonMe())*(S.tired?Math.sqrt(TIRED_HP):1);
-const buildSig=()=>JSON.stringify(S.gear)+'|'+JSON.stringify(S.mast)+'|'+S.hero+JSON.stringify(hsOf(S.hero))+'|'+(S.season||0)+'|'+(S.tired?1:0);
+const buildSig=()=>JSON.stringify(S.gear)+'|'+JSON.stringify(S.mast)+'|'+S.hero+JSON.stringify(hsOf(S.hero))+'|'+(S.season||0)+'|'+(S.tired?1:0)+'|'+(S.food||'');
 function bossPower(i){ const o=OPP[i]; let k=1;
   if(S.season>0){ const R=newFight(i,true), b=bossFighter(oppMember(o,0),o.dmg,i), d0=b.dm; dmgFloor(R.p.hp0,R.p,b,KO_BOSS); k=b.dm/d0; } // в новых кругах урон босса подтянут под бойца
   const ps=(o.duo?o.members:[o]).map(m=>powerOf(scaleSt(m.st),o.dmg*seasonDm()*k,bossHp(i))); return Math.round(Math.sqrt(ps.reduce((a,b)=>a+b*b,0))*bossMods(i).reduce((a,m)=>a*m.pm,1)); }
@@ -2829,7 +2847,7 @@ const INFO={
   hero:'Уровень, характеристики, деньги, снаряжение, лига и зал — общие для всех бойцов. У каждого бойца свои приёмы и своё дерево навыков из 3 школ.',
   gear:()=>'Падает с боссов (в 30% побед) и изредка с врагов волн (2%). Легендарные — только с последних боссов лиги и в следующих кругах. Чем дальше этап, тем сильнее вещь.<br>Вещи изнашиваются: −'+WEAR_RUN+'% прочности за забег, при 0% — половина силы, чини. ✦ — перековка: попытка поднять редкость.',
   train:()=>'Тренировка поднимает характеристику и тратит ⚡.<br>Обычная — без усталости. Интенсивная — прогресс ×'+String(TRAIN_HARD_K).replace('.',',')+', но усталость: −15% здоровья в следующем забеге.',
-  rest:()=>'⚡ Энергия восстанавливается сама: +1 каждые 3 минуты, даже когда ты не в игре.<br>Сон — энергия на максимум, раз в 8 часов. Поесть можно '+MEALS_MAX+' раза между снами (или за 8 часов).',
+  rest:()=>'⚡ Энергия восстанавливается сама: +1 каждые 3 минуты, даже когда ты не в игре.<br>Сон — энергия на максимум, раз в 2 часа. Поесть можно '+MEALS_MAX+' раза между снами (или за 2 часа).<br>🍽 Меню дня — 3 блюда из 10, у каждого свой баф на следующий забег (действует один, новое блюдо заменяет прежний). Блюдо дня — со скидкой 30%. Цены растут с районом.<br>💼 Подработка: '+JOB_EN+'⚡ → наличные. В каждом новом районе — новая, и платит больше.',
   cons:()=>'Для боя: кнопки рядом с «Яростью», одна вещь раз в '+CONS_CD/1000+' с. Нашатырь поднимает после нокаута (раз за забег), купить — не больше '+NASH_DAY+' в сутки. Цена растёт с этапом.',
   combo:'В бою боец сам выбирает приёмы из комбинации (до 3). Нужен хотя бы один атакующий.',
   styles:'Собери пару приёмов в комбо — получишь постоянный бонус стиля.',
@@ -2878,11 +2896,14 @@ function tabGym(){
     h+='<button class="tcard" data-act="train" data-v="'+k+'" '+(max?'disabled':'')+'><div class="ico">'+STATS[k].ic+'</div><div class="tx"><div class="nm">'+STATS[k].tr+'</div><div class="dim">'+STATS[k].n+': '+v+(max?' (макс)':' · '+S.prog[k]+'/'+needProg(v))+'</div><div class="bar"><i style="background:var(--cyan);width:'+(max?100:S.prog[k]/needProg(v)*100)+'%"></i></div></div><div class="cost">-'+trainCost()+'⚡</div></button>';
   }
   const c1=h.length; h+='<div class="h2" style="margin-top:14px">Отдых и еда'+ib('rest')+'</div>';
-  h+='<button class="tcard" data-act="sleep"><div class="ico">🛏</div><div class="tx"><div class="nm">Выспаться</div><div class="dim">Новый день, энергия на максимум. Раз в 8 часов<br><b id="sleepT" style="color:var(--yel)"></b></div></div><div class="cost">+⚡MAX</div></button>';
-  mealsReset(); h+='<div class="dim" style="margin:-2px 0 8px">🍽 Еда до сна: <b style="color:var(--yel)">'+(MEALS_MAX-S.meals)+'/'+MEALS_MAX+'</b></div>';
-  for(const f of FOOD) h+='<button class="tcard" data-act="eat" data-v="'+f.id+'" '+(S.meals>=MEALS_MAX?'disabled':'')+'><div class="ico">'+f.ic+'</div><div class="tx"><div class="nm">'+f.n+'</div><div class="dim">+'+f.en+' энергии</div></div><div class="cost" style="color:var(--grn)">$'+f.cost+'</div></button>';
-  const pay=workPay();
-  h+='<button class="tcard" data-act="work"><div class="ico">📦</div><div class="tx"><div class="nm">Подработка грузчиком</div><div class="dim">Тратит 30 энергии, платит наличкой</div></div><div class="cost" style="color:var(--grn)">+$'+pay+'</div></button>';
+  h+='<button class="tcard" data-act="sleep"><div class="ico">🛏</div><div class="tx"><div class="nm">Выспаться</div><div class="dim">Новый день, энергия на максимум. Раз в 2 часа<br><b id="sleepT" style="color:var(--yel)"></b></div></div><div class="cost">+⚡MAX</div></button>';
+  mealsReset(); const fa=foodOf(S.food); h+='<div class="dim" style="margin:-2px 0 8px">🍽 Меню дня · еда до сна: <b style="color:var(--yel)">'+(MEALS_MAX-S.meals)+'/'+MEALS_MAX+'</b></div>'+
+    (fa?'<div class="note" style="margin:0 0 8px">Баф на следующий забег: <b>'+fa.ic+' '+fa.n+'</b> — '+fa.d+'</div>':'');
+  menuToday().forEach((fi,k)=>{ const f=FOOD[fi], deal=k===0, pr=dishPrice(fi,deal);
+    h+='<button class="tcard'+(deal?' deal':'')+'" data-act="eat" data-v="'+f.id+'" '+(S.meals>=MEALS_MAX||S.money<pr?'disabled':'')+'><div class="ico">'+f.ic+'</div><div class="tx"><div class="nm">'+f.n+(deal?' <span class="dtag">−30% · блюдо дня</span>':'')+'</div><div class="dim">+'+f.en+'⚡ · '+f.d+'</div></div><div class="cost" style="color:var(--yel)">'+(deal?'<s class="dim">$'+dishPrice(fi,false)+'</s><br>':'')+'$'+pr+'</div></button>'; });
+  h+='<div class="dim" style="margin:8px 0 4px">💼 Подработка — '+JOB_EN+'⚡, наличными. Новая — в каждом районе</div>';
+  for(let d=jobsOpen()-1;d>=0;d--){ const J=JOBS[d]; h+='<button class="tcard" data-act="work" data-v="'+d+'" '+(S.energy<JOB_EN?'disabled':'')+'><div class="ico">'+J.ic+'</div><div class="tx"><div class="nm">'+J.n+'</div><div class="dim">'+J.d[0].toUpperCase()+J.d.slice(1)+' · район '+(d+1)+'</div></div><div class="cost" style="color:var(--grn)">+$'+workPay(d)+'</div></button>'; }
+  if(jobsOpen()<JOBS.length) h+='<div class="dim" style="margin:-2px 0 8px">🔒 Следующая подработка — с этапа '+(jobsOpen()*10+1)+' (район «'+ARENAS[jobsOpen()].n+'»)</div>';
   const c2=h.length; nashReset(); h+='<div class="h2" style="margin-top:14px">Аптечка и запас'+ib('cons')+'</div>';
   for(const k in CONS){ const c=CONS[k], pr=consPrice(k), have=S.cons[k]||0, dis=have>=c.max||(k==='nash'&&S.nashN>=NASH_DAY)||S.money<pr;
     h+='<button class="tcard" data-act="buycons" data-v="'+k+'" '+(dis?'disabled':'')+'><div class="ico">'+c.ic+'</div><div class="tx"><div class="nm">'+c.n+'</div><div class="dim">'+c.d+' · есть '+have+'/'+c.max+(k==='nash'?' · сегодня '+S.nashN+'/'+NASH_DAY:'')+'</div></div><div class="cost" style="color:var(--grn)">$'+pr+'</div></button>'; }
@@ -2898,8 +2919,21 @@ function tabGym(){
 }
 const GYM_SECS=[['train','💪 Тренировки'],['rest','🛏 Отдых'],['cons','🧰 Аптечка'],['gym','🏋 Зал']];
 let gymSec='train';
-/* Подработка платит МЕНЬШЕ, чем стоят 30⚡ из самой дешёвой еды, — круг «поел → поработал» больше не приносит денег (баг бесконечных денег). */
-const workPay=()=>Math.max(1,Math.floor(30*Math.min(...FOOD.map(f=>f.cost/f.en)))-1);
+/* Подработки (сборка 98): своя в каждом районе, открывается вместе с районом (этап 10·d+1) и остаётся.
+   Первая платит МЕНЬШЕ, чем стоят 30⚡ из самой дешёвой еды (против круга «поел → поработал»), следующие — по деньгам своего района:
+   JOB_K от призовых первого босса района (×seasonPay). Бой выгоднее: новый этап — ~1,6 призовых за 20⚡. */
+const JOBS=[{ic:'📦',n:'Грузчик',d:'разгрузить фуру',t:'Разгрузил фуру'},{ic:'🔧',n:'Помощник механика',d:'перебрать мотор в гараже',t:'Перебрал мотор'},
+  {ic:'🏭',n:'Смена на заводе',d:'отстоять смену у станка',t:'Отстоял смену у станка'},{ic:'🪟',n:'Мойщик окон',d:'отмыть окна башни на высоте',t:'Отмыл окна башни'},
+  {ic:'🛡️',n:'Охрана подпольных боёв',d:'держать порядок у ринга',t:'Отработал смену у ринга'}];
+const JOB_EN=30, JOB_K=.6;
+const jobsOpen=()=>Math.min(JOBS.length,1+Math.floor(S.beaten/10));
+const JOB0=11, FOOD_K=1.5, FOOD_DEAL=.7; // грузчик — $11 (как до сборки 99); еда района — в 1,5 раза дороже подработки за 1⚡
+const workPay=(d=0)=>d?Math.round(OPP[d*10].money*JOB_K*seasonPay()):JOB0;
+const foodRate=()=>{ const d=jobsOpen()-1; return d?FOOD_K*workPay(d)/JOB_EN:FOOD_K*JOB0/JOB_EN*seasonPay(); };
+function menuToday(){ let h=0; for(const ch of dayKey()+'|menu') h=(Math.imul(h,31)+ch.charCodeAt(0))>>>0; const r=mulberry(h), l=[];
+  while(l.length<3){ const i=Math.floor(r()*FOOD.length); if(!l.includes(i)) l.push(i); } return l.sort((a,b)=>a-b); } // первое — блюдо дня (слабейший баф)
+const dishPrice=(i,deal)=>Math.max(1,Math.round(FOOD[i].en*foodRate()*(1+.05*i)*(deal?FOOD_DEAL:1)));
+const foodOf=id=>FOOD.find(f=>f.id===id);
 function moveStats(m){
   if(m.type==='atk') return '<div class="mvst"><span>Урон <b>'+m.dmg+'</b></span><span>Точн. <b>'+Math.round(m.acc*100)+'%</b></span><span>Темп <b>'+(1/m.spd).toFixed(1)+'</b></span><span>Стамина <b>'+m.sta+'</b></span><span>Сквозь блок <b>'+Math.round(m.pierce*100)+'%</b></span></div>';
   return '<div class="mvst"><span>Длит. <b>'+(m.dur/1000).toFixed(1)+' c</b></span><span>Стамина <b>'+m.sta+'</b></span></div>';
@@ -2926,7 +2960,7 @@ function tabLeague(){
   let h='<div class="h2">Этапы · '+S.beaten+'/'+OPP.length+(S.season?' · сезон '+(S.season+1):'')+ib('league')+'</div>';
   h+='<button class="btn sm" data-act="cp" style="margin-bottom:8px">⏭ Начинать с '+CP_WAVE+'-й волны там, где уже доходил до босса: <b style="color:'+(S.cp?'var(--grn)':'var(--dim)')+'">'+(S.cp?'вкл':'выкл')+'</b></button>';
   if(S.champ) h+='<div class="note">🏆 Ты чемпион улиц! Повторные этапы приносят 40% денег и 50% опыта.</div><button class="btn yel" data-act="season" style="margin-bottom:10px">🏆 Новый сезон '+((S.season||0)+2)+': соперники сильнее, у боссов особенности, +5% урона навсегда</button>';
-  if(S.season) h+='<div class="dim" style="margin-bottom:8px">Сезон '+(S.season+1)+': соперники сильнее на '+S.season*15+'% (и бьют больнее), у боссов особенности, твой урон +'+S.season*5+'%.</div>';
+  if(S.season) h+='<div class="dim" style="margin-bottom:8px">Сезон '+(S.season+1)+': соперники сильнее на '+S.season*15+'% (и бьют больнее), у боссов особенности, твой урон +'+S.season*5+'%, деньги за бои и задания +'+S.season*15+'%.</div>';
   const curD=Math.floor(Math.min(S.beaten,OPP.length-1)/10);
   OPP.forEach((o,i)=>{ const done=i<S.beaten, next=i===S.beaten, lock=i>S.beaten, mem=o.duo?o.members:[o], dn=Math.floor(i/10);
     if(i%10===0) h+='<div class="h2" style="margin-top:12px">Район '+(dn+1)+' · '+ARENAS[arenaOf(i)].n+(dn>curD?' 🔒':'')+'</div>'+(dn>curD?'<div class="dim" style="margin-bottom:8px">Откроется, когда пройдёшь район '+dn+'.</div>':'');
@@ -2985,7 +3019,7 @@ function helpHTML(){
   '<h4>🥋 Школы боя</h4><ul><li><b>Громила</b> — уличный бокс: тяжёлые удары, «Размашистый» пробивает любой блок.</li><li><b>Техник</b> — классический бокс: «Двойка», «Контрудар», уклонения, частые точные удары.</li><li><b>Кикбоксёр</b> — кикбоксинг: лоу-кик (отнимает стамину), мидл-кик, колено, хай-кик.</li><li>У каждой школы свои приёмы на вкладке «Приёмы» и свои стили.</li><li><b>Дерево навыков</b> (вкладка «Приёмы» → «🌳 Дерево навыков»): каждый уровень даёт 3 общих очка развития — каждое можно вложить либо в характеристику (вкладка «Боец»), либо в навык дерева. У каждого бойца 3 школы: Громила — уличный бокс, вольная борьба, грязный бой; Техник — классический бокс, защитный бокс, давление; Кикбоксёр — кикбоксинг, муай-тай, тхэквондо. Сначала открыта только основная, следующая — когда в предыдущую вложено 5 очков. У каждой школы бафф и дебафф (действует, когда школа активна) и своя фирменная связка комбо; узлы — баффы, дебаффы сопернику и новые приёмы, действуют всегда.</li><li>Сброс за деньги — отдельно очки характеристик (вкладка «Боец») и дерево навыков (в окне дерева); цена растёт с этапом лиги.</li></ul>'+
   '<h4>💤 Пока тебя нет</h4><ul><li>Боец сам фармит лучший пройденный этап: награда за каждые полчаса, максимум за 2 часа. Деньги — как за врагов этапа, опыта немного. Забери, когда вернёшься.</li></ul>'+
   '<h4>🥊 Бой</h4><ul><li>Боец сам выбирает приёмы из твоей комбинации (до 3).</li><li>Шкала адреналина полна — боец сам проводит <b>СУПЕРУДАР</b>: неблокируемый удар.</li><li><b>Комбо-связка:</b> раз в 12 с над кнопками приёмов появляются 3 значка — нажми эти приёмы по порядку (на каждое нажатие ~1,4 с). Успел — <b>комбо-удар</b>: сильный, не блокируется и не промахивается, +адреналин. Ошибся — связка сгорает, новая через 4 с. Фирменная связка школы (Громила: хук → джеб → апперкот; Техник: джеб → двойка → апперкот; Кикбоксёр: лоу-кик → колено → хай-кик) — если все три приёма в комбинации — бьёт ещё сильнее. Связки нет в «Авто» и на x4.</li><li>Стамина тратится на удары. Кончилась — боец переводит дух.</li><li>На врага волны — 40 секунд, с каждой волной враги крепче. Не уложился — побеждает тот, у кого больше % здоровья.</li><li>Кнопка скорости ускоряет бой до x4.</li></ul>'+
-  '<h4>🏋 Зал</h4><ul><li>Залы дорогие (до $4800), личный тренер — ×1,5 к тренировкам до конца круга лиги. На новом круге зал и тренер — сначала, тренер — дороже.</li><li>Тренировка идёт сама 3 секунды и даёт прогресс характеристики. Обычная — 20⚡; интенсивная — 35⚡ и ×2,2 прогресса, но усталость: −15% здоровья в следующем забеге.</li><li>Энергия тратится на новые этапы, тренировки и работу. Повтор пройденного этапа (фарм) — бесплатно. Энергия восстанавливается сама: +1 каждые 3 минуты, даже когда ты не в игре. Ещё её дают еда и сон — «Выспаться» раз в 8 часов.</li><li>Улучшай зал — тренировки станут эффективнее.</li></ul>'+
+  '<h4>🏋 Зал</h4><ul><li>Залы дорогие (до $4800), личный тренер — ×1,5 к тренировкам до конца круга лиги. На новом круге зал и тренер — сначала, тренер — дороже.</li><li>Тренировка идёт сама 3 секунды и даёт прогресс характеристики. Обычная — 20⚡; интенсивная — 35⚡ и ×2,2 прогресса, но усталость: −15% здоровья в следующем забеге.</li><li>Энергия тратится на новые этапы, тренировки и работу. Повтор пройденного этапа (фарм) — бесплатно. Энергия восстанавливается сама: +1 каждые 3 минуты, даже когда ты не в игре. Ещё её дают еда и сон — «Выспаться» раз в 2 часа. Еда — меню дня из 3 блюд, каждое даёт баф на следующий забег.</li><li>Улучшай зал — тренировки станут эффективнее.</li></ul>'+
   '<h4>📈 Прогресс</h4><ul><li>Опыт → уровни → 3 общих очка развития за уровень: в характеристики или в дерево навыков — выбирай сам. Уровень без предела, но каждый следующий требует больше опыта. Повтор пройденного этапа даёт вдвое меньше опыта, чем первое прохождение, автофарм — ещё вдвое меньше.</li><li>Характеристика на максимуме (30) — очки идут в её ★ мастерство (до 50): +1% урона, скорости атак или здоровья за очко, у ловкости +0,4% к уходу от удара.</li><li>Проиграл боссу — 25% опыта, а начиная с Бизона ещё и 10% его призовых.</li><li>Новые приёмы открываются с уровнем и покупаются за деньги.</li><li>Прогресс сохраняется автоматически.</li></ul>'+
   '<h4>Приёмы</h4><ul><li><b>Блок</b> гасит быстрые удары, но апперкот и тяжёлый его пробивают.</li><li><b>Уклон</b> — шанс полностью избежать удара и контратаковать.</li></ul></div>'+
   '<button class="btn grn" data-act="closemodal">Понятно</button>';
@@ -3047,16 +3081,16 @@ const ACT={
   sleep(){
     const left=sleepLeft(); if(left) return toast('Пока не спится. Выспаться снова можно через '+fmtClock(left));
     if(S.energy>=S.maxEnergy) return toast('Энергия и так полная');
-    S.sleeps++; S.day++; S.energy=S.maxEnergy; S.enAt=S.sleptAt=Date.now(); S.meals=0; S.mealT=0; save(); toast('День '+S.day+'. Ты отлично выспался!'); renderHub(); // бесплатно, но раз в 8 часов; после сна снова можно поесть
+    S.sleeps++; S.day++; S.energy=S.maxEnergy; S.enAt=S.sleptAt=Date.now(); S.meals=0; S.mealT=0; save(); toast('День '+S.day+'. Ты отлично выспался!'); renderHub(); // бесплатно, но раз в 2 часа; после сна снова можно поесть
   },
   adclaim(){ if(AD&&AD.left<=0) AD.reward(); },
   adcancel(){ if(AD) AD.cancel(); },
-  eat(el){ const f=FOOD.find(x=>x.id===el.dataset.v); if(!f) return; mealsReset();
+  eat(el){ const m=menuToday(), k=m.findIndex(i=>FOOD[i].id===el.dataset.v); if(k<0) return toast('Этого блюда сегодня нет в меню'); const f=FOOD[m[k]], pr=dishPrice(m[k],k===0); mealsReset();
     if(S.meals>=MEALS_MAX) return toast('Больше не лезет! Снова поесть — после сна или через '+fmtClock(S.mealT+SLEEP_CD-Date.now()));
-    if(S.money<f.cost) return toast('Не хватает денег');
-    if(S.energy>=S.maxEnergy) return toast('Энергия и так полная');
-    if(!S.meals) S.mealT=Date.now(); S.meals++; S.money-=f.cost; S.energy=Math.min(S.maxEnergy,S.energy+f.en); save(); sfx('coin'); toast(f.n+': +'+f.en+' энергии · поесть ещё: '+(MEALS_MAX-S.meals)); renderHub(); },
-  work(){ if(S.energy<30) return toast('Слишком устал для работы'); const pay=workPay(); spendEnergy(30); S.money+=pay; addXp(1); save(); sfx('coin'); toast('Разгрузил фуру: +$'+pay); renderHub(); },
+    if(S.money<pr) return toast('Не хватает денег');
+    if(!S.meals) S.mealT=Date.now(); S.meals++; S.money-=pr; S.energy=Math.min(S.maxEnergy,S.energy+f.en); const was=foodOf(S.food); S.food=f.id; save(); sfx('coin');
+    toast(f.ic+' '+f.n+': +'+f.en+'⚡ · баф на забег: '+f.d+(was&&was!==f?' (вместо «'+was.n+'»)':'')); renderHub(); },
+  work(el){ const d=Math.min(jobsOpen()-1,Math.max(0,+(el&&el.dataset.v)||0)); if(S.energy<JOB_EN) return toast('Слишком устал для работы'); const pay=workPay(d); spendEnergy(JOB_EN); S.money+=pay; addXp(1); save(); sfx('coin'); toast(JOBS[d].t+': +$'+pay); renderHub(); },
   upgym(){ if(S.gym>=GYM.length) return; const c=GYM[S.gym].cost; if(S.money<c) return toast('Не хватает денег'); S.money-=c; S.gym++; save(); sfx('lvl'); toast('Теперь ты тренируешься в: '+GYM[S.gym-1].n); renderHub(); },
   buy(el){ const id=el.dataset.v, m=MOVES[id]; if(!m||S.owned.includes(id)||!schoolMoves(S.hero).includes(id)) return; // только приёмы своей школы
     if(S.lvl<mvLvl(id)) return toast('Нужен уровень '+mvLvl(id)); if(S.money<mvCost(id)) return toast('Не хватает денег');
@@ -3258,7 +3292,7 @@ function tgBack(){
 
 /* ---------- ДИАГНОСТИКА: ошибки на телефоне видны прямо в игре ----------
    Нажатие на номер сборки на заставке показывает сведения об устройстве; нажатие на панель — скрывает её. */
-const BUILD='97 · 2026-10-29'; // номер сборки — видно на заставке, свежая версия или старая из кэша Telegram
+const BUILD='99 · 2026-10-29'; // номер сборки — видно на заставке, свежая версия или старая из кэша Telegram
 let FRAMES=0, PRESENT_MODE='чёткий';
 /* Сторож: раз в секунду, независимо от кадров. Если игра открыта, а кадры не идут — или бой стоит без открытых окон, —
    показываем панель ошибок с подробностями (по ней видно причину, например на ПК). */
