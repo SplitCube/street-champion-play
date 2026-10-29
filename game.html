@@ -140,7 +140,8 @@ button.chip{font:inherit;font-weight:bold;cursor:pointer;position:relative;min-h
 .ostat{font-size:11px;color:var(--dim);margin-top:3px}
 /* title */
 #scr-title{justify-content:flex-start;background:#07050f;padding-top:var(--sat);padding-bottom:var(--sab)}
-#titleCv{width:100%;aspect-ratio:16/9;box-shadow:0 3px 0 #000} /* тень вместо рамки — не меняет размер холста */
+#titleCv{width:100%;flex:1 1 0;min-height:calc(min(100vw,520px)*.5625);max-height:calc(min(100vw,520px)*1.25);box-shadow:0 3px 0 #000} /* сцена занимает свободное место (края обрезаются, не растягивается); тень вместо рамки */
+#scr-title .menu{margin-bottom:0}
 .logo{text-align:center;padding:14px 10px 6px}
 .logo .a{font-size:30px;font-weight:bold;color:var(--yel);letter-spacing:2px;line-height:1.05;text-shadow:3px 0 #000,-3px 0 #000,0 3px #000,0 -3px #000,4px 4px 0 var(--red),6px 6px 0 #000}
 .logo .b{font-size:18px;font-weight:bold;color:var(--cyan);letter-spacing:6px;margin-top:8px;text-shadow:2px 2px 0 #000}
@@ -171,7 +172,7 @@ button.chip{font:inherit;font-weight:bold;cursor:pointer;position:relative;min-h
 .ftimer small{font-size:9px;font-weight:bold;color:#f0d890;letter-spacing:1px;text-shadow:1px 1px 0 #000;white-space:nowrap}
 .ftimer span{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:bold;color:#fff3c0;
   background:radial-gradient(circle at 50% 40%,#3a2a10 0 55%,#1a1206 56%);box-shadow:0 0 0 3px #c9940a,0 0 0 5px #5a3a08,0 0 0 7px #000;text-shadow:2px 2px 0 #000}
-.awrap{position:relative;width:100%;aspect-ratio:16/9;background:#000;overflow:hidden;cursor:pointer;touch-action:none}
+.awrap{position:relative;width:100%;aspect-ratio:6/5;max-height:40%;background:#000;overflow:hidden;cursor:pointer;touch-action:none}
 .awrap canvas{width:100%;height:100%}
 #fx{position:absolute;inset:0;pointer-events:none;overflow:hidden}
 .ft{position:absolute;transform:translate(-50%,-50%);font-weight:bold;font-size:16px;white-space:nowrap;text-shadow:2px 0 #000,-2px 0 #000,0 2px #000,0 -2px #000;animation:rise .9s steps(9) forwards}
@@ -179,6 +180,9 @@ button.chip{font:inherit;font-weight:bold;cursor:pointer;position:relative;min-h
 @keyframes rise{0%{margin-top:6px;opacity:1}15%{margin-top:-8px}100%{margin-top:-34px;opacity:0}}
 #banner{position:absolute;left:50%;top:50%;transform:translate(-50%,-60%);height:22%;width:auto;max-width:96%;pointer-events:none;display:none}
 #banner.on{display:block;animation:popc .35s steps(4)}
+#bigfx{position:absolute;left:50%;top:24%;transform:translate(-50%,-50%);height:15%;width:auto;max-width:96%;pointer-events:none;display:none}
+#bigfx.on{display:block;animation:bfx .7s steps(7) forwards}
+@keyframes bfx{0%{transform:translate(-50%,-50%) scale(2);opacity:0}20%{transform:translate(-50%,-50%) scale(1);opacity:1}75%{opacity:1}100%{transform:translate(-50%,-70%) scale(1);opacity:0}}
 @keyframes popc{0%{transform:translate(-50%,-60%) scale(2.2);opacity:0}100%{transform:translate(-50%,-60%) scale(1);opacity:1}}
 @keyframes pop{0%{transform:scale(2.2);opacity:0}100%{transform:scale(1);opacity:1}}
 .fctl{flex:1;display:flex;flex-direction:column;gap:8px;padding:8px 10px;background:var(--bg);min-height:0;overflow-y:auto;padding-bottom:max(8px,var(--sab))}
@@ -224,6 +228,17 @@ button.chip{font:inherit;font-weight:bold;cursor:pointer;position:relative;min-h
 .gear .gtx{flex:1;min-width:0;display:flex;flex-direction:column;font-size:12px}
 .gear .gtx small{color:var(--dim);font-size:11px}
 .gear .btn{min-height:32px;padding:4px 8px;width:auto}
+.ggrid{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin:4px 0 6px}
+.ggrid.eq{grid-template-columns:repeat(4,1fr)}
+.gt{position:relative;aspect-ratio:1;min-height:44px;padding:0;background:var(--panel2);border:3px solid #3a2f66;box-shadow:inset 0 0 0 2px #000,0 2px 0 #000;font-size:24px;line-height:1;display:grid;place-items:center;cursor:pointer;font-family:inherit}
+.gt.empty{opacity:.4;filter:grayscale(1)}
+.gt.sel{outline:3px solid #fff;outline-offset:1px}
+.gt .lv{position:absolute;left:3px;bottom:2px;font-size:11px;font-style:normal;font-weight:bold;color:#fff;text-shadow:1px 0 #000,-1px 0 #000,0 1px #000,0 -1px #000}
+.gt .up{position:absolute;right:3px;top:2px;font-size:13px;color:var(--grn);text-shadow:1px 1px 0 #000}
+.gt .wr{position:absolute;right:2px;bottom:1px;font-size:11px}
+@keyframes hlp{0%,100%{box-shadow:0 0 0 0 #fff0}50%{box-shadow:0 0 0 4px #fff,0 0 14px 6px #ffd23f}}
+.btn.hl,.fbtn.hl{animation:hlp .6s steps(3) 4;position:relative;z-index:2}
+.grow2{display:flex;gap:6px;margin-bottom:6px}.grow2 .btn{flex:1}
 .loot{font-size:12px;text-align:left;margin:6px 0;line-height:1.5}
 .picks{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
 .pick{display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:2px;background:#1a1430;border:3px solid #000;box-shadow:inset 0 0 0 2px #3d2f6b;color:var(--txt);padding:6px 2px;font:inherit;cursor:pointer;min-width:0}
@@ -334,7 +349,7 @@ div.power:not(.ostat){font-size:13px;margin-top:4px}
       <div class="ftimer"><small id="fRound">ВОЛНА</small><span id="fTimer">30</span></div>
       <div class="side r"><div class="nmrow"><canvas class="nm" id="oName" width="10" height="10"></canvas></div><div class="sb"><div class="bar hp" id="oHpBar"><i class="ghost" id="oGhost"></i><i class="fill" id="oHp"></i><b class="num" id="oHpN"></b></div><div class="bar st"><i class="fill" id="oSt"></i><b class="num" id="oStN"></b></div></div><canvas class="face" id="oFace" width="30" height="30"></canvas></div>
     </div>
-    <div class="awrap" id="arena"><canvas id="fightCv" width="320" height="180"></canvas><div id="fx"></div><canvas id="banner" width="10" height="10"></canvas></div>
+    <div class="awrap" id="arena"><canvas id="fightCv" width="320" height="180"></canvas><div id="fx"></div><canvas id="banner" width="10" height="10"></canvas><canvas id="bigfx" width="10" height="10"></canvas></div>
     <div class="fctl">
       <div class="waves" id="waveTrack"></div>
       <div class="runinfo" id="runInfo"></div>
@@ -1916,7 +1931,7 @@ function setName(id,text){
 // длинное имя переносится на две строки, чтобы остаться крупным; возвращает нижнюю границу текста
 FONT5['«']=['.....','..#.#','.#.#.','#.#..','.#.#.','..#.#','.....']; FONT5['»']=['.....','#.#..','.#.#.','..#.#','.#.#.','#.#..','.....']; // кавычки для клички на экране VS
 function vsName(ctx,text,cx,y,color,oneLine){
-  const room=Math.min(cx,W-cx)*2-8;
+  const room=Math.min(cx-FV.x,FV.x+FV.w-cx)*2-8; // FV — видимая часть арены (края обрезаны)
   const wrap=s=>{ const out=[]; for(const w of text.split(' ')){ const l=out.length?out[out.length-1]+' '+w:w; if(out.length&&bitmapWidth(l,s)<=room) out[out.length-1]=l; else out.push(w); } return out; }; // перенос по словам
   let s=2, lines=wrap(2); if(lines.length>(oneLine?1:2)||lines.some(l=>bitmapWidth(l,2)>room)){ s=1; lines=wrap(1); } // oneLine: лучше мельче, но в одну строку
   lines.forEach((l,n)=>{ const w=bitmapWidth(l,s), x=Math.round(cx-w/2), yy=y+n*(7*s+3);
@@ -1934,7 +1949,7 @@ function drawVS(ctx,F,t){
   ctx.fillStyle='#10286a'; ctx.beginPath(); ctx.moveTo(176,0); ctx.lineTo(W,0); ctx.lineTo(W,H); ctx.lineTo(144,H); ctx.fill();
   for(let y=0;y<H;y+=3) ditherRect(ctx,0,y,W,1,'rgba(0,0,0,.35)',2);
   ctx.fillStyle='#ffd23f'; ctx.beginPath(); ctx.moveTo(174,0); ctx.lineTo(178,0); ctx.lineTo(146,H); ctx.lineTo(142,H); ctx.fill();
-  const slide=Math.max(0,1-el/350), px=Math.round(76-slide*140), ox=Math.round(244+slide*140);
+  const cx=W/2, half=FV.w/2, slide=Math.max(0,1-el/350), px=Math.round(cx-half*.53-slide*140), ox=Math.round(cx+half*.53+slide*140); // бойцы по краям видимой части
   const opp=OPP[F.idx], mem=opp.duo?opp.members:[opp];
   // бойцы чуть выше и мельче, чтобы внизу поместилось название локации крупным шрифтом
   if(mem[1]) renderFighter(ctx,mem[1].pal,'idle',ox+34,161,-1,t,0,null,1.3);
@@ -2033,7 +2048,7 @@ function useRage(){
   if(!F||F.state!=='fight'||F.rageCd>0) return;
   F.rageT=RAGE_T; F.rageCd=RAGE_CD; F.p.adr=Math.min(100,F.p.adr+30); spBreak('norage');
   if(F.sim) return;
-  F.flashAll=.35; F.shake=Math.max(F.shake,4); sfx('super'); floatTxt(F.p,'🔥 ЯРОСТЬ!','#ff8a2b',true);
+  F.flashAll=.35; F.shake=Math.max(F.shake,4); sfx('super'); floatTxt(F.p,'🔥 ЯРОСТЬ!','#ff8a2b',true); bigFx('ЯРОСТЬ!','#ff8a2b');
   addLog('<b style="color:#ff8a2b">🔥 Ярость: 5 секунд урон +35%, атаки чаще!</b>'); hudCache.rage=null;
 }
 /* Комбо-связка — бонус за внимание, бой идёт и без неё. Раз в COMBO_CD (12 с) над кнопками появляется связка из 3 приёмов:
@@ -2070,7 +2085,7 @@ function comboTap(m){
   F.ch.i++; F.ch.t=COMBO_STEP; floatTxt(F.p,F.ch.i+'/3','#38e8ff');
   if(F.ch.i<3) return sfx('combo');
   F.cq={m:F.ch.seq[2],sig:F.ch.sig}; F.ch=null; F.cd=COMBO_CD; F.comboHits++; S.cmbH++; taskAdd('combo'); // удар — как только боец закончит текущий
-  F.p.adr=Math.min(100,F.p.adr+COMBO_ADR); F.flashAll=.45; floatTxt(F.p,'КОМБО!','#38e8ff',true); sfx('super');
+  F.p.adr=Math.min(100,F.p.adr+COMBO_ADR); F.flashAll=.45; floatTxt(F.p,'КОМБО!','#38e8ff',true); bigFx('КОМБО!','#38e8ff'); sfx('super');
 }
 // комбо-удар из очереди: боец бьёт последним приёмом связки, удар не блокируется и не промахивается
 function comboStrike(f){ const q=F.cq; F.cq=null; f.cur=q.m; f.stance=null; f.stanceT=0; f.pending={m:q.m,t:140,cb:q.sig?COMBO_HIT*COMBO_SIG:COMBO_HIT}; f.pose=windPose(PZ(q.m)); f.poseT=0; f.timer=Math.max(f.timer,intervalOf(f.st)*.6);
@@ -2116,18 +2131,35 @@ const scaleSt=st=>{ const k=seasonSt(), r={}; for(const s in st) r[s]=Math.round
 // интенсивная тренировка: больше прогресса, но усталость — −15% здоровья в следующем забеге
 const TRAIN_COST_HARD=35, TRAIN_HARD_K=2.2, TIRED_HP=.85;
 const trainCost=()=>S.trMode==='hard'?TRAIN_COST_HARD:TRAIN_COST;
+// снаряжение сеткой: надетое — 4 клетки, сумка — по 5 в ряд; рамка цвета редкости, ▲ — лучше надетого; действия — у выбранной вещи
+let gearSel='g'; // выбранная клетка: ключ слота или 'b'+номер в сумке
+const gearBetter=it=>{ const cur=S.gear[it.s]; return !cur||gearVal(it)>gearVal(cur); };
+function gearTile(it,v,ic){
+  const w=it?(it.w==null?100:it.w):100;
+  return '<button class="gt'+(it?'':' empty')+(gearSel===v?' sel':'')+'" data-act="gsel" data-v="'+v+'"'+(it?' style="border-color:'+gearCol(it)+'"':'')+' aria-label="'+(it?gearName(it):'пусто')+'">'+ic+
+    (it&&it.l>1?'<i class="lv">+'+(it.l-1)+'</i>':'')+(it&&v[0]==='b'&&gearBetter(it)?'<b class="up">▲</b>':'')+(it&&w<50?'<b class="wr">🔧</b>':'')+'</button>';
+}
+function gearRow(it,v){ // подробности и кнопки выбранной вещи
+  if(!it) return '<div class="gear"><span class="gic">'+SLOTS[v].ic+'</span><div class="gtx"><span class="dim">'+SLOTS[v].n[0].toUpperCase()+SLOTS[v].n.slice(1)+' — пусто. Вещи выпадают в боях.</span></div></div>';
+  const w=it.w==null?100:it.w;
+  if(v[0]==='b'){ const j=+v.slice(1);
+    return '<div class="gear"><span class="gic">'+SLOTS[it.s].ic+'</span><div class="gtx"><b style="color:'+gearCol(it)+'">'+gearName(it)+'</b><small>'+gearTxt(it)+' · класс '+it.t+(gearBetter(it)?' · <span style="color:var(--grn)">лучше надетого</span>':'')+'</small></div>'+
+      '<button class="btn sm" data-act="gequip" data-v="'+j+'">Надеть</button><button class="btn sm" data-act="gsell" data-v="'+j+'">$'+gearSellPrice(it)+'</button></div>'; }
+  return '<div class="gear"><span class="gic">'+SLOTS[v].ic+'</span><div class="gtx"><b style="color:'+gearCol(it)+'">'+gearName(it)+'</b><small>'+gearTxt(it)+' · класс '+it.t+' · <span style="color:'+(w<50?'var(--org)':'inherit')+'">прочность '+w+'%</span></small></div>'+
+    (it.l<GEAR_MAX_LVL?'<button class="btn sm yel" data-act="gup" data-v="'+v+'" '+(S.money>=gearUpCost(it)?'':'disabled')+'>⬆ $'+gearUpCost(it)+'</button>':'<span class="dim">MAX</span>')+
+    (reforgeOk(it)?'<button class="btn sm" data-act="reforge" data-v="'+v+'" '+(S.money>=reforgeCost(it)?'':'disabled')+'>✦ $'+reforgeCost(it)+' · '+Math.round(REFORGE_P[it.r]*100)+'%</button>':'')+'</div>';
+}
 function gearHTML(){
+  if(gearSel[0]==='b'&&!S.bag[+gearSel.slice(1)]) gearSel='g';
   let h='<div class="card"><div class="h2">Снаряжение'+ib('gear')+'</div>';
-  const rc=repairAll(); if(rc) h+='<button class="btn sm yel" data-act="repair" style="margin-bottom:6px" '+(S.money>=rc?'':'disabled')+'>🔧 Починить всё за $'+rc+'</button>';
-  for(const k of SLOT_IDS){ const it=S.gear[k], w=it?(it.w==null?100:it.w):100;
-    h+='<div class="gear">'+'<span class="gic">'+SLOTS[k].ic+'</span><div class="gtx">'+(it?'<b style="color:'+gearCol(it)+'">'+gearName(it)+'</b><small>'+gearTxt(it)+' · класс '+it.t+' · <span style="color:'+(w<50?'var(--org)':'inherit')+'">прочность '+w+'%</span></small>':'<span class="dim">'+SLOTS[k].n[0].toUpperCase()+SLOTS[k].n.slice(1)+' — пусто</span>')+'</div>'+
-      (it?(it.l<GEAR_MAX_LVL?'<button class="btn sm yel" data-act="gup" data-v="'+k+'" '+(S.money>=gearUpCost(it)?'':'disabled')+'>⬆ $'+gearUpCost(it)+'</button>':'<span class="dim">MAX</span>')+
-        (reforgeOk(it)?'<button class="btn sm" data-act="reforge" data-v="'+k+'" '+(S.money>=reforgeCost(it)?'':'disabled')+'>✦ $'+reforgeCost(it)+' · '+Math.round(REFORGE_P[it.r]*100)+'%</button>':''):'')+'</div>'; }
+  const rc=repairAll(), best=S.bag.some(gearBetter);
+  if(rc||best) h+='<div class="grow2">'+(best?'<button class="btn sm grn" data-act="gbest">▲ Надеть лучшее</button>':'')+(rc?'<button class="btn sm yel" data-act="repair" '+(S.money>=rc?'':'disabled')+'>🔧 Починить всё · $'+rc+'</button>':'')+'</div>';
+  h+='<div class="ggrid eq">'+SLOT_IDS.map(k=>gearTile(S.gear[k],k,SLOTS[k].ic)).join('')+'</div>';
+  const sel=gearSel[0]==='b'?S.bag[+gearSel.slice(1)]:S.gear[gearSel];
+  h+=gearRow(sel,gearSel);
   h+='<div class="h2" style="margin-top:10px">Сумка '+S.bag.length+'/'+BAG_MAX+'</div>';
-  if(!S.bag.length) h+='<div class="dim">Пусто.</div>';
-  S.bag.forEach((it,j)=>{ const cur=S.gear[it.s], better=!cur||gearVal(it)>gearVal(cur);
-    h+='<div class="gear"><span class="gic">'+SLOTS[it.s].ic+'</span><div class="gtx"><b style="color:'+gearCol(it)+'">'+gearName(it)+'</b><small>'+gearTxt(it)+' · класс '+it.t+(better?' · <span style="color:var(--grn)">лучше надетого</span>':'')+'</small></div>'+
-      '<button class="btn sm" data-act="gequip" data-v="'+j+'">Надеть</button><button class="btn sm" data-act="gsell" data-v="'+j+'">$'+gearSellPrice(it)+'</button></div>'; });
+  if(!S.bag.length) h+='<div class="dim">Пусто — вещи выпадают в боях.</div>';
+  else h+='<div class="ggrid">'+S.bag.map((it,j)=>gearTile(it,'b'+j,SLOTS[it.s].ic)).join('')+'</div>';
   return h+'</div>';
 }
 const bossHp=i=>OPP[i].duo?BOSS_HP_DUO:BOSS_HP;
@@ -2215,7 +2247,7 @@ function addLog(m){ if(F.sim) return; F.log.unshift(m); F.log.length=Math.min(F.
 function floatTxt(f,text,color,big){
   if(F.sim) return;
   const d=document.createElement('div'); d.className='ft'+(big?' big':''); d.textContent=text; d.style.color=color;
-  d.style.left=((f.x+rnd(-6,6))/W*100)+'%'; d.style.top=((GROUND-80+rnd(-6,6))/H*100)+'%';
+  d.style.left=clamp((f.x+rnd(-6,6)-FV.x)/FV.w*100,12,88)+'%'; d.style.top=((GROUND-80+rnd(-6,6))/H*100)+'%';
   $('#fx').appendChild(d); setTimeout(()=>d.remove(),950);
 }
 function sparks(x,y,n,colors){ if(F.sim) return; for(let i=0;i<n;i++) F.parts.push({x,y,vx:rnd(-1.6,1.6),vy:rnd(-2,.4),life:rnd(200,450),s:Math.random()<.3?2:1,c:colors[i%colors.length]}); }
@@ -2256,7 +2288,7 @@ function act(f,o){
 function startSuper(f){
   f.adr=0; f.stance=null; f.stanceT=0; f.pending={m:'super',t:260}; f.pose=windPose('super'); f.poseT=0; f.cur='super';
   f.timer=intervalOf(f.st)+260; F.flashAll=.5; sfx('super');
-  floatTxt(f,'СУПЕР!','#ffd23f',true); addLog('<b style="color:#ffd23f">'+f.name+': СУПЕРУДАР!</b>');
+  floatTxt(f,'СУПЕР!','#ffd23f',true); bigFx('СУПЕРУДАР!','#ffd23f'); addLog('<b style="color:#ffd23f">'+f.name+': СУПЕРУДАР!</b>');
 }
 function resolveAttack(a,d,id,cb){ // cb — множитель комбо-удара (удар не блокируется и не промахивается)
   const isSup=id==='super', m=isSup?SUPER:MOVES[id], sure=isSup||!!cb;
@@ -2290,6 +2322,7 @@ function resolveAttack(a,d,id,cb){ // cb — множитель комбо-уд�
   if(!F.sim){ F.fx.push({x:hx,y:hy,t:0,life:blocked?140:200,type:blocked?'block':'hit',big:crit||isSup||m.dmg>=11,dir:d.face});
     F.hitstop=Math.max(F.hitstop,blocked?45:crit||isSup?140:m.dmg>=11?100:70); } // стоп-кадр: удар «чувствуется»
   if(cb&&!F.sim){ F.shake=Math.max(F.shake,7); F.hitstop=Math.max(F.hitstop,170); F.flashAll=.5; sparks(hx,hy,18,['#fff','#38e8ff','#9fe0ff']); }
+  if(crit&&!cb&&!isSup&&!blocked) bigFx('КРИТ!','#ff5a6a');
   floatTxt(d,(cb?'КОМБО -':blocked?'БЛОК -':crit?'КРИТ -':'-')+dmg,cb?'#38e8ff':blocked?'#9fe0ff':crit||isSup?'#ffd23f':'#ff5a6a',crit||isSup||!!cb);
   sfx(blocked?'block':(crit||isSup)?'crit':'hit');
   if(!blocked&&(crit||isSup||Math.random()<.35)) addLog(a.name+': '+m.n.toLowerCase()+(crit?' — критический!':'')+' ('+dmg+')');
@@ -2402,6 +2435,8 @@ function renderHUD(){
   const cur=p.cur||''; if(hudCache.cur!==cur){ hudCache.cur=cur; document.querySelectorAll('.mchip').forEach(el=>el.classList.toggle('on',el.dataset.m===cur)); }
 }
 function showBanner(t){ if(F&&F.sim) return; const b=$('#banner'); if(F.banner!==t){ F.banner=t; pixelLabel(b,t,'#ffd23f',14,'#d01818'); b.classList.remove('on'); void b.offsetWidth; b.classList.add('on'); } }
+// крупная надпись эффекта на 0,7 с (комбо, крит, суперудар) — поверх арены, не мешает баннеру по центру
+function bigFx(t,color){ if(!F||F.sim) return; const b=$('#bigfx'); pixelLabel(b,t,color,14,'#000'); b.classList.remove('on'); void b.offsetWidth; b.classList.add('on'); }
 function hideBanner(){ $('#banner').classList.remove('on'); if(F) F.banner=''; }
 // энергия нужна только на новый этап; повтор пройденного (фарм) — бесплатно
 const stageCost=i=>i<S.beaten?0:FIGHT_COST;
@@ -2811,6 +2846,11 @@ function fightBarHTML(){
   return low?'<div class="fbrow">'+go+'<button class="fbtn farm" data-act="fight" data-v="'+(i-1)+'"><span>🔁 Фарм<span class="fst">этап '+i+' · бесплатно</span></span></button></div>':go;
 }
 // красные точки на вкладках: есть что сделать
+// красная точка → на вкладке коротко подсвечивается то, что нажать
+const HL_SEL={fighter:'[data-act=addpt]:not([disabled])',gym:'[data-act=sleep]:not([disabled])',moves:'[data-act=buy]:not([disabled])',league:'#fightbar .fbtn'};
+function hlFor(t){ if(screen!=='hub'||tab!==t) return; const els=[...document.querySelectorAll(HL_SEL[t])]; if(!els.length) return;
+  if(t!=='league') els[0].scrollIntoView({block:'center',behavior:'smooth'});
+  for(const e of els){ e.classList.remove('hl'); void e.offsetWidth; e.classList.add('hl'); setTimeout(()=>e.classList.remove('hl'),2400); } }
 function navBadges(){ const nx=S.beaten<OPP.length, cl=CHANCE_LAST[S.beaten];
   return {fighter:S.pts>0,
     gym:!sleepLeft()&&S.energy<S.maxEnergy/2,
@@ -2998,7 +3038,7 @@ const ACT={
   help(){ openModal(helpHTML()); },
   sound(){ S.sound=!S.sound; save(); $('#btnSound').textContent='Звук: '+(S.sound?'вкл':'выкл'); },
   closemodal(){ closeModal(); },
-  tab(el){ tab=el.dataset.v; if(tab==='gym'&&navBadges().gym) gymSec='rest'; $('#tabBody').scrollTop=0; renderHub(); if(tab==='league') leagueToCur(); }, // точка у «Зала» — про сон: сразу раздел «Отдых»
+  tab(el){ tab=el.dataset.v; const nb=navBadges(); if(tab==='gym'&&nb.gym) gymSec='rest'; $('#tabBody').scrollTop=0; renderHub(); if(tab==='league') leagueToCur(); if(nb[tab]) setTimeout(()=>hlFor(tab),120); }, // точка у «Зала» — про сон: сразу раздел «Отдых»
   gymsec(el){ gymSec=el.dataset.v; $('#tabBody').scrollTop=0; renderHub(); },
   styles(){ stylesOpen=!stylesOpen; renderHub(); },
   addpt(el){ const k=el.dataset.v; if(S.pts<=0) return; if(S.st[k]<MAX_STAT){ S.st[k]++; S.alloc[k]=(S.alloc[k]||0)+1; } else if(mastOf(k)<MAST_MAX) S.mast[k]=mastOf(k)+1; else return; S.pts--; save(); renderHub(); }, // на максимуме — в мастерство
@@ -3058,7 +3098,11 @@ const ACT={
     if(Math.random()<REFORGE_P[it.r]){ it.r++; sfx('lvl'); toast('Перековка удалась: '+gearName(it)+'!'); } else { sfx('miss'); toast('Перековка не удалась — вещь осталась прежней'); }
     save(); renderHub(); },
   gup(el){ const it=S.gear[el.dataset.v]; if(!it||it.l>=GEAR_MAX_LVL) return; const c=gearUpCost(it); if(S.money<c) return toast('Не хватает денег'); S.money-=c; it.l++; save(); sfx('lvl'); toast(gearName(it)+': '+gearTxt(it)); renderHub(); },
-  gequip(el){ const j=+el.dataset.v, it=S.bag[j]; if(!it) return; const cur=S.gear[it.s]; S.bag.splice(j,1); if(cur) S.bag.push(cur); S.gear[it.s]=it; save(); sfx('ui'); renderHub(); },
+  gequip(el){ const j=+el.dataset.v, it=S.bag[j]; if(!it) return; const cur=S.gear[it.s]; S.bag.splice(j,1); if(cur) S.bag.push(cur); S.gear[it.s]=it; gearSel=it.s; save(); sfx('ui'); renderHub(); },
+  gsel(el){ gearSel=el.dataset.v; sfx('ui'); renderHub(); },
+  gbest(){ let n=0; for(const k of SLOT_IDS){ let j=-1; S.bag.forEach((it,i)=>{ if(it.s===k&&gearBetter(it)&&(j<0||gearVal(it)>gearVal(S.bag[j]))) j=i; });
+      if(j>=0){ const it=S.bag.splice(j,1)[0], cur=S.gear[k]; if(cur) S.bag.push(cur); S.gear[k]=it; n++; } }
+    if(!n) return; gearSel='g'; save(); sfx('lvl'); toast('Надето лучшее: '+n+' '+(n===1?'вещь':'вещи')); renderHub(); },
   gsell(el){ const j=+el.dataset.v, it=S.bag[j]; if(!it) return; const p=gearSellPrice(it); S.bag.splice(j,1); S.money+=p; save(); sfx('coin'); toast('Продано: +$'+p); renderHub(); },
   again(el){ clearTimeout(AUTO_T); closeModal(); F=null; $('#fx').innerHTML=''; if(!startFight(+el.dataset.v)){ tab='league'; showScreen('hub'); leagueToCur(); } },
   perk(el){ if(F&&F.state==='perk'&&PERKS[el.dataset.v]) takePerk(el.dataset.v); },
@@ -3103,14 +3147,14 @@ function loop(now){
       step('сцена боя',()=>{ if(F.state==='intro'&&F.introT>VS_END) drawVS(fctx,F,now);
         else drawScene(fctx,F.arena,[F.p,F.o],now,{shake:F.shake,parts:F.parts,cheer:F.cheer,flashAll:F.flashAll,fx:F.fx}); });
       step('полоски',renderHUD);
-      step('вывод боя',()=>present(FBUF,$('#fightCv')));
+      step('вывод боя',()=>present(FBUF,$('#fightCv'),true));
     }
   } else if(screen==='title'){
     titleAt+=dt; const ph=Math.floor(titleAt/700)%6;
     TITLE_F[0].pose=ph===2?'jab':ph===4?'hook':'idle'; TITLE_F[1].pose=ph===2?'block':ph===4?'hit':ph===5?'uppercut':'idle';
     TITLE_F[0].pose=ph===5?'block':TITLE_F[0].pose;
     step('заставка',()=>drawScene(tctx,0,TITLE_F,now,{}));
-    step('вывод заставки',()=>present(TBUF,$('#titleCv')));
+    step('вывод заставки',()=>present(TBUF,$('#titleCv'),true));
   } else if(screen==='hub'&&tab==='fighter') step('портрет',()=>drawPortrait(now));
   if(TR) step('зал',()=>{ updateTrain(dt); drawTrain(now); present(TRBUF,$('#trCv')); });
   step('telegram',tgSyncBack);
@@ -3214,7 +3258,7 @@ function tgBack(){
 
 /* ---------- ДИАГНОСТИКА: ошибки на телефоне видны прямо в игре ----------
    Нажатие на номер сборки на заставке показывает сведения об устройстве; нажатие на панель — скрывает её. */
-const BUILD='96 · 2026-10-29'; // номер сборки — видно на заставке, свежая версия или старая из кэша Telegram
+const BUILD='97 · 2026-10-29'; // номер сборки — видно на заставке, свежая версия или старая из кэша Telegram
 let FRAMES=0, PRESENT_MODE='чёткий';
 /* Сторож: раз в секунду, независимо от кадров. Если игра открыта, а кадры не идут — или бой стоит без открытых окон, —
    показываем панель ошибок с подробностями (по ней видно причину, например на ПК). */
@@ -3263,26 +3307,35 @@ function checkNames(){ for(const n in OWN_FN) if(window[n]!==OWN_FN[n]){ diag('�
    сначала целое увеличение без сглаживания, затем точная подгонка — все «пиксели» одного размера.
    Если чёткий вывод на устройстве падает или рисует пустоту — игра сама переходит на простой (растяжение буфера). */
 const UP=document.createElement('canvas'), upg=UP.getContext('2d');
-function present(buf,cv){
-  if(PRESENT_MODE!=='чёткий') return presentSimple(buf,cv);
+// crop: показать середину буфера по ширине под пропорции холста (арена боя крупнее — края сцены обрезаются, пиксели не растягиваются)
+let FV={x:0,w:W}; // видимая часть буфера боя по ширине — для всплывающих надписей
+function viewOf(buf,cv,crop){
+  const cw=cv.clientWidth, ch=cv.clientHeight;
+  if(!crop||!cw||!ch) return {x:0,w:buf.width};
+  const vw=Math.min(buf.width,Math.max(140,Math.round(buf.height*cw/ch)));
+  return {x:(buf.width-vw)>>1,w:vw};
+}
+function present(buf,cv,crop){
+  if(PRESENT_MODE!=='чёткий') return presentSimple(buf,cv,crop);
   try{
     const cw=cv.clientWidth, ch=cv.clientHeight; if(!cw||!ch) return; // размер без учёта анимаций (transform)
-    const d=window.devicePixelRatio||1, w=Math.round(cw*d), h=Math.round(ch*d);
+    const d=window.devicePixelRatio||1, w=Math.round(cw*d), h=Math.round(ch*d), v=viewOf(buf,cv,crop); if(crop&&cv.id==='fightCv') FV=v;
     if(cv.width!==w||cv.height!==h){ cv.width=w; cv.height=h; }
-    const k=Math.max(1,Math.ceil(w/buf.width)), uw=buf.width*k, uh=buf.height*k;
+    const k=Math.max(1,Math.ceil(w/v.w)), uw=v.w*k, uh=buf.height*k;
     if(UP.width!==uw||UP.height!==uh){ UP.width=uw; UP.height=uh; }
-    upg.imageSmoothingEnabled=false; upg.clearRect(0,0,uw,uh); upg.drawImage(buf,0,0,uw,uh);
+    upg.imageSmoothingEnabled=false; upg.clearRect(0,0,uw,uh); upg.drawImage(buf,v.x,0,v.w,buf.height,0,0,uw,uh);
     const g=cv.getContext('2d'); g.imageSmoothingEnabled=true; g.imageSmoothingQuality='high'; g.drawImage(UP,0,0,w,h);
     if((cv.__checks=(cv.__checks||0)+1)<=3){ // первые кадры: проверяем, что на экран реально что-то попало
       const px=g.getImageData(w>>1,h>>1,1,1).data;
       if(px[3]===0) throw new Error('чёткий вывод дал пустой кадр');
     }
-  }catch(e){ diag('вывод',e); PRESENT_MODE='простой'; presentSimple(buf,cv); }
+  }catch(e){ diag('вывод',e); PRESENT_MODE='простой'; presentSimple(buf,cv,crop); }
 }
-function presentSimple(buf,cv){
+function presentSimple(buf,cv,crop){
   try{
-    if(cv.width!==buf.width||cv.height!==buf.height){ cv.width=buf.width; cv.height=buf.height; }
-    const g=cv.getContext('2d'); g.imageSmoothingEnabled=false; g.drawImage(buf,0,0);
+    const v=viewOf(buf,cv,crop); if(crop&&cv.id==='fightCv') FV=v;
+    if(cv.width!==v.w||cv.height!==buf.height){ cv.width=v.w; cv.height=buf.height; }
+    const g=cv.getContext('2d'); g.imageSmoothingEnabled=false; g.drawImage(buf,v.x,0,v.w,buf.height,0,0,v.w,buf.height);
   }catch(e){ diag('вывод-запасной',e); }
 }
 // масштаб пиксельных надписей: не больше maxK и такой, чтобы 1 пиксель шрифта = целое число физических точек
