@@ -917,6 +917,7 @@ function sanitize(d){
   if(!s.load.length) s.load=s.owned.slice(0,3);
   if(!s.load.some(m=>MOVES[m].type==='atk')) s.load=['jab',...s.load.filter(m=>m!=='jab')].slice(0,3);
   s.name=cleanName(d.name)||'Ты'; s.ts=num(d.ts,0,0,9e15); // ts — время сохранения, для облака Telegram
+  s.off=d.off&&typeof d.off==='object'?{m:num(d.off.m,0,0,1e9),x:num(d.off.x,0,0,1e9),k:num(d.off.k,0,0,1e6),i:num(d.off.i,0,0,OPP.length-1),a:num(d.off.a,0,0,9e15)}:null; // незабранная награда за отсутствие
   s.sound=d.sound!==false; s.started=!!d.started; s.tips=Array.isArray(d.tips)?[...new Set(d.tips.filter(k=>TIP_KEYS.includes(k)))]:(s.started?TIP_KEYS.slice():[]); if(d.lg!==2&&s.beaten>0){ s.beaten=CORE_POS[Math.min(s.beaten,OLD_N)-1]+1; s.best=0; } s.lg=2; // лига из 16 → из 50: пройденные остаются пройденными (вместе с новыми боссами до них)
   s.champ=s.beaten>=OPP.length;
   // зал славы: лучший круг победы над каждым боссом; для старых сохранений — по пройденным этапам и прошлым кругам
@@ -926,7 +927,7 @@ function sanitize(d){
 /* Свой прогресс у каждого бойца: SAVE_KEY — текущий (активный) боец, heroKey(id) — прогресс каждого бойца
    (уровень, характеристики, этапы, снаряжение, деньги, энергия). Смена бойца — загрузка его прогресса или старт с нуля. */
 const heroKey=id=>SAVE_KEY+'_h'+id;
-function save(){ S.ts=Date.now(); const json=JSON.stringify(S); try{ localStorage.setItem(SAVE_KEY,json); }catch(e){} tgCloudSave(json); }
+function save(){ S.ts=Date.now(); const json=JSON.stringify(S); try{ localStorage.setItem(SAVE_KEY,json); save.fail=0; }catch(e){ if(!save.fail){ save.fail=1; diag('сохранение',e); toast('Не удалось сохранить прогресс: память браузера недоступна'); } } tgCloudSave(json); } // ошибку записи показываем один раз, пока запись снова не пройдёт
 // с 81-й сборки прогресс общий: «профиль» любого бойца — общее сохранение
 function heroProfile(id){ return S.started?S:null; }
 // смена бойца: общий прогресс остаётся, меняются приёмы, школа и дерево (свои у каждого, hs[id])
@@ -941,7 +942,8 @@ function loadSave(){
   let raw=null; try{ raw=localStorage.getItem(SAVE_KEY); }catch(e){}
   if(!raw) return false;
   try{ S=sanitize(JSON.parse(raw)); addXp(0); mergeHeroes(); // старые раздельные прогрессы бойцов — в один общий
-    return S.started; }catch(e){ S=DEF_SAVE(); return false; }
+    return S.started; }catch(e){ try{ localStorage.setItem(SAVE_KEY+'_bad',raw); }catch(e2){} // битое сохранение не затираем молча: копия остаётся, ошибка — в панели
+    diag('загрузка',new Error('сохранение не прочиталось ('+(e&&e.message||e)+'), копия — '+SAVE_KEY+'_bad')); S=DEF_SAVE(); return false; }
 }
 /* ---------- DEV MODE: настройки пишет отдельный файл dev-mode.html ---------- */
 const DEV_KEY='streetChampion_dev';
@@ -2456,21 +2458,24 @@ let OFF=null;
 const fmtDur=ms=>{ const m=Math.floor(ms/60e3), h=Math.floor(m/60); return (h?h+' ч ':'')+(m%60)+' мин'; };
 function checkOffline(){
   if(!S.started||OFF||screen==='fight'||TR) return;
-  const away=Date.now()-(S.ts||Date.now()); if(away<OFF_STEP) return;
-  const steps=Math.floor(Math.min(away,OFF_CAP)/OFF_STEP), i=Math.max(0,S.beaten-1), kills=steps*OFF_KPS; // 1–4 получаса
-  const en=regenEnergy(); renderTop(); // энергия за это время тоже восстановилась
-  OFF={money:kills*waveMoney(i),xp:Math.round(offXpCap()*steps/(OFF_CAP/OFF_STEP)),kills,i}; save(); // время отсчитано — второй раз не начислится
+  let away, en=0;
+  if(S.off){ away=S.off.a; OFF={money:S.off.m,xp:S.off.x,kills:S.off.k,i:S.off.i}; } // игру закрыли, не забрав награду, — показываем ту же
+  else{ away=Date.now()-(S.ts||Date.now()); if(away<OFF_STEP) return;
+    const steps=Math.floor(Math.min(away,OFF_CAP)/OFF_STEP), i=Math.max(0,S.beaten-1), kills=steps*OFF_KPS; // 1–4 получаса
+    en=regenEnergy(); renderTop(); // энергия за это время тоже восстановилась
+    OFF={money:kills*waveMoney(i),xp:Math.round(offXpCap()*steps/(OFF_CAP/OFF_STEP)),kills,i}; S.off={m:OFF.money,x:OFF.xp,k:kills,i,a:away}; save(); } // время отсчитано, награда записана в сохранение — второй раз не начислится и при закрытии не пропадёт
+  const steps=Math.floor(Math.min(away,OFF_CAP)/OFF_STEP), i=OFF.i, kills=OFF.kills;
   openModal('<div class="title" style="color:var(--yel)">ПОКА ТЕБЯ НЕ БЫЛО</div><p style="text-align:center">'+fmtDur(away)+(away>OFF_CAP?' (засчитано 2 ч — это максимум)':' (засчитано '+fmtDur(steps*OFF_STEP)+')')+
     ' боец фармил этап '+(i+1)+'. Побеждено врагов: '+kills+'.</p><div class="rew"><div class="money">+$'+OFF.money+'</div><div class="lv">+'+OFF.xp+' XP</div>'+(en?'<div style="color:var(--org)">+'+en+' ⚡</div>':'')+'</div>'+
     (ADS_ON?'<button class="btn yel" data-act="offx2">📺 Забрать ×2</button><div class="gap"></div>':'')+'<button class="btn grn" data-act="offtake">Забрать</button>');
 }
 function claimOffline(k){
-  if(!OFF) return; const o=OFF; OFF=null; S.money+=o.money*k; const ups=addXp(o.xp*k); save(); closeModal(); sfx(ups?'lvl':'coin');
+  if(!OFF) return; const o=OFF; OFF=null; S.off=null; S.money+=o.money*k; const ups=addXp(o.xp*k); save(); closeModal(); sfx(ups?'lvl':'coin');
   toast('+$'+o.money*k+' и +'+o.xp*k+' XP'+(ups?' · новый уровень '+S.lvl+'!':'')); if(screen==='hub') renderHub();
 }
 // свернул игру — запоминаем время; вернулся спустя 5+ минут — награда. Пока игра открыта, время отмечается раз в минуту.
 document.addEventListener('visibilitychange',()=>{ if(!S.started||screen==='title') return; // на заставке время отсутствия не сбрасываем — награда покажется по «Продолжить»
-  if(document.visibilityState==='hidden'){ if(!OFF) save(); } else if(screen==='hub') checkOffline(); });
+  if(document.visibilityState==='hidden'){ if(!OFF) save(); tgCloudFlush(); } else if(screen==='hub') checkOffline(); });
 setInterval(()=>{ if(S.started&&screen!=='title'&&document.visibilityState==='visible'&&!OFF) save(); },60000);
 let AUTO_T=0;
 function updAutoBtn(){ const b=$('#autoBtn'); if(b){ b.textContent='Авто: '+(S.auto?'вкл':'выкл'); b.classList.toggle('on',S.auto); } }
@@ -2566,7 +2571,7 @@ function closeTrain(){
   if(!TR) return;
   if(TR.state==='run') return;
   if(TR.state==='ready'){ S.energy=Math.min(S.maxEnergy,S.energy+TR.spent); save(); }
-  TR=null; $('#train').classList.remove('on'); renderHub();
+  TR=null; $('#train').classList.remove('on'); renderHub(); runLater();
 }
 const TRBUF=document.createElement('canvas'); TRBUF.width=240; TRBUF.height=135; const trCtx=TRBUF.getContext('2d'); // буфер зала; на экран — present()
 const TW=240, TH=135, TG=114, GHZ=66; // TG — линия ног бойца, GHZ — низ задней стены
@@ -2692,7 +2697,7 @@ function showRewardedAd(onReward){
 
 /* ---------- ИНТЕРФЕЙС ---------- */
 let screen='title', tab='fighter';
-function showScreen(s){ screen=s; hideTip(); document.querySelectorAll('.screen').forEach(el=>el.classList.toggle('on',el.id==='scr-'+s)); if(s==='hub') renderHub();
+function showScreen(s){ screen=s; runLater(); hideTip(); document.querySelectorAll('.screen').forEach(el=>el.classList.toggle('on',el.id==='scr-'+s)); if(s==='hub') renderHub();
   if(s==='hub'&&S.started&&streakNext()&&showScreen.shown!==dayKey()&&!$('#modal').classList.contains('on')){ showScreen.shown=dayKey(); setTimeout(()=>{ if(screen==='hub'&&!$('#modal').classList.contains('on')){ openModal(tasksHTML()); showTip('tasks'); } },400); } } // при первом входе за день — окно с наградой серии
 function toast(m){ const t=$('#toast'); t.textContent=m; t.classList.remove('on'); void t.offsetWidth; t.classList.add('on'); clearTimeout(toast.h); toast.h=setTimeout(()=>t.classList.remove('on'),2200); }
 function openModal(html){ $('#mbox').innerHTML=html; $('#modal').classList.add('on'); }
@@ -3059,8 +3064,12 @@ function applyExternal(){
 }
 window.addEventListener('storage',e=>{
   if(e.key===DEV_KEY){ loadDev(); applyExternal(); }
-  else if(e.key===SAVE_KEY&&e.newValue){ try{ const d=JSON.parse(e.newValue); if(S.mh&&!d.mh) return; S=sanitize(d); addXp(0); mergeHeroes(); }catch(err){} applyExternal(); } // запись старой версии (без общего прогресса) из другой вкладки — не принимаем
+  else if(e.key===SAVE_KEY&&e.newValue){ const v=e.newValue; whenIdle(()=>{ try{ const d=JSON.parse(v); if(S.mh&&!d.mh) return; if((+d.ts||0)<=(S.ts||0)) return; S=sanitize(d); addXp(0); mergeHeroes(); }catch(err){ diag('другая вкладка',err); } applyExternal(); }); } // запись старой версии (без общего прогресса) или более старая — не принимаем
 });
+// чужое сохранение (облако Telegram, другая вкладка) не подменяет прогресс посреди боя или тренировки — применяется, когда они закончатся
+var LATER=null; // var: showScreen может сработать раньше этой строки
+function whenIdle(fn){ if(F||TR||screen==='fight') LATER=fn; else { LATER=null; fn(); } }
+function runLater(){ if(LATER&&!F&&!TR&&screen!=='fight'){ const fn=LATER; LATER=null; fn(); } }
 
 /* ---------- TELEGRAM MINI APP ----------
    Игра запускается из Telegram-бота как Mini App (https://core.telegram.org/bots/webapps).
@@ -3091,8 +3100,14 @@ function tgHaptic(n){
 }
 // сохранение в облаке Telegram: прогресс переносится между телефонами и не теряется при очистке кэша
 function tgCloudSave(json){
-  if(!TGA.cloud||json.length>4096) return;
-  clearTimeout(TGA.timer); TGA.timer=setTimeout(()=>{ try{ TGA.app.CloudStorage.setItem('save',json); }catch(e){} },1500); // с 81-й сборки прогресс общий — одна запись
+  if(!TGA.cloud) return;
+  if(json.length>4096){ diag('облако',new Error('сохранение больше лимита Telegram 4096 символов — в облако не записано')); return; }
+  TGA.pend=json; clearTimeout(TGA.timer); TGA.timer=setTimeout(tgCloudFlush,1500); // с 81-й сборки прогресс общий — одна запись
+}
+// отправить отложенную запись сейчас (игру свернули — таймер может не успеть)
+function tgCloudFlush(){
+  const json=TGA.pend; if(!json) return; TGA.pend=null; clearTimeout(TGA.timer);
+  try{ TGA.app.CloudStorage.setItem('save',json,err=>{ if(err) diag('облако',new Error('запись: '+err)); }); }catch(e){ diag('облако',e); }
 }
 function tgCloudLoad(){
   if(!TGA.cloud) return;
@@ -3100,13 +3115,14 @@ function tgCloudLoad(){
     for(const h of HEROES){ const v=vals['save_h'+h.id]; if(!v) continue; try{ const d=JSON.parse(v), loc=JSON.parse(localStorage.getItem(heroKey(h.id))||'{}');
       if((+d.ts||0)>(+loc.ts||0)&&!(S.started&&S.hero===h.id)) localStorage.setItem(heroKey(h.id),v); }catch(e){} } }); }catch(e){}
   try{ TGA.app.CloudStorage.getItem('save',(err,val)=>{
-    if(err||!val) return;
-    let d; try{ d=JSON.parse(val); }catch(e){ return; }
-    if((+d.ts||0)<=(S.ts||0)) return; // в облаке не новее, чем на телефоне
-    if(S.mh&&!d.mh) return; // в облаке — сохранение старой версии (до общего прогресса бойцов): не откатываемся и не переносим второй раз
-    S=sanitize(d); addXp(0); mergeHeroes(); try{ localStorage.setItem(SAVE_KEY,JSON.stringify(S)); }catch(e){}
-    applyExternal(); toast('Прогресс загружен из облака Telegram');
-  }); }catch(e){}
+    if(err){ diag('облако',new Error('чтение: '+err)); return; } if(!val) return;
+    let d; try{ d=JSON.parse(val); }catch(e){ diag('облако',e); return; }
+    whenIdle(()=>{ // начатый бой облако не подменяет — применим после
+      if((+d.ts||0)<=(S.ts||0)) return; // в облаке не новее, чем на телефоне
+      if(S.mh&&!d.mh) return; // в облаке — сохранение старой версии (до общего прогресса бойцов): не откатываемся и не переносим второй раз
+      S=sanitize(d); addXp(0); mergeHeroes(); try{ localStorage.setItem(SAVE_KEY,JSON.stringify(S)); }catch(e){ diag('сохранение',e); }
+      applyExternal(); toast('Прогресс загружен из облака Telegram'); });
+  }); }catch(e){ diag('облако',e); }
 }
 // системная кнопка «Назад» Telegram и подтверждение закрытия во время боя
 function tgSyncBack(){
@@ -3125,7 +3141,7 @@ function tgBack(){
 
 /* ---------- ДИАГНОСТИКА: ошибки на телефоне видны прямо в игре ----------
    Нажатие на номер сборки на заставке показывает сведения об устройстве; нажатие на панель — скрывает её. */
-const BUILD='92 · 2026-10-27'; // номер сборки — видно на заставке, свежая версия или старая из кэша Telegram
+const BUILD='93 · 2026-10-29'; // номер сборки — видно на заставке, свежая версия или старая из кэша Telegram
 let FRAMES=0, PRESENT_MODE='чёткий';
 /* Сторож: раз в секунду, независимо от кадров. Если игра открыта, а кадры не идут — или бой стоит без открытых окон, —
    показываем панель ошибок с подробностями (по ней видно причину, например на ПК). */
