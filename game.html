@@ -612,6 +612,9 @@ function profSt(u,f,dk){ const pf=BOSS_PROF[f]||BOSS_PROF.bal, base={};
   const r=at(lo); for(const s in r) r[s]=Math.max(1,Math.round(r[s])); return r; }
 const DUO_K=.82; // боец дуэта слабее одиночного босса (как у нынешних дуэтов)
 const REW_K=u=>.4+.4*Math.max(0,1-u/3);
+// сложность боссов (сборка 94): бот-игрок приходил к каждому боссу с шансом ~100% — характеристики соперников ×DIFF_K:
+// первые этапы почти как были (быстрые победы новичку), к 12-му ×2,1, дальше плавно вниз до ×1 у последнего (там игрок и так на пределе силы)
+const DIFF_K=i=>1+1.4*Math.min(1,i/12)*Math.pow(Math.max(0,1-i/49),.6);
 // опыт за бои ×XP_K (сборка 84): уровней стало 50 + дерево навыков — первое прохождение лиги ≈ 33-й уровень; деньги не меняются
 const XP_K=3;
 const OPP=(()=>{ const L=[], nb={}; NEW_BOSSES.forEach(b=>nb[b.p]=b); CORE.forEach((c,k)=>c.u=k);
@@ -620,7 +623,8 @@ const OPP=(()=>{ const L=[], nb={}; NEW_BOSSES.forEach(b=>nb[b.p]=b); CORE.forEa
     const mk=m=>({name:m.name,st:profSt(u,m.f,b.duo?DUO_K:1),moves:m.moves,pal:m.pal});
     const o=b.duo?{name:b.name,duo:true,members:b.members.map(mk)}:mk(b);
     Object.assign(o,{title:b.title,u,isNew:1,dmg:+coreAt(u,c=>c.dmg).toFixed(2),money:coreAt(u,c=>c.money),xp:coreAt(u,c=>c.xp)}); L.push(o); }
-  L.forEach(o=>{ const k=REW_K(o.u); o.money=Math.max(5,Math.round(o.money*k)); o.xp=Math.max(5,Math.round(o.xp*k*XP_K)); });
+  L.forEach((o,i)=>{ const k=REW_K(o.u); o.money=Math.max(5,Math.round(o.money*k)); o.xp=Math.max(5,Math.round(o.xp*k*XP_K));
+    const d=DIFF_K(i), sc=st=>{ for(const s in st) st[s]=Math.max(1,Math.round(st[s]*d)); }; if(o.duo) o.members.forEach(m=>{ m.st={...m.st}; sc(m.st); }); else { o.st={...o.st}; sc(o.st); } });
   return L; })();
 const oppMember=(o,k)=>o.duo?o.members[k]:o;
 // соперники Вася и Толик — готовые спрайты «уличного бойца» (ENEMY_DATA): Вася в исходном костюме, Толик с рыжей кепкой; враги волн этапа 1 — e0 (Вася в синем, ENEMY_TINT)
@@ -1954,6 +1958,7 @@ const startWaveOf=i=>S.cp&&cpAvail(i)?CP_WAVE:1;
 const SLOTS={g:{n:'перчатки',ic:'🥊',pl:1},w:{n:'бинты',ic:'🩹',pl:1},s:{n:'кроссовки',ic:'👟',pl:1},m:{n:'капа',ic:'🦷',pl:0}};
 const SLOT_IDS=['g','w','s','m'];
 const RARITY=[{p:'Обычные',f:'Обычная',c:'#c8c8d0',k:1},{p:'Редкие',f:'Редкая',c:'#38a8ff',k:1.6},{p:'Эпические',f:'Эпическая',c:'#c060ff',k:2.4},{p:'Легендарные',f:'Легендарная',c:'#ffb020',k:3.5}];
+const CRIT_CAP=.6; // шанс крита со всеми бонусами (вещи, дерево, стили) — не больше 60% (раньше бинты могли дать больше 100%)
 const GEAR_MAX_LVL=10, BAG_MAX=10, GEAR_CAP=.4, GEAR_DROP=.02, BOSS_DROP=.3; // скорость атак и защита от вещей — не больше 40%
 // редкость (накопленные доли): с босса — обычные 70%, редкие 25%, эпические 4,5%, легендарные 0,5%; с врагов волн — без легендарок
 const DROP_BOSS=[.7,.95,.995,1], DROP_WAVE=[.85,.98,1,1], LEGEND_FROM=.8; // легендарки — с последнего района (ринг) или в следующих кругах
@@ -2248,7 +2253,7 @@ function resolveAttack(a,d,id,cb){ // cb — множитель комбо-уд�
   if(Math.random()>acc){ floatTxt(d,'МИМО','#9a8cc0'); sfx('whiff'); return; }
   if(!sure&&d.evade&&Math.random()<d.evade){ d.pose='dodge'; d.poseT=260; floatTxt(d,'УКЛОН','#38e8ff'); sfx('whiff'); return; } // усиление «Скользкий»
   let dmg=m.dmg*(1+a.st.str*.13)*a.dm*rnd(.88,1.12)*(raging(a)?RAGE_DMG:1)*(cb||1)*(m.counter&&(d.pending||ATK_POSES.has(d.pose))?m.counter:1); // комбо-удар, контрудар
-  const crit=!isSup&&Math.random()<critOf(a.st)+(a.critB||0); if(crit) dmg*=1.6;
+  const crit=!isSup&&Math.random()<Math.min(CRIT_CAP,critOf(a.st)+(a.critB||0)); if(crit) dmg*=1.6;
   if(d.armor) dmg*=1-d.armor;
   let blocked=false;
   if(d.stance==='block'&&!sure){ dmg*=m.pierce; blocked=true; d.sta=Math.max(0,d.sta-m.dmg*.6); }
@@ -3141,7 +3146,7 @@ function tgBack(){
 
 /* ---------- ДИАГНОСТИКА: ошибки на телефоне видны прямо в игре ----------
    Нажатие на номер сборки на заставке показывает сведения об устройстве; нажатие на панель — скрывает её. */
-const BUILD='93 · 2026-10-29'; // номер сборки — видно на заставке, свежая версия или старая из кэша Telegram
+const BUILD='94 · 2026-10-29'; // номер сборки — видно на заставке, свежая версия или старая из кэша Telegram
 let FRAMES=0, PRESENT_MODE='чёткий';
 /* Сторож: раз в секунду, независимо от кадров. Если игра открыта, а кадры не идут — или бой стоит без открытых окон, —
    показываем панель ошибок с подробностями (по ней видно причину, например на ПК). */
