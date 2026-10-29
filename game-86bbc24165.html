@@ -12,7 +12,7 @@
 window.__errs=[];window.addEventListener('error',function(e){window.__errs.push('[js] '+(e.message||e)+' @'+(e.lineno||'?')+':'+(e.colno||'?'));if(window.showDiag)window.showDiag();else{var d=document.getElementById('diag');if(d){d.textContent='ОШИБКИ:\n'+window.__errs.join('\n')+'\n'+navigator.userAgent;d.className='on';}}});</script>
 <script async src="https://telegram.org/js/telegram-web-app.js?64" onload="window.tgInit&&tgInit()"></script>
 <style>
-:root{--bg:#0d0a1a;--panel:#1a1430;--panel2:#261d45;--line:#3d2f6b;--txt:#f1e9ff;--dim:#9a8cc0;--red:#ff3b4f;--yel:#ffd23f;--grn:#3ee07a;--cyan:#38e8ff;--mag:#ff4fd8;--org:#ff8a2b;
+:root{--bg:#0d0a1a;--panel:#1a1430;--panel2:#261d45;--line:#3d2f6b;--txt:#f1e9ff;--dim:#ada0d2;--red:#ff3b4f;--yel:#ffd23f;--grn:#3ee07a;--cyan:#38e8ff;--mag:#ff4fd8;--org:#ff8a2b;
   /* безопасные зоны: вырез/Dynamic Island/полоска «Домой» и панели Telegram в полноэкранном режиме */
   --sat:max(env(safe-area-inset-top),calc(var(--tg-safe-area-inset-top,0px) + var(--tg-content-safe-area-inset-top,0px)));
   --sab:max(env(safe-area-inset-bottom),calc(var(--tg-safe-area-inset-bottom,0px) + var(--tg-content-safe-area-inset-bottom,0px)))}
@@ -85,6 +85,15 @@ button.chip{font:inherit;font-weight:bold;cursor:pointer;position:relative;min-h
 .fbtn .pct{flex:none;font-size:20px;background:#000;padding:3px 8px;border:2px solid currentColor}
 .ibtn{display:inline-grid;place-items:center;width:20px;height:20px;margin-left:6px;vertical-align:middle;background:#000;color:var(--cyan);border:2px solid var(--cyan);font-weight:bold;font-size:12px;line-height:1;padding:0;cursor:pointer;text-transform:none;letter-spacing:0}
 .chance{font-size:16px}
+.fbrow{display:flex;gap:6px}.fbrow .fbtn{flex:1;min-width:0}.fbrow .fbtn.farm{flex:0 0 36%;background:#1e8a47}
+.seg{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;margin-bottom:10px}
+.seg button{background:var(--panel2);color:var(--dim);border:2px solid #000;padding:8px 2px;font:inherit;font-size:11px;font-weight:bold;cursor:pointer}
+.seg button.on{background:#1f1640;color:var(--yel);box-shadow:inset 0 -3px 0 var(--yel)}
+.trow{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.srow{margin:8px 0 10px;font-size:12px;line-height:1.8}
+.srow .btn{display:inline-block;width:auto;margin-left:4px}
+#diag.min{left:auto;right:6px;bottom:auto;top:calc(96px + var(--sat));max-height:none;padding:4px 8px;font-size:13px;font-weight:bold;overflow:hidden;white-space:nowrap}
+#saveInfo{margin-top:6px;color:var(--dim)}
 /* hub */
 .hero{display:flex;gap:10px;align-items:center}
 .hero canvas{width:96px;height:96px;background:#0a0716;border:3px solid #000;box-shadow:inset 0 0 0 2px var(--line);flex:none}
@@ -302,7 +311,7 @@ div.power:not(.ostat){font-size:13px;margin-top:4px}
       <button class="btn" data-act="help">Как играть</button>
       <button class="btn" data-act="sound" id="btnSound">Звук: вкл</button>
     </div>
-    <div class="foot">5 районов · 50 боссов · 500 волн · 1 пояс<br><span id="build"></span></div>
+    <div class="foot">5 районов · 50 боссов · 500 волн · 1 пояс<br><span id="build"></span><div id="saveInfo"></div></div>
   </div>
 
   <!-- HUB -->
@@ -2093,6 +2102,7 @@ const STYLES=[
 ];
 const activeStyles=load=>STYLES.filter(s=>s.req.every(m=>load.includes(m)));
 const styleMul=load=>activeStyles(load).reduce((a,s)=>a*s.pm,1);
+let stylesOpen=false; // вкладка «Приёмы»: полный список стилей раскрыт
 function stylesHTML(){
   return '<div class="card"><div class="h2">Стили боя'+ib('styles')+'</div>'+
     STYLES.filter(s=>s.req.every(m=>schoolMoves(S.hero).includes(m))).map(s=>{ const on=s.req.every(m=>S.load.includes(m)); // только стили своей школы
@@ -2714,7 +2724,7 @@ function showRewardedAd(onReward){
 /* ---------- ИНТЕРФЕЙС ---------- */
 let screen='title', tab='fighter';
 function showScreen(s){ screen=s; runLater(); hideTip(); document.querySelectorAll('.screen').forEach(el=>el.classList.toggle('on',el.id==='scr-'+s)); if(s==='hub') renderHub();
-  if(s==='hub'&&S.started&&streakNext()&&showScreen.shown!==dayKey()&&!$('#modal').classList.contains('on')){ showScreen.shown=dayKey(); setTimeout(()=>{ if(screen==='hub'&&!$('#modal').classList.contains('on')){ openModal(tasksHTML()); showTip('tasks'); } },400); } } // при первом входе за день — окно с наградой серии
+  if(s==='hub'&&S.started&&streakNext()&&showScreen.shown!==dayKey()) setTimeout(nextHubPopup,400); } // при первом входе за день — окно с наградой серии (если открыто другое окно — после его закрытия)
 function toast(m){ const t=$('#toast'); t.textContent=m; t.classList.remove('on'); void t.offsetWidth; t.classList.add('on'); clearTimeout(toast.h); toast.h=setTimeout(()=>t.classList.remove('on'),2200); }
 function openModal(html){ $('#mbox').innerHTML=html; $('#modal').classList.add('on'); }
 // подсказка обучения k — один раз за карьеру (старые карьеры их не видят: при загрузке все отмечены прочитанными)
@@ -2723,7 +2733,15 @@ function showTip(k,top){ if(!S.started||!Array.isArray(S.tips)||S.tips.includes(
   el.innerHTML='<b>'+T[0]+'</b><ul>'+T[1].map(x=>'<li>'+x+'</li>').join('')+'</ul><button class="btn grn" data-act="tipok">Понятно</button>';
   el.classList.toggle('top',!!top); el.classList.add('on'); }
 function hideTip(){ $('#tip').classList.remove('on'); }
-function closeModal(){ $('#modal').classList.remove('on'); if(screen==='hub'&&S.started&&!S.tips.includes(tab)) setTimeout(()=>{ if(screen==='hub'&&!$('#modal').classList.contains('on')) showTip(tab); },300); }
+// окна при входе — по одному: закрыли окно — следующее из очереди (награда серии за день, затем подсказка вкладки)
+function closeModal(){ $('#modal').classList.remove('on'); if(screen==='hub'&&S.started) setTimeout(nextHubPopup,300); }
+function nextHubPopup(){ if(screen!=='hub'||!S.started||$('#modal').classList.contains('on')) return;
+  if(streakNext()&&showScreen.shown!==dayKey()){ showScreen.shown=dayKey(); hideTip(); openModal(tasksHTML()); showTip('tasks'); return; }
+  if(!S.tips.includes(tab)) showTip(tab); }
+// строка на заставке: когда и куда сохранён прогресс (игрок видит, что он не пропадёт)
+function saveInfo(){ const el=$('#saveInfo'); if(!el) return; if(!S.started||!S.ts){ el.textContent=''; return; }
+  const d=new Date(S.ts), p=n=>String(n).padStart(2,'0');
+  el.textContent='☁ Прогресс сохранён в '+p(d.getHours())+':'+p(d.getMinutes())+(TGA.cloud?' · облако Telegram':' · на этом устройстве'); }
 function renderTop(){
   const need=needXp(S.lvl), maxed=false; // уровень без предела
   $('#topbar').innerHTML='<button class="chip lv" data-act="menu" aria-label="Меню" style="cursor:pointer">☰ УР '+S.lvl+(skillPts(S.hero)>0?' 🌳'+skillPts(S.hero):'')+'</button><div class="xpw"><div class="bar"><i style="background:var(--yel);width:'+(maxed?100:S.xp/need*100)+'%"></i></div><div class="dim" style="font-size:10px">'+(maxed?'MAX':S.xp+'/'+need+' XP')+'</div></div><span class="chip money">$'+fmt(S.money)+'</span><button class="chip day'+(tasksBadge()?' has':'')+'" data-act="tasks" aria-label="Задания">📋 '+(DEV.enabled?'<b style="color:var(--red)">DEV</b> ':'')+'ДЕНЬ '+S.day+'<i class="dot"></i></button>'+
@@ -2787,7 +2805,10 @@ function fightBarHTML(){
   const i=S.beaten;
   if(i>=OPP.length) return S.champ?'<button class="fbtn" data-act="tab" data-v="league" style="background:var(--yel);color:#000">🏆 Новый сезон →</button>':'';
   const r=chanceOf(i), w=r?Math.round(r.winRate*100):null, c=w==null?'#fff':w>=70?'var(--grn)':w>=35?'var(--yel)':'#ff5a5a';
-  return '<button class="fbtn" data-act="fight" data-v="'+i+'"><span>⚔ В бой<span class="fst">Этап '+(i+1)+' · '+OPP[i].name+' · '+FIGHT_COST+'⚡</span></span><span class="pct" style="color:'+c+'">'+(w==null?'…':w+'%')+'</span></button>';
+  const low=w!=null&&w<35&&i>0; // рядом встанет кнопка фарма — подпись короче, без имени босса
+  const go='<button class="fbtn" data-act="fight" data-v="'+i+'"><span>⚔ В бой<span class="fst">Этап '+(i+1)+(low?'':' · '+OPP[i].name)+' · '+FIGHT_COST+'⚡</span></span><span class="pct" style="color:'+c+'">'+(w==null?'…':w+'%')+'</span></button>';
+  // шанс низкий — рядом бесплатный фарм пройденного этапа: прокачаться, не тратя энергию
+  return low?'<div class="fbrow">'+go+'<button class="fbtn farm" data-act="fight" data-v="'+(i-1)+'"><span>🔁 Фарм<span class="fst">этап '+i+' · бесплатно</span></span></button></div>':go;
 }
 // красные точки на вкладках: есть что сделать
 function navBadges(){ const nx=S.beaten<OPP.length, cl=CHANCE_LAST[S.beaten];
@@ -2804,7 +2825,7 @@ function tabFighter(){
     (next?'<div class="dim" style="font-size:11px">'+chanceHTML(S.beaten)+'</div>':'')+'</div></div>'+
     '<div class="note" style="'+(S.pts?'':'opacity:.55')+'">'+(S.pts?'Свободные очки развития: '+S.pts+' — жми «+» у характеристики или вкладывай в дерево навыков (вкладка «Приёмы»)':'Очков нет — +'+PTS_LVL+' за новый уровень (в характеристики или дерево навыков)')+'</div>' /* строка есть всегда — при последнем очке экран не дёргается */+
     '<div class="card"><div class="h2">Характеристики'+ib('stats')+'</div>'+Object.keys(STATS).map(statRow).join('')+(allocSum()?'<button class="btn sm" data-act="resetstats" style="margin-top:8px" '+(S.money>=statResetCost()?'':'disabled')+'>↺ Сбросить очки характеристик — $'+statResetCost()+'</button>':'')+'</div>'+
-    '<div class="card"><div class="h2">Твой боец: '+heroOf(S.hero).n+ib('hero')+'</div><button class="btn" data-act="herolist">👥 Сменить бойца</button><div class="gap"></div><button class="btn yel" data-act="hof">🏛 Зал славы</button></div>'+gearHTML()+'<div class="card"><div class="h2">В бою</div><div class="grid2">'+
+    '<div class="card"><div class="h2">Твой боец: '+heroOf(S.hero).n+ib('hero')+'</div><button class="btn" data-act="herolist">👥 Сменить бойца</button><div class="gap"></div><button class="btn" data-act="hof">🏛 Зал славы</button></div>'+gearHTML()+'<div class="card"><div class="h2">В бою</div><div class="grid2">'+
     '<div class="kv"><span>Здоровье</span><b>'+maxHpOf(s)+'</b></div><div class="kv"><span>Стамина</span><b>'+maxStaOf(s)+'</b></div>'+
     '<div class="kv"><span>Атака раз в</span><b>'+(intervalOf(s)/1000).toFixed(2)+' c</b></div><div class="kv"><span>Множ. урона</span><b>x'+(1+s.str*.13).toFixed(2)+'</b></div>'+
     '<div class="kv"><span>Уклонение</span><b>'+Math.round(dodgeOf(s)*100)+'%</b></div><div class="kv"><span>Крит</span><b>'+Math.round(critOf(s)*100)+'%</b></div>'+
@@ -2816,23 +2837,27 @@ function tabGym(){
   for(const k in STATS){ const v=S.st[k], max=v>=MAX_STAT;
     h+='<button class="tcard" data-act="train" data-v="'+k+'" '+(max?'disabled':'')+'><div class="ico">'+STATS[k].ic+'</div><div class="tx"><div class="nm">'+STATS[k].tr+'</div><div class="dim">'+STATS[k].n+': '+v+(max?' (макс)':' · '+S.prog[k]+'/'+needProg(v))+'</div><div class="bar"><i style="background:var(--cyan);width:'+(max?100:S.prog[k]/needProg(v)*100)+'%"></i></div></div><div class="cost">-'+trainCost()+'⚡</div></button>';
   }
-  h+='<div class="h2" style="margin-top:14px">Отдых и еда'+ib('rest')+'</div>';
+  const c1=h.length; h+='<div class="h2" style="margin-top:14px">Отдых и еда'+ib('rest')+'</div>';
   h+='<button class="tcard" data-act="sleep"><div class="ico">🛏</div><div class="tx"><div class="nm">Выспаться</div><div class="dim">Новый день, энергия на максимум. Раз в 8 часов<br><b id="sleepT" style="color:var(--yel)"></b></div></div><div class="cost">+⚡MAX</div></button>';
   mealsReset(); h+='<div class="dim" style="margin:-2px 0 8px">🍽 Еда до сна: <b style="color:var(--yel)">'+(MEALS_MAX-S.meals)+'/'+MEALS_MAX+'</b></div>';
   for(const f of FOOD) h+='<button class="tcard" data-act="eat" data-v="'+f.id+'" '+(S.meals>=MEALS_MAX?'disabled':'')+'><div class="ico">'+f.ic+'</div><div class="tx"><div class="nm">'+f.n+'</div><div class="dim">+'+f.en+' энергии</div></div><div class="cost" style="color:var(--grn)">$'+f.cost+'</div></button>';
   const pay=workPay();
   h+='<button class="tcard" data-act="work"><div class="ico">📦</div><div class="tx"><div class="nm">Подработка грузчиком</div><div class="dim">Тратит 30 энергии, платит наличкой</div></div><div class="cost" style="color:var(--grn)">+$'+pay+'</div></button>';
-  nashReset(); h+='<div class="h2" style="margin-top:14px">Аптечка и запас'+ib('cons')+'</div>';
+  const c2=h.length; nashReset(); h+='<div class="h2" style="margin-top:14px">Аптечка и запас'+ib('cons')+'</div>';
   for(const k in CONS){ const c=CONS[k], pr=consPrice(k), have=S.cons[k]||0, dis=have>=c.max||(k==='nash'&&S.nashN>=NASH_DAY)||S.money<pr;
     h+='<button class="tcard" data-act="buycons" data-v="'+k+'" '+(dis?'disabled':'')+'><div class="ico">'+c.ic+'</div><div class="tx"><div class="nm">'+c.n+'</div><div class="dim">'+c.d+' · есть '+have+'/'+c.max+(k==='nash'?' · сегодня '+S.nashN+'/'+NASH_DAY:'')+'</div></div><div class="cost" style="color:var(--grn)">$'+pr+'</div></button>'; }
-  h+='<div class="h2" style="margin-top:14px">Зал</div>';
+  const c3=h.length; h+='<div class="h2" style="margin-top:14px">Зал</div>';
   if(S.gym<GYM.length){ const nx=GYM[S.gym];
     h+='<div class="card"><b>'+GYM[S.gym-1].n+'</b> → <b style="color:var(--yel)">'+nx.n+'</b><div class="dim" style="margin:4px 0 8px">Эффективность тренировок x'+gymMult().toFixed(2)+' → x'+(1+S.gym*.35).toFixed(2)+'</div><button class="btn yel" data-act="upgym" '+(S.money>=nx.cost?'':'disabled')+'>Улучшить за $'+nx.cost+'</button></div>';
   } else h+='<div class="card"><b style="color:var(--yel)">'+GYM[S.gym-1].n+'</b><div class="dim">Лучший зал в городе.</div></div>';
   h+=S.coach?'<div class="card"><b style="color:var(--yel)">🧢 Тренер с тобой</b><div class="dim">Тренировки ×'+String(COACH_K).replace('.',',')+' до конца круга лиги.</div></div>'
     :'<div class="card"><b>🧢 Личный тренер</b><div class="dim" style="margin:4px 0 8px">Тренировки ×'+String(COACH_K).replace('.',',')+' до конца круга лиги. На новом круге — нанимать заново, и дороже.</div><button class="btn yel" data-act="coach" '+(S.money>=coachCost()?'':'disabled')+'>Нанять за $'+coachCost()+'</button></div>';
-  return h;
+  // разделы вместо одного длинного списка: переключатель сверху, показан один раздел
+  const sec={train:h.slice(0,c1),rest:h.slice(c1,c2),cons:h.slice(c2,c3),gym:h.slice(c3)};
+  return '<div class="seg">'+GYM_SECS.map(s=>'<button class="'+(gymSec===s[0]?'on':'')+'" data-act="gymsec" data-v="'+s[0]+'">'+s[1]+'</button>').join('')+'</div>'+sec[gymSec].replace('margin-top:14px','margin-top:4px');
 }
+const GYM_SECS=[['train','💪 Тренировки'],['rest','🛏 Отдых'],['cons','🧰 Аптечка'],['gym','🏋 Зал']];
+let gymSec='train';
 /* Подработка платит МЕНЬШЕ, чем стоят 30⚡ из самой дешёвой еды, — круг «поел → поработал» больше не приносит денег (баг бесконечных денег). */
 const workPay=()=>Math.max(1,Math.floor(30*Math.min(...FOOD.map(f=>f.cost/f.en)))-1);
 function moveStats(m){
@@ -2840,9 +2865,13 @@ function moveStats(m){
   return '<div class="mvst"><span>Длит. <b>'+(m.dur/1000).toFixed(1)+' c</b></span><span>Стамина <b>'+m.sta+'</b></span></div>';
 }
 function tabMoves(){
-  let h='<div class="card"><div class="h2">🌳 Дерево навыков'+ib('tree')+'</div><div class="dim" style="margin-bottom:6px">Школа: <b>'+schoolOf(S.hero).n+'</b> · свободных очков: <b style="color:var(--yel)">'+skillPts(S.hero)+'</b></div><button class="btn yel" data-act="tree">Открыть дерево</button></div>'+stylesHTML()+'<div class="h2">Комбинация (до 3 приёмов)'+ib('combo')+'</div><div class="slots">';
+  // сверху — главное: дерево одной строкой и комбинация; стили свёрнуты в строку (раскрываются по кнопке)
+  let h='<div class="card trow"><div><div class="h2" style="margin:0">🌳 Дерево навыков'+ib('tree')+'</div><div class="dim">'+schoolOf(S.hero).n+' · очков: <b style="color:var(--yel)">'+skillPts(S.hero)+'</b></div></div><button class="btn sm" data-act="tree">Открыть</button></div>'+
+    '<div class="h2">Комбинация (до 3 приёмов)'+ib('combo')+'</div><div class="slots">';
   for(let i=0;i<3;i++){ const m=S.load[i]; h+='<div class="slot'+(m?'':' empty')+'">'+(m?MOVES[m].n:'пусто')+'</div>'; }
-  h+='</div><div style="margin-bottom:10px"></div>';
+  const act=activeStyles(S.load);
+  h+='</div><div class="srow">Стили: '+(act.length?act.map(s=>'<b style="color:var(--grn)">'+s.ic+' '+s.n+'</b>').join(', '):'<span class="dim">нет — собери пару приёмов</span>')+
+    ' <button class="btn sm" data-act="styles">'+(stylesOpen?'Скрыть ▴':'Все стили ▾')+'</button></div>'+(stylesOpen?stylesHTML():'');
   const sc=schoolOf(S.hero); h+='<div class="note">🥋 Школа: <b>'+sc.n+'</b> ('+sc.st+'). '+sc.d+'</div>';
   for(const id of schoolMoves(S.hero)){ const m=MOVES[id], own=S.owned.includes(id), sel=S.load.includes(id), lockLv=S.lvl<mvLvl(id);
     h+='<div class="mv'+(sel?' sel':'')+'"><div class="t"><span class="nm">'+m.n+'</span><span class="tag '+m.type+'">'+(m.type==='atk'?'атака':'защита')+'</span></div>'+moveStats(m)+'<div class="dim">'+m.d+'</div><div class="gap"></div>';
@@ -2935,7 +2964,7 @@ const ACT={
       '<p style="text-align:center;margin-top:10px">Как тебя будут звать на улицах?</p>'+
       '<input id="nameIn" class="namein" type="text" maxlength="'+NAME_MAX+'" autocomplete="off" spellcheck="false" value="'+first+'">'+
       '<div class="dim" id="nameErr" style="min-height:18px;margin:6px 0;color:var(--red)"></div>'+
-      '<button class="btn yel" data-act="rollname">🎲 Случайное имя</button><div class="gap"></div>'+
+      '<button class="btn" data-act="rollname">🎲 Случайное имя</button><div class="gap"></div>'+
       '<div class="row"><button class="btn" data-act="closemodal">Отмена</button><button class="btn grn" data-act="startcareer">Начать</button></div>');
   },
   pickhero(el){ NEW_HERO=+el.dataset.v; document.querySelectorAll('[data-act="pickhero"]').forEach(b=>b.classList.toggle('on',+b.dataset.v===NEW_HERO)); },
@@ -2969,7 +2998,9 @@ const ACT={
   help(){ openModal(helpHTML()); },
   sound(){ S.sound=!S.sound; save(); $('#btnSound').textContent='Звук: '+(S.sound?'вкл':'выкл'); },
   closemodal(){ closeModal(); },
-  tab(el){ tab=el.dataset.v; $('#tabBody').scrollTop=0; renderHub(); if(tab==='league') leagueToCur(); },
+  tab(el){ tab=el.dataset.v; if(tab==='gym'&&navBadges().gym) gymSec='rest'; $('#tabBody').scrollTop=0; renderHub(); if(tab==='league') leagueToCur(); }, // точка у «Зала» — про сон: сразу раздел «Отдых»
+  gymsec(el){ gymSec=el.dataset.v; $('#tabBody').scrollTop=0; renderHub(); },
+  styles(){ stylesOpen=!stylesOpen; renderHub(); },
   addpt(el){ const k=el.dataset.v; if(S.pts<=0) return; if(S.st[k]<MAX_STAT){ S.st[k]++; S.alloc[k]=(S.alloc[k]||0)+1; } else if(mastOf(k)<MAST_MAX) S.mast[k]=mastOf(k)+1; else return; S.pts--; save(); renderHub(); }, // на максимуме — в мастерство
   train(el){ openTrain(el.dataset.v); },
   trclose(){ closeTrain(); },
@@ -3041,7 +3072,7 @@ const ACT={
       sfx('coin'); toast('Награда удвоена!'+(ups?' Новый уровень '+S.lvl+'!':'')); }); },
   autostop(){ clearTimeout(AUTO_T); S.auto=false; save(); updAutoBtn(); const n=$('#autoNote'); if(n) n.remove(); },
   speed(){ if(!F) return; fightSpeed=F.speed=F.speed>=4?1:F.speed*2; $('#speedBtn').textContent='⏩ x'+F.speed; },
-  menu(){ $('#btnContinue').style.display=S.started?'':'none'; showScreen('title'); },
+  menu(){ $('#btnContinue').style.display=S.started?'':'none'; showScreen('title'); saveInfo(); },
   surrender(){ if(!F||!['fight','intro','swap','perk'].includes(F.state)) return; clearTimeout(PERK_T); openModal('<div class="title" style="color:var(--red)">ОТСТУПИТЬ?</div><p style="text-align:center">Забег прервётся. Деньги и опыт за побеждённых врагов останутся.</p><div class="row"><button class="btn" data-act="closemodal">Драться</button><button class="btn red" data-act="dosurrender">Отступить</button></div>'); },
   dosurrender(){ if(!F||!['fight','intro','swap','perk'].includes(F.state)) return closeModal(); F.surrender=true; F.winner='o'; F.state='done'; closeModal(); finishFight(); },
   closefight(){ clearTimeout(AUTO_T); clearTimeout(PERK_T); clearTimeout(REV_T); closeModal(); F=null; $('#fx').innerHTML=''; tab=S.beaten>=OPP.length?'fighter':'league'; $('#tabBody').scrollTop=0; showScreen('hub'); if(tab==='league') leagueToCur(); }
@@ -3183,7 +3214,7 @@ function tgBack(){
 
 /* ---------- ДИАГНОСТИКА: ошибки на телефоне видны прямо в игре ----------
    Нажатие на номер сборки на заставке показывает сведения об устройстве; нажатие на панель — скрывает её. */
-const BUILD='95 · 2026-10-29'; // номер сборки — видно на заставке, свежая версия или старая из кэша Telegram
+const BUILD='96 · 2026-10-29'; // номер сборки — видно на заставке, свежая версия или старая из кэша Telegram
 let FRAMES=0, PRESENT_MODE='чёткий';
 /* Сторож: раз в секунду, независимо от кадров. Если игра открыта, а кадры не идут — или бой стоит без открытых окон, —
    показываем панель ошибок с подробностями (по ней видно причину, например на ПК). */
@@ -3212,10 +3243,11 @@ function diagEnv(){
 }
 window.showDiag=function(force){
   const d=$('#diag'), errs=window.__errs||[]; if(!d||(!errs.length&&!force)) return;
-  d.textContent=(errs.length?'ОШИБКИ:\n'+errs.slice(-6).join('\n')+'\n\n':'')+diagEnv()+'\n\n(нажмите, чтобы скрыть)'; d.classList.add('on');
+  if(!force){ d.textContent='⚠ ошибка'; d.classList.add('on','min'); return; } // игроку — маленький значок, подробности по нажатию
+  d.textContent=(errs.length?'ОШИБКИ:\n'+errs.slice(-6).join('\n')+'\n\n':'')+diagEnv()+'\n\n(нажмите, чтобы скрыть)'; d.classList.remove('min'); d.classList.add('on');
 };
-document.addEventListener('click',e=>{ if(e.target.closest('#diag')) $('#diag').classList.remove('on'); else if(e.target.closest('#build')) showDiag(true); });
-$('#build').textContent='сборка '+BUILD;
+document.addEventListener('click',e=>{ const d=e.target.closest('#diag'); if(d){ if(d.classList.contains('min')) showDiag(true); else d.classList.remove('on'); } else if(e.target.closest('#build')) showDiag(true); });
+$('#build').textContent='сборка '+BUILD; setTimeout(saveInfo,500);
 // шаг кадра с отдельной защитой: ошибка в одной части (картинка, полоски, вывод) не гасит остальные
 function step(name,fn){ try{ fn(); }catch(e){ diag(name,e); } }
 // сторож имён: встроенный скрипт Telegram на iPhone перезаписал глобальное имя head (функцию рисования головы) элементом <head>.
