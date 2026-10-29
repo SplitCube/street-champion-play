@@ -411,7 +411,8 @@ const rnd=(a,b)=>a+Math.random()*(b-a);
 const fmt=n=>Math.round(n).toLocaleString('ru-RU');
 
 /* ---------- ДАННЫЕ ---------- */
-// MAX_LVL — до него уровень даёт +5 к макс. энергии; сам уровень без предела. MAST_MAX — предел мастерства характеристики
+// MAX_LVL — прежний предел роста энергии (с сборки 100 энергия всегда EN_MAX); сам уровень без предела. MAST_MAX — предел мастерства характеристики
+const EN_MAX=100; // запас энергии бойца — постоянный (сборка 100; раньше +5 за уровень до 30-го, до 245)
 const MAX_LVL=30, MAX_STAT=30, MAST_MAX=50, FIGHT_COST=20, TRAIN_COST=20, TRAIN_TIME=3000;
 // автобатлер: этап = 10 волн (по одному врагу) + босс из лиги; здоровье бойца переходит из волны в волну
 const WAVES=10, WAVE_K0=.25, WAVE_K1=.04, WAVE_HP0=.6, WAVE_HP1=.045, WAVE_TIME=40000, BOSS_TIME=120000, BOSS_TIME_DUO=150000, BOSS_HP=2.45, BOSS_HP_DUO=1.95, WAVE_HEAL=.3, BOSS_HEAL=1;
@@ -951,7 +952,7 @@ function sanitize(d){
   const num=(v,def,min,max)=>(v!=null&&v!==''&&Number.isFinite(+v))?clamp(Math.floor(+v),min,max):def;
   s.lvl=num(d.lvl,1,1,9999); s.mast={}; for(const k of ['str','spd','end','agi']) s.mast[k]=num((d.mast||{})[k],0,0,MAST_MAX); s.xp=num(d.xp,0,0,1e9); s.pts=num(d.pts,0,0,999);
   s.money=num(d.money,30,0,1e9); s.day=num(d.day,1,1,1e6);
-  s.maxEnergy=num(d.maxEnergy,100,100,1000); s.energy=num(d.energy,100,0,s.maxEnergy);
+  s.maxEnergy=EN_MAX; s.energy=num(d.energy,100,0,s.maxEnergy);
   for(const k in s.st){ if(d.st) s.st[k]=num(d.st[k],3,1,MAX_STAT); if(d.prog) s.prog[k]=num(d.prog[k],0,0,1e6); }
   s.gym=num(d.gym,1,1,GYM.length); s.coach=d.coach?1:0; s.spN=num(d.spN,0,0,99); s.spDone=num(d.spDone,0,0,1e6);
   s.sp=d.sp&&SP_COND[d.sp.c]?{c:d.sp.c,n:String(d.sp.n||'Спонсор').slice(0,40),need:num(d.sp.need,1,1,9),done:num(d.sp.done,0,0,9),exp:num(d.sp.exp,0,0,9e15)}:null; s.uniq=num(d.uniq,0,0,1e6);
@@ -1025,7 +1026,7 @@ function devDamage(a,d,dmg){
 loadDev();
 function addXp(x){
   S.xp+=Math.max(0,Math.round(x)); let ups=0;
-  while(S.xp>=needXp(S.lvl)){ S.xp-=needXp(S.lvl); S.lvl++; S.pts+=PTS_LVL; if(S.lvl<=MAX_LVL) S.maxEnergy+=5; ups++; } // общие очки развития: характеристики или дерево навыков
+  while(S.xp>=needXp(S.lvl)){ S.xp-=needXp(S.lvl); S.lvl++; S.pts+=PTS_LVL; ups++; } // общие очки развития: характеристики или дерево навыков
   return ups;
 }
 function addProg(k,amount){
@@ -2588,7 +2589,7 @@ function finishFight(){
     ?'<div class="note" id="autoNote">▶ Авто: этап '+(autoTo+1)+autoWhy+' через <b id="autoSec">4</b> с <button class="btn sm" data-act="autostop" style="margin-left:6px;min-height:0;padding:4px 8px">Стоп</button></div>'
     :'<div class="note" id="autoNote">Авто остановлено: на новый этап нужно '+FIGHT_COST+'⚡. Поешь или выспись.</div>';
   html+=spFinish(win&&!F.surrender); // контракт спонсора: зачёт победы или награда
-  if(ups) html+='<div class="note">НОВЫЙ УРОВЕНЬ '+S.lvl+'! '+lvlGain(ups)+(S.lvl-ups<MAX_LVL?', +'+5*(Math.min(S.lvl,MAX_LVL)-(S.lvl-ups))+' к макс. энергии':'')+'</div>';
+  if(ups) html+='<div class="note">НОВЫЙ УРОВЕНЬ '+S.lvl+'! '+lvlGain(ups)+'</div>';
   if(champNow) html+='<div class="note" style="color:var(--yel)">🏆 ТЫ — ЧЕМПИОН УЛИЦ! Пояс твой. Этапы можно проходить снова ради денег и опыта.</div>';
   const next=win?(i+1<OPP.length&&i+1<=S.beaten?i+1:-1):i;
   if(next>=0) html+='<button class="btn red" data-act="again" data-v="'+next+'">'+(win?'Этап '+(next+1)+' →':'Ещё раз')+costTxt(next)+'</button><div class="gap"></div>';
@@ -3292,7 +3293,7 @@ function tgBack(){
 
 /* ---------- ДИАГНОСТИКА: ошибки на телефоне видны прямо в игре ----------
    Нажатие на номер сборки на заставке показывает сведения об устройстве; нажатие на панель — скрывает её. */
-const BUILD='99 · 2026-10-29'; // номер сборки — видно на заставке, свежая версия или старая из кэша Telegram
+const BUILD='100 · 2026-10-29'; // номер сборки — видно на заставке, свежая версия или старая из кэша Telegram
 let FRAMES=0, PRESENT_MODE='чёткий';
 /* Сторож: раз в секунду, независимо от кадров. Если игра открыта, а кадры не идут — или бой стоит без открытых окон, —
    показываем панель ошибок с подробностями (по ней видно причину, например на ПК). */
